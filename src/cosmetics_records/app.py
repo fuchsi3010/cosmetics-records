@@ -286,6 +286,7 @@ class MainWindow(QMainWindow):
 
         Note:
             This updates both the navbar active state and the visible view.
+            Client detail nav item stays visible once a client is viewed.
         """
         if view_id in self.views:
             # Update navbar
@@ -293,14 +294,6 @@ class MainWindow(QMainWindow):
 
             # Switch to view
             self.stacked_widget.setCurrentWidget(self.views[view_id])
-
-            # Special handling for client_detail view
-            # WHY: Client detail should only be visible when viewing a client
-            if view_id == "client_detail":
-                self.navbar.set_item_visible("client_detail", True)
-            elif view_id == "clients":
-                # Hide client detail when returning to clients list
-                self.navbar.set_item_visible("client_detail", False)
 
             logger.debug(f"Navigated to view: {view_id}")
         else:
@@ -381,10 +374,24 @@ class MainWindow(QMainWindow):
             # From clients list view when user clicks a client
             main_window.show_client_detail(123)
         """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+
         # Update client_detail view with the client data
         if "client_detail" in self.views:
             try:
                 self.views["client_detail"].load_client(client_id)
+
+                # Get client name for nav label
+                with DatabaseConnection() as db:
+                    controller = ClientController(db)
+                    client = controller.get_client(client_id)
+                    if client:
+                        # Update nav button label with client name
+                        self.navbar.set_item_label("client_detail", client.full_name())
+                        # Make client detail nav item visible
+                        self.navbar.set_item_visible("client_detail", True)
+
             except Exception as e:
                 logger.error(f"Failed to load client {client_id}: {e}")
 

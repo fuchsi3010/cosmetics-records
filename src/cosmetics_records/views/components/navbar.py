@@ -109,14 +109,17 @@ class NavBar(QFrame):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Create navigation items
-        # WHY this order: Most common tasks first, settings at bottom
+        # WHY this order: Clients and client detail at top, then spacer,
+        # then less common items (inventory, audit) above settings
         self._add_nav_button("clients", "☰", _("Clients"), layout)
         self._add_nav_button("client_detail", "☺", _("Client Detail"), layout)
+
+        # Add spacer to push remaining items to bottom
+        layout.addStretch()
+
+        # Less frequently used items above settings
         self._add_nav_button("inventory", "■", _("Inventory"), layout)
         self._add_nav_button("audit", "⟲", _("Audit Log"), layout)
-
-        # Add spacer to push settings to bottom
-        layout.addStretch()
 
         # Settings at bottom (common UI pattern)
         self._add_nav_button("settings", "⚙", _("Settings"), layout)
@@ -124,7 +127,8 @@ class NavBar(QFrame):
         # Toggle button at very bottom
         self._create_toggle_button(layout)
 
-        # Hide client detail by default (only shown when viewing a client)
+        # Client detail starts hidden, shown when a client is selected
+        # WHY: It stays visible once shown so user can navigate back to it
         self.set_item_visible("client_detail", False)
 
     def _add_nav_button(
@@ -312,6 +316,36 @@ class NavBar(QFrame):
             Optional[str]: The active item ID, or None if no item is active
         """
         return self.active_item
+
+    def set_item_label(self, item_id: str, label: str) -> None:
+        """
+        Update the label text for a navigation item.
+
+        This is used to show the client name in the client_detail button
+        instead of the generic "Client Detail" text.
+
+        Args:
+            item_id: ID of the item to update
+            label: New label text
+
+        Example:
+            # Show client name in the nav button
+            navbar.set_item_label("client_detail", "Jane Doe")
+        """
+        if item_id in self._nav_buttons:
+            button = self._nav_buttons[item_id]
+            icon = button.property("nav_icon")
+
+            # Store new label
+            button.setProperty("nav_label", label)
+
+            # Update displayed text based on expanded state
+            if self.is_expanded:
+                button.setText(f"{icon}  {label}")
+            else:
+                button.setText(str(icon) if icon else "")
+
+            logger.debug(f"NavBar item '{item_id}' label set to '{label}'")
 
     # Override sizeHint to prevent layout issues
     def sizeHint(self) -> QSize:
