@@ -54,9 +54,9 @@ def sample_treatments_path():
 
 
 @pytest.fixture
-def sample_products_path():
-    """Path to sample products CSV file."""
-    return str(FIXTURES_DIR / "sample_products.csv")
+def sample_product_sales_path():
+    """Path to sample product_sales CSV file."""
+    return str(FIXTURES_DIR / "sample_product_sales.csv")
 
 
 @pytest.fixture
@@ -171,14 +171,14 @@ class TestDataValidation:
         import_service,
         sample_clients_path,
         sample_treatments_path,
-        sample_products_path,
+        sample_product_sales_path,
         sample_inventory_path,
     ):
         """Should pass validation when all data is valid."""
         errors = import_service.validate_files(
             clients_path=sample_clients_path,
             treatments_path=sample_treatments_path,
-            products_path=sample_products_path,
+            products_path=sample_product_sales_path,
             inventory_path=sample_inventory_path,
         )
 
@@ -228,14 +228,14 @@ class TestPreview:
         import_service,
         sample_clients_path,
         sample_treatments_path,
-        sample_products_path,
+        sample_product_sales_path,
         sample_inventory_path,
     ):
         """Should return correct preview counts after successful validation."""
         errors = import_service.validate_files(
             clients_path=sample_clients_path,
             treatments_path=sample_treatments_path,
-            products_path=sample_products_path,
+            products_path=sample_product_sales_path,
             inventory_path=sample_inventory_path,
         )
 
@@ -246,7 +246,7 @@ class TestPreview:
         assert preview is not None
         assert preview.clients_count == 3  # 3 clients in sample file
         assert preview.treatments_count == 5  # 5 treatments in sample file
-        assert preview.products_count == 4  # 4 products in sample file
+        assert preview.products_count == 4  # 4 product sales in sample file
         assert preview.inventory_count == 5  # 5 inventory items in sample file
 
     def test_get_preview_returns_none_with_errors(self, import_service):
@@ -307,7 +307,7 @@ class TestImport:
         import_service,
         sample_clients_path,
         sample_treatments_path,
-        sample_products_path,
+        sample_product_sales_path,
         sample_inventory_path,
         db_connection,
     ):

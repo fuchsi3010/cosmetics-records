@@ -88,7 +88,44 @@ class SectionHeader(QLabel):
         """
         super().__init__(text, parent)
         self.setProperty("class", "section_header")  # CSS class
-        self.setStyleSheet("font-size: 16px; font-weight: bold; margin-top: 16px;")
+        self.setStyleSheet("font-size: 16px; font-weight: bold; background: transparent;")
+
+
+class SettingsSection(QFrame):
+    """
+    A grouped section container for settings.
+
+    Provides a visually distinct container with rounded corners
+    and a subtle background to group related settings together.
+    """
+
+    def __init__(self, title: str, parent: Optional[QWidget] = None):
+        """
+        Initialize a settings section.
+
+        Args:
+            title: Section title to display
+            parent: Optional parent widget
+        """
+        super().__init__(parent)
+        self.setProperty("settings_section", True)
+
+        # Main layout with padding
+        self._layout = QVBoxLayout(self)
+        self._layout.setContentsMargins(16, 12, 16, 16)
+        self._layout.setSpacing(12)
+
+        # Add section header
+        header = SectionHeader(title)
+        self._layout.addWidget(header)
+
+    def add_widget(self, widget: QWidget) -> None:
+        """Add a widget to the section."""
+        self._layout.addWidget(widget)
+
+    def add_layout(self, layout) -> None:
+        """Add a layout to the section."""
+        self._layout.addLayout(layout)
 
 
 class SettingsView(QWidget):
@@ -194,17 +231,11 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing appearance settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Appearance")))
+        section = SettingsSection(_("Appearance"))
 
         # Theme selector
         theme_label = QLabel(_("Theme") + ":")
-        layout.addWidget(theme_label)
+        section.add_widget(theme_label)
 
         theme_row = QHBoxLayout()
         theme_row.setSpacing(12)
@@ -224,11 +255,11 @@ class SettingsView(QWidget):
         theme_row.addWidget(self._theme_system)
         theme_row.addStretch()
 
-        layout.addLayout(theme_row)
+        section.add_layout(theme_row)
 
         # UI Scale slider
         scale_label = QLabel(_("UI Scale") + ":")
-        layout.addWidget(scale_label)
+        section.add_widget(scale_label)
 
         scale_row = QHBoxLayout()
         scale_row.setSpacing(12)
@@ -261,7 +292,7 @@ class SettingsView(QWidget):
         scale_row.addWidget(self._scale_label)
         scale_row.addWidget(self._scale_apply_btn)
 
-        layout.addLayout(scale_row)
+        section.add_layout(scale_row)
 
         return section
 
@@ -274,17 +305,11 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing language settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Language")))
+        section = SettingsSection(_("Language"))
 
         # Language selector
         lang_label = QLabel(_("Language") + ":")
-        layout.addWidget(lang_label)
+        section.add_widget(lang_label)
 
         lang_row = QHBoxLayout()
         lang_row.setSpacing(12)
@@ -302,7 +327,7 @@ class SettingsView(QWidget):
         lang_row.addWidget(self._lang_de)
         lang_row.addStretch()
 
-        layout.addLayout(lang_row)
+        section.add_layout(lang_row)
 
         return section
 
@@ -315,17 +340,11 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing date format settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Date Format")))
+        section = SettingsSection(_("Date Format"))
 
         # Date format selector
         format_label = QLabel(_("Date format") + ":")
-        layout.addWidget(format_label)
+        section.add_widget(format_label)
 
         # Radio buttons for date format
         # Options: Language default, ISO 8601, US (MM/DD/YYYY), German (DD.MM.YYYY)
@@ -359,15 +378,15 @@ class SettingsView(QWidget):
         format_row.addWidget(self._date_format_de)
         format_row.addStretch()
 
-        layout.addLayout(format_row)
+        section.add_layout(format_row)
 
         # Note about date format
         note_label = QLabel(
             _("Language default uses MM/DD/YYYY for English and DD.MM.YYYY for German")
         )
         note_label.setProperty("class", "secondary")
-        note_label.setStyleSheet("color: gray; font-size: 11px;")
-        layout.addWidget(note_label)
+        note_label.setStyleSheet("color: gray; font-size: 11px; background: transparent;")
+        section.add_widget(note_label)
 
         return section
 
@@ -380,18 +399,12 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing backup settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Backup")))
+        section = SettingsSection(_("Backup"))
 
         # Auto-backup checkbox
         self._auto_backup_check = QCheckBox(_("Auto-backup on startup"))
         self._auto_backup_check.toggled.connect(self._on_auto_backup_toggled)
-        layout.addWidget(self._auto_backup_check)
+        section.add_widget(self._auto_backup_check)
 
         # Backup interval
         interval_row = QHBoxLayout()
@@ -410,7 +423,7 @@ class SettingsView(QWidget):
         interval_row.addWidget(self._backup_interval_spin)
         interval_row.addStretch()
 
-        layout.addLayout(interval_row)
+        section.add_layout(interval_row)
 
         # Backup retention
         retention_row = QHBoxLayout()
@@ -429,7 +442,7 @@ class SettingsView(QWidget):
         retention_row.addWidget(self._backup_retention_spin)
         retention_row.addStretch()
 
-        layout.addLayout(retention_row)
+        section.add_layout(retention_row)
 
         # Manual backup button and last backup time
         backup_row = QHBoxLayout()
@@ -446,13 +459,13 @@ class SettingsView(QWidget):
         backup_row.addWidget(self._last_backup_label)
         backup_row.addStretch()
 
-        layout.addLayout(backup_row)
+        section.add_layout(backup_row)
 
         # Open backups folder button
         open_folder_btn = QPushButton(_("Open Backups Folder"))
         open_folder_btn.setFixedWidth(150)
         open_folder_btn.clicked.connect(self._on_open_backups_folder)
-        layout.addWidget(open_folder_btn)
+        section.add_widget(open_folder_btn)
 
         return section
 
@@ -465,32 +478,26 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing import/export settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Import / Export")))
+        section = SettingsSection(_("Import / Export"))
 
         # Import data button
         # WHY first: Import is often a one-time operation for new users
         import_btn = QPushButton(_("Import Data from CSV"))
         import_btn.setFixedWidth(220)
         import_btn.clicked.connect(self._on_import_data)
-        layout.addWidget(import_btn)
+        section.add_widget(import_btn)
 
         # Export for mail merge button
         mail_merge_btn = QPushButton(_("Export Clients for Mail Merge"))
         mail_merge_btn.setFixedWidth(220)
         mail_merge_btn.clicked.connect(self._on_export_mail_merge)
-        layout.addWidget(mail_merge_btn)
+        section.add_widget(mail_merge_btn)
 
         # Export all data button
         export_all_btn = QPushButton(_("Export All Data"))
         export_all_btn.setFixedWidth(220)
         export_all_btn.clicked.connect(self._on_export_all_data)
-        layout.addWidget(export_all_btn)
+        section.add_widget(export_all_btn)
 
         return section
 
@@ -503,31 +510,25 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing database information
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Database")))
+        section = SettingsSection(_("Database"))
 
         # Database path
         path_label = QLabel(_("Database path") + ":")
-        layout.addWidget(path_label)
+        section.add_widget(path_label)
 
         config_dir = self.config.get_config_dir()
         db_path = config_dir / "cosmetics_records.db"
 
         self._db_path_label = QLabel(str(db_path))
         self._db_path_label.setProperty("class", "monospace")
-        self._db_path_label.setStyleSheet("color: gray; font-family: monospace;")
+        self._db_path_label.setStyleSheet("color: gray; font-family: monospace; background: transparent;")
         self._db_path_label.setWordWrap(True)
-        layout.addWidget(self._db_path_label)
+        section.add_widget(self._db_path_label)
 
         # Database size
         self._db_size_label = QLabel(_("Size") + ": " + _("Calculating..."))
         self._db_size_label.setProperty("class", "secondary")
-        layout.addWidget(self._db_size_label)
+        section.add_widget(self._db_size_label)
 
         # Update database size
         self._update_database_size()
@@ -543,13 +544,7 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing audit settings
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("Audit Log")))
+        section = SettingsSection(_("Audit Log"))
 
         # Audit retention
         retention_row = QHBoxLayout()
@@ -567,13 +562,13 @@ class SettingsView(QWidget):
         retention_row.addWidget(self._audit_retention_spin)
         retention_row.addStretch()
 
-        layout.addLayout(retention_row)
+        section.add_layout(retention_row)
 
         # Cleanup button
         cleanup_btn = QPushButton(_("Clean Up Now"))
         cleanup_btn.setFixedWidth(150)
         cleanup_btn.clicked.connect(self._on_audit_cleanup)
-        layout.addWidget(cleanup_btn)
+        section.add_widget(cleanup_btn)
 
         return section
 
@@ -586,24 +581,18 @@ class SettingsView(QWidget):
         Returns:
             QWidget containing about information
         """
-        section = QWidget()
-        layout = QVBoxLayout(section)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
-
-        # Section header
-        layout.addWidget(SectionHeader(_("About")))
+        section = SettingsSection(_("About"))
 
         # Version
         version_label = QLabel(_("Cosmetics Records v1.0"))
-        version_label.setStyleSheet("font-weight: bold;")
-        layout.addWidget(version_label)
+        version_label.setStyleSheet("font-weight: bold; background: transparent;")
+        section.add_widget(version_label)
 
         # Copyright
         copyright_label = QLabel(_("Copyright 2024"))
         copyright_label.setProperty("class", "secondary")
-        copyright_label.setStyleSheet("color: gray;")
-        layout.addWidget(copyright_label)
+        copyright_label.setStyleSheet("color: gray; background: transparent;")
+        section.add_widget(copyright_label)
 
         return section
 

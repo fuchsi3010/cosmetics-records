@@ -34,6 +34,7 @@ from typing import List, Optional
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.product import ProductRecord
+from cosmetics_records.services.audit_service import AuditService
 
 # Configure module logger for debugging and error tracking
 logger = logging.getLogger(__name__)
@@ -133,6 +134,11 @@ class ProductController:
         # Get the auto-generated ID from the database
         record_id = self.db.get_last_insert_id()
 
+        # Log creation to audit log
+        audit = AuditService(self.db)
+        description = f"Product record on {record.product_date}"
+        audit.log_create("product_records", record_id, description, "ProductController")
+
         logger.info(
             f"Created product record for client {record.client_id} "
             f"on {record.product_date} (ID: {record_id})"
@@ -211,6 +217,12 @@ class ProductController:
                 "Use create_product_record() instead."
             )
 
+        # Fetch old record for audit logging
+        old_record = self.get_product_record(record.id)
+        if old_record is None:
+            logger.warning(f"Update failed: Product record ID {record.id} not found")
+            return False
+
         # Execute UPDATE query
         # WHY we update all fields: Simplifies logic, ensures consistency
         query = """
@@ -233,12 +245,16 @@ class ProductController:
         # Commit the transaction
         self.db.commit()
 
-        # Check if any row was actually updated
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Update failed: Product record ID {record.id} not found")
-            return False
+        # Log changes to audit log
+        audit = AuditService(self.db)
+        if str(old_record.product_date) != str(record.product_date):
+            audit.log_update("product_records", record.id, "product_date",
+                           str(old_record.product_date), str(record.product_date),
+                           "ProductController")
+        if old_record.product_text != record.product_text:
+            audit.log_update("product_records", record.id, "product_text",
+                           old_record.product_text or "", record.product_text or "",
+                           "ProductController")
 
         logger.info(f"Updated product record ID {record.id}")
         return True
@@ -270,18 +286,23 @@ class ProductController:
             ... else:
             ...     print("Product record not found")
         """
+        # Fetch record info for audit logging before deletion
+        record = self.get_product_record(record_id)
+        if record is None:
+            logger.warning(f"Delete failed: Product record ID {record_id} not found")
+            return False
+
+        description = f"Product record on {record.product_date}"
+
         # Execute DELETE query
         query = "DELETE FROM product_records WHERE id = ?"
 
         self.db.execute(query, (record_id,))
         self.db.commit()
 
-        # Check if any row was actually deleted
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Delete failed: Product record ID {record_id} not found")
-            return False
+        # Log deletion to audit log
+        audit = AuditService(self.db)
+        audit.log_delete("product_records", record_id, description, "ProductController")
 
         logger.info(f"Deleted product record ID {record_id}")
         return True

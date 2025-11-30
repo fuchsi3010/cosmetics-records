@@ -210,10 +210,9 @@ class MainWindow(QMainWindow):
         # Create client detail view
         try:
             client_detail_view = ClientDetailView()
-            # Wire up back button to return to list
-            client_detail_view.back_to_list.connect(
-                lambda: self._navigate_to("clients")
-            )
+            # Wire up back button to return to list and refresh it
+            # (refresh is needed when client is deleted)
+            client_detail_view.back_to_list.connect(self._on_back_to_client_list)
             self.views["client_detail"] = client_detail_view
             self.stacked_widget.addWidget(client_detail_view)
             logger.debug("ClientDetailView created and connected")
@@ -443,6 +442,21 @@ class MainWindow(QMainWindow):
                 logger.info(f"Client added successfully: {client.full_name()}")
         except Exception as e:
             logger.error(f"Failed to add client: {e}")
+
+    def _on_back_to_client_list(self) -> None:
+        """
+        Handle returning to client list from detail view.
+
+        Navigates back to the clients list and refreshes it.
+        This ensures deleted clients are removed from the UI.
+        """
+        self._navigate_to("clients")
+
+        # Refresh the list to reflect any changes (e.g., deleted client)
+        if "clients" in self.views:
+            self.views["clients"].refresh()
+
+        logger.debug("Returned to client list and refreshed")
 
     def _on_theme_changed(self, theme: str) -> None:
         """

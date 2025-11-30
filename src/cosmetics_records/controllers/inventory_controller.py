@@ -35,6 +35,7 @@ from thefuzz import fuzz
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.product import InventoryItem
+from cosmetics_records.services.audit_service import AuditService
 
 # Configure module logger for debugging and error tracking
 logger = logging.getLogger(__name__)
@@ -134,6 +135,10 @@ class InventoryController:
         # Get the auto-generated ID from the database
         item_id = self.db.get_last_insert_id()
 
+        # Log creation to audit log
+        audit = AuditService(self.db)
+        audit.log_create("inventory_items", item_id, item.display_name(), "InventoryController")
+
         logger.info(f"Created inventory item: {item.display_name()} (ID: {item_id})")
         return item_id
 
@@ -207,6 +212,12 @@ class InventoryController:
                 "Cannot update inventory item without ID. Use create_item() instead."
             )
 
+        # Fetch old item for audit logging
+        old_item = self.get_item(item.id)
+        if old_item is None:
+            logger.warning(f"Update failed: Inventory item ID {item.id} not found")
+            return False
+
         # Execute UPDATE query
         # WHY we update all fields: Simplifies logic, ensures consistency
         query = """
@@ -230,12 +241,22 @@ class InventoryController:
         # Commit the transaction
         self.db.commit()
 
-        # Check if any row was actually updated
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Update failed: Inventory item ID {item.id} not found")
-            return False
+        # Log changes to audit log
+        audit = AuditService(self.db)
+        if old_item.name != item.name:
+            audit.log_update("inventory_items", item.id, "name",
+                           old_item.name, item.name, "InventoryController")
+        if old_item.description != item.description:
+            audit.log_update("inventory_items", item.id, "description",
+                           old_item.description or "", item.description or "",
+                           "InventoryController")
+        if old_item.capacity != item.capacity:
+            audit.log_update("inventory_items", item.id, "capacity",
+                           str(old_item.capacity), str(item.capacity),
+                           "InventoryController")
+        if old_item.unit != item.unit:
+            audit.log_update("inventory_items", item.id, "unit",
+                           old_item.unit, item.unit, "InventoryController")
 
         logger.info(f"Updated inventory item: {item.display_name()} (ID: {item.id})")
         return True
@@ -268,6 +289,14 @@ class InventoryController:
             ... else:
             ...     print("Item not found")
         """
+        # Fetch item info for audit logging before deletion
+        item = self.get_item(item_id)
+        if item is None:
+            logger.warning(f"Delete failed: Inventory item ID {item_id} not found")
+            return False
+
+        item_name = item.display_name()
+
         # Execute DELETE query
         # NOTE: This won't affect ProductRecords because they use free-text,
         # not foreign keys to inventory
@@ -276,12 +305,9 @@ class InventoryController:
         self.db.execute(query, (item_id,))
         self.db.commit()
 
-        # Check if any row was actually deleted
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Delete failed: Inventory item ID {item_id} not found")
-            return False
+        # Log deletion to audit log
+        audit = AuditService(self.db)
+        audit.log_delete("inventory_items", item_id, item_name, "InventoryController")
 
         logger.info(f"Deleted inventory item ID {item_id}")
         return True

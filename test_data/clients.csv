@@ -1,0 +1,101 @@
+import_id,first_name,last_name,email,phone,address,date_of_birth,allergies,tags,planned_treatment,notes
+C0001,Isabella,Mitchell,isabellamitchell@gmail.com,(892) 958-9935,"1425 Beach Road, Columbus",2005-01-03,Coconut derivatives,Wedding prep,Signature facial (90 min),Client notes for Isabella. Regular visitor.
+C0002,Riley,Hall,rileyhall@yahoo.com,(981) 544-2674,"1520 Spring Street, Houston",1985-06-20,,"Sensitive skin,Special occasions,Oily skin",Collagen boost facial,
+C0003,Anna,Torres,anna.torres@yahoo.com,(991) 496-2307,"3815 Cedar Lane, Fort Worth",1990-08-21,,"Oily skin,Eczema",Anti-aging facial with LED therapy,
+C0004,Luna,Hernandez,lunahernandez@outlook.com,(986) 994-1916,"3753 Oak Avenue, Austin",1982-05-03,Propylene glycol,"Referred by friend,Special occasions,Eczema",,Client notes for Luna. Prefers morning appointments.
+C0005,Brooklyn,Mitchell,brooklyn75@outlook.com,(424) 341-9348,"8086 Maple Drive, Los Angeles",1952-02-05,,,,Client notes for Brooklyn. Interested in anti-aging treatments.
+C0006,Rebecca,King,rebecca.king@gmail.com,(898) 749-5371,"5574 Cedar Lane, San Jose",1980-03-15,Nickel,,,
+C0007,Ellie,Weber,ellieweber@yahoo.com,(582) 980-3646,"8838 Mountain View, New York",1969-06-16,Sulfates,,,Client notes for Ellie. Regular visitor.
+C0008,Abigail,Garcia,abigailgarcia@yahoo.com,(875) 686-3705,"4343 Mountain View, Miami",1980-04-18,,"Referred by friend,Eczema",,
+C0009,Ella,Thomas,ella.thomas@hotmail.com,(767) 435-4608,"118 Maple Drive, Oakland",1967-01-08,Fragrance,,Brightening vitamin C facial,Client notes for Ella. Interested in anti-aging treatments.
+C0010,Scarlett,Campbell,scarlettcampbell@icloud.com,,"1589 Valley Road, Jacksonville",1978-12-02,,,Lymphatic drainage massage,
+C0011,John,Thomas,john69@yahoo.com,(632) 387-5563,"7580 Lake Drive, Chicago",1979-09-04,Latex,,,
+C0012,Kathleen,Walker,kathleen.walker@yahoo.com,(588) 202-7396,"4346 Garden Path, San Jose",1980-12-24,,"Acne-prone,Sensitive skin,Anti-aging focus",Hydrating facial treatment,
+C0013,Audrey,Brown,audreybrown@gmail.com,(720) 282-4044,"1123 Harbor Lane, Chicago",1964-04-13,Formaldehyde,,,
+C0014,Audrey,Koch,akoch@yahoo.com,(471) 605-3144,"4916 Garden Path, Austin",1959-02-01,,,,Client notes for Audrey. Prefers morning appointments.
+C0015,Scarlett,Koch,scarlettkoch@outlook.com,(491) 361-8179,"8901 Hill Street, Miami",1956-11-17,Cobalt,,Chemical peel - light,Client notes for Scarlett. Regular visitor.
+C0016,Victoria,Moore,vmoore@yahoo.com,(903) 849-5325,"8281 Sunset Boulevard, Dallas",1950-01-03,,,Dermaplaning treatment,
+C0017,Brooklyn,Hernandez,brooklyn71@hotmail.com,(209) 314-2232,"2443 Ocean Drive, Los Angeles",1954-06-19,,,,
+C0018,Mia,Hoffmann,miahoffmann@gmail.com,(562) 998-7658,"2533 Lake Drive, Philadelphia",1956-03-14,Propylene glycol,,,
+C0019,Luna,Moore,luna.moore@icloud.com,(239) 681-4644,"3270 Garden Path, Jacksonville",1988-04-08,Lanolin,"New client,Referred by friend",Neck and décolletage treatment,Client notes for Luna. 
+C0020,Isabella,Davis,idavis@gmail.com,(644) 553-6139,"8380 Cedar Lane, Fort Worth",,Fragrance,,Express facial (30 min),
+C0021,Richard,White,rwhite@hotmail.com,(521) 879-3041,"4921 Mountain View, San Jose",1965-07-11,,Oily skin,,
+C0022,Lily,Flores,lily.flores@outlook.com,(493) 415-8043,"9503 Harbor Lane, Atlanta",1987-08-15,,"Mature skin,Eczema,Regular",Consultation and skin analysis,Client notes for Lily. Prefers morning appointments.
+C0023,Addison,Schmidt,addison.schmidt@yahoo.com,(686) 825-2193,"7462 Valley Road, Atlanta",1971-04-23,,Acne-prone,,Client notes for Addison. Regular visitor.
+C0024,Addison,Lopez,addison90@gmail.com,(770) 455-2988,"7479 Pine Road, Charlotte",1965-09-18,,,,
+C0025,Jennifer,Weber,jennifer21@icloud.com,(453) 852-5543,,1967-04-09,,,Dermaplaning treatment,Client notes for Jennifer. 
+C0026,Victoria,Anderson,victoriaanderson@gmail.com,(624) 617-6421,"8891 Garden Path, Columbus",2004-04-27,,,,
+C0027,Joshua,Harris,jharris@icloud.com,(629) 751-9947,"9884 Lake Drive, Seattle",1993-05-14,,"Mature skin,Wedding prep,Dry skin",,
+C0028,Kennedy,Nguyen,kennedy.nguyen@icloud.com,(338) 672-3977,"824 River Road, Fort Worth",1987-04-15,,,,
+C0029,Thomas,Weber,thomas.weber@outlook.com,(429) 865-2124,"660 Main Street, San Diego",1995-01-20,Retinol,,,Client notes for Thomas. Referred by existing client.
+C0030,Aria,Hill,aria.hill@yahoo.com,(518) 310-1420,"5112 Beach Road, Minneapolis",1983-07-23,Formaldehyde,"Sensitive skin,Referred by friend",,
+C0031,Jennifer,Nelson,jnelson@gmail.com,(630) 701-2729,"7103 Meadow Way, Atlanta",1950-08-23,Essential oils,,,Client notes for Jennifer. 
+C0032,Rebecca,Ramirez,rramirez@outlook.com,(451) 288-5569,"7386 Lake Drive, Charlotte",1971-10-22,,"Mature skin,Dry skin",Oxygen facial treatment,Client notes for Rebecca. 
+C0033,Zoe,Scott,zoe.scott@yahoo.com,(937) 616-9004,"9097 Lake Drive, Oakland",1977-11-23,,,Brightening vitamin C facial,
+C0034,Caroline,Walker,caroline45@hotmail.com,(538) 560-8434,"4439 Hill Street, Dallas",1993-02-24,Salicylic acid,,,
+C0035,Sandra,Moore,smoore@gmail.com,(398) 503-4727,"5913 Elm Street, San Jose",2007-12-18,Fragrance,,,
+C0036,Kathleen,Miller,kathleen61@icloud.com,(252) 458-8827,"1071 Spring Street, Seattle",1967-11-02,Cobalt,Sensitive skin,,
+C0037,Addison,Roberts,addison58@outlook.com,(802) 639-6003,"9317 Harbor Lane, Los Angeles",1968-12-04,,Combination skin,,Client notes for Addison. Prefers morning appointments.
+C0038,Riley,Smith,riley89@outlook.com,(233) 437-5720,"4633 Garden Path, Chicago",1964-04-09,,Wedding prep,Brightening vitamin C facial,
+C0039,David,Jones,djones@icloud.com,(327) 679-5982,"6595 River Road, Denver",1973-08-15,Fragrance,,,
+C0040,Eleanor,Klein,eleanor.klein@outlook.com,(790) 241-3870,"7709 Mountain View, Atlanta",1979-05-06,,"New client,Dry skin,Mature skin",,Client notes for Eleanor. Regular visitor.
+C0041,Daniel,Clark,daniel37@hotmail.com,(237) 665-2442,"5154 River Road, Austin",2000-07-28,,,,
+C0042,Zoey,King,zoey97@icloud.com,(978) 252-4335,"4376 Ocean Drive, Phoenix",1989-08-23,,Mature skin,,Client notes for Zoey. Interested in anti-aging treatments.
+C0043,Avery,Robinson,avery20@outlook.com,(479) 625-8905,,1972-03-13,Coconut derivatives,,Anti-aging facial with LED therapy,Client notes for Avery. Interested in anti-aging treatments.
+C0044,Leah,Fischer,lfischer@hotmail.com,(793) 875-9022,"2435 Garden Path, Boston",1977-06-11,,"Eczema,Wedding prep,Sensitive skin",,Client notes for Leah. Interested in anti-aging treatments.
+C0045,Laura,Williams,laura61@icloud.com,(879) 867-3492,"8116 Oak Avenue, Phoenix",1975-10-11,,,,
+C0046,Chloe,Clark,,(471) 546-7512,,,,,,Client notes for Chloe. Interested in anti-aging treatments.
+C0047,Michael,Flores,mflores@yahoo.com,(964) 292-8110,"1613 Cedar Lane, Charlotte",1997-12-10,,,Microneedling session,
+C0048,Laura,Torres,lauratorres@yahoo.com,(280) 824-7267,"3946 Sunset Boulevard, Portland",1998-04-15,,,,
+C0049,Riley,Jones,rjones@icloud.com,(906) 456-8484,"4950 Park Avenue, Fort Worth",1953-08-04,Sulfates,"VIP,Wedding prep",,Client notes for Riley. 
+C0050,Michael,Schaefer,mschaefer@yahoo.com,(821) 560-4588,"3116 Harbor Lane, Dallas",1964-12-25,,,,
+C0051,Paisley,Mueller,pmueller@yahoo.com,(292) 502-6352,"6808 Elm Street, San Antonio",1999-09-12,,,,Client notes for Paisley. Interested in anti-aging treatments.
+C0052,Christopher,Mitchell,,(277) 344-4696,,,,,,Client notes for Christopher. Interested in anti-aging treatments.
+C0053,Ella,Robinson,erobinson@hotmail.com,(590) 853-7086,"1776 Lake Drive, Seattle",2006-10-18,,,,
+C0054,Laura,Davis,ldavis@icloud.com,(318) 299-4846,"8808 Pine Road, Fort Worth",1978-06-22,,"Acne-prone,Special occasions,Oily skin",,
+C0055,Zoe,Williams,zoe28@icloud.com,(441) 571-2627,"6019 Ocean Drive, Atlanta",1985-01-13,,,,
+C0056,Lillian,Adams,lillian.adams@outlook.com,(449) 328-4362,"1125 Ocean Drive, San Antonio",1970-04-27,,VIP,Chemical peel - light,
+C0057,Lily,Davis,lilydavis@gmail.com,(566) 443-6304,"259 Elm Street, Dallas",2004-03-24,,,,
+C0058,Sofia,Lewis,sofia.lewis@hotmail.com,(508) 669-1510,"997 Sunset Boulevard, Fort Worth",1980-11-04,,,Anti-aging facial with LED therapy,Client notes for Sofia. Prefers morning appointments.
+C0059,Zoe,Flores,zflores@icloud.com,(811) 743-5831,"7434 Mountain View, Miami",1980-02-26,,,,
+C0060,Lillian,Ramirez,lillian30@outlook.com,(664) 608-7815,"1558 Forest Lane, Columbus",1987-11-09,,"New client,Regular,Wedding prep",Eye contour treatment,Client notes for Lillian. Referred by existing client.
+C0061,Andrew,Brown,abrown@gmail.com,(620) 562-7929,"843 Hill Street, Miami",1988-06-04,,"Dry skin,Wedding prep,Regular",,
+C0062,Zoe,Torres,zoe.torres@hotmail.com,(873) 910-5381,"475 Elm Street, Dallas",1963-05-11,,Referred by friend,Deep cleansing facial,Client notes for Zoe. 
+C0063,Sarah,Robinson,srobinson@outlook.com,(995) 781-2391,"862 Pine Road, Philadelphia",1959-10-02,,"Anti-aging focus,Rosacea,Dry skin",,Client notes for Sarah. 
+C0064,Michelle,Davis,michelle87@hotmail.com,(883) 515-1744,"3613 Spring Street, Miami",2004-01-07,,Combination skin,Microdermabrasion session,Client notes for Michelle. Interested in anti-aging treatments.
+C0065,Genesis,Wright,gwright@gmail.com,(606) 959-1693,"7148 Main Street, Charlotte",2003-06-19,,"Rosacea,Regular,Oily skin",Dermaplaning treatment,Client notes for Genesis. 
+C0066,Anna,Garcia,annagarcia@icloud.com,(803) 610-9584,"1289 Spring Street, San Jose",1960-06-08,,,,Client notes for Anna. Referred by existing client.
+C0067,Chloe,Thomas,chloethomas@yahoo.com,(816) 356-2234,"2903 Sunset Boulevard, Charlotte",1959-10-25,,"Eczema,New client",,
+C0068,Zoe,Nguyen,zoe.nguyen@outlook.com,(672) 662-1616,"933 Meadow Way, San Jose",2003-11-28,,"Special occasions,Rosacea,Combination skin",,
+C0069,Zoey,Lee,zoeylee@gmail.com,(661) 305-6626,"1382 Mountain View, Atlanta",1996-01-08,,,,
+C0070,Stella,Harris,stella.harris@outlook.com,(267) 537-2548,"9142 Spring Street, San Jose",1991-12-28,,,,Client notes for Stella. 
+C0071,Bella,Martin,bellamartin@hotmail.com,(286) 517-7171,,1999-11-23,,,,
+C0072,Jennifer,Allen,jallen@yahoo.com,(419) 549-8967,"3146 Lake Drive, Phoenix",1998-02-10,,,,
+C0073,Genesis,Martinez,genesismartinez@icloud.com,(244) 620-6968,"3892 Garden Path, Miami",1989-12-26,,"Anti-aging focus,Special occasions",,Client notes for Genesis. 
+C0074,Donald,Roberts,donald49@yahoo.com,(404) 819-3267,"4097 Oak Avenue, Atlanta",1977-06-18,,,,Client notes for Donald. Regular visitor.
+C0075,Leah,Lewis,leah.lewis@yahoo.com,,,,,"Dry skin,Oily skin",,Client notes for Leah. Regular visitor.
+C0076,Elizabeth,Weber,elizabethweber@yahoo.com,(239) 493-8740,"2274 Sunset Boulevard, Charlotte",1968-01-03,Lanolin,,,
+C0077,Avery,Roberts,avery.roberts@gmail.com,(444) 629-8489,"1030 Cedar Lane, Seattle",1969-09-01,,Rosacea,,
+C0078,Sarah,Lopez,slopez@gmail.com,(738) 757-9312,"8317 Ocean Drive, New York",1983-08-02,,,Deep cleansing facial,Client notes for Sarah. Regular visitor.
+C0079,Sofia,Roberts,sroberts@yahoo.com,(245) 560-9945,"5547 Elm Street, Minneapolis",1978-12-16,,,Lip treatment,Client notes for Sofia. Prefers morning appointments.
+C0080,Nora,Becker,nora40@hotmail.com,(684) 459-1599,"3132 Hill Street, Jacksonville",1952-01-28,,"Wedding prep,Special occasions",,
+C0081,Daniel,Lopez,dlopez@hotmail.com,(473) 284-7955,"1294 Valley Road, Miami",1955-03-18,,"Rosacea,Acne-prone",,
+C0082,Amanda,Thompson,athompson@hotmail.com,(645) 481-1939,"1230 Spring Street, Jacksonville",1975-12-22,Latex,"Regular,New client,Anti-aging focus",Microneedling session,Client notes for Amanda. 
+C0083,Victoria,Baker,vbaker@icloud.com,(981) 278-3255,"8675 Meadow Way, Fort Worth",1987-11-09,Salicylic acid,Anti-aging focus,,
+C0084,Brooklyn,Rivera,brivera@icloud.com,(404) 325-3223,"1214 Garden Path, Philadelphia",1950-12-15,,,,
+C0085,Harper,Scott,harperscott@yahoo.com,(570) 720-4673,"1989 Park Avenue, Phoenix",1992-08-01,,"Acne-prone,Rosacea,Regular",Lymphatic drainage massage,
+C0086,Laura,Roberts,laura.roberts@yahoo.com,(524) 857-2215,"7373 Garden Path, Minneapolis",1974-06-05,,,,Client notes for Laura. Prefers morning appointments.
+C0087,Amelia,Weber,aweber@yahoo.com,(365) 530-4694,"5670 Mountain View, San Jose",1953-02-09,Nickel,"New client,Combination skin",,
+C0088,Aria,Nelson,anelson@hotmail.com,(242) 229-2330,"745 Beach Road, Dallas",1966-04-25,,,,
+C0089,Ellie,Walker,ellie88@outlook.com,(664) 274-1981,"2590 Garden Path, Columbus",1977-08-07,,"Monthly package,Oily skin",Microneedling session,
+C0090,Natalie,Robinson,natalierobinson@yahoo.com,(299) 251-5754,"6294 Harbor Lane, Columbus",1992-03-27,,"Oily skin,Referred by friend",Neck and décolletage treatment,
+C0091,Steven,Johnson,steven51@yahoo.com,(420) 797-6781,"798 Oak Avenue, San Jose",1976-10-27,,,,
+C0092,Matthew,Carter,matthew6@gmail.com,(783) 775-4189,"5940 Ocean Drive, San Jose",2003-07-17,,,Microdermabrasion session,Client notes for Matthew. Referred by existing client.
+C0093,Anna,Carter,anna78@hotmail.com,(241) 246-1637,"2246 Forest Lane, Seattle",1974-08-05,,"Eczema,New client",,
+C0094,Joshua,Perez,joshua66@hotmail.com,(506) 686-1272,"6036 Forest Lane, Minneapolis",2000-07-19,,,,
+C0095,Brooklyn,Klein,brooklynklein@gmail.com,(797) 691-3793,"8590 Harbor Lane, Fort Worth",1998-11-08,Salicylic acid,"Eczema,Oily skin,New client",,Client notes for Brooklyn. 
+C0096,Nicole,Wagner,nicole.wagner@yahoo.com,(731) 412-6325,"7838 Mountain View, Fort Worth",1987-03-15,,"Combination skin,Rosacea",,
+C0097,Ellie,Anderson,,(921) 412-9011,"5715 Ocean Drive, Sacramento",2000-10-22,,,,Client notes for Ellie. Prefers morning appointments.
+C0098,Stella,Klein,stella45@outlook.com,(965) 690-4505,"3311 Ocean Drive, Dallas",1972-12-09,Formaldehyde,Dry skin,Eye contour treatment,Client notes for Stella. Interested in anti-aging treatments.
+C0099,Grace,Smith,,(868) 687-8822,,,,,,Client notes for Grace. 
+C0100,Sophia,Schaefer,sophia.schaefer@icloud.com,(390) 966-5742,,1971-10-04,,"Anti-aging focus,Special occasions,New client",,

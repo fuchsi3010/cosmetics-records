@@ -6,7 +6,7 @@
 # systems (Excel, old software, etc.).
 #
 # Key Features:
-#   - Import 4 CSV file types: clients, treatments, products, inventory
+#   - Import 4 CSV file types: clients, treatments, product_sales, inventory
 #   - Validate all data before any database writes
 #   - Use transactions (all-or-nothing imports)
 #   - Map temporary import_id values to actual database IDs
@@ -15,14 +15,14 @@
 # CSV File Structure:
 #   - clients.csv: Required - client personal data with import_id for linking
 #   - treatments.csv: Optional - treatment records linked to clients
-#   - products.csv: Optional - product records linked to clients
+#   - product_sales.csv: Optional - product sale records linked to clients
 #   - inventory.csv: Optional - inventory items (standalone)
 #
 # Import Order:
 #   1. Inventory (standalone, no dependencies)
 #   2. Clients (creates mapping of import_id -> database ID)
 #   3. Treatments (uses client mapping)
-#   4. Products (uses client mapping)
+#   4. Product Sales (uses client mapping)
 #
 # Usage Example:
 #   import_service = ImportService()
@@ -279,7 +279,7 @@ class ImportService:
         if self._treatments_path:
             self._validate_file_exists(self._treatments_path, "treatments.csv")
         if self._products_path:
-            self._validate_file_exists(self._products_path, "products.csv")
+            self._validate_file_exists(self._products_path, "product_sales.csv")
         if self._inventory_path:
             self._validate_file_exists(self._inventory_path, "inventory.csv")
 
@@ -706,7 +706,7 @@ class ImportService:
 
     def _parse_products_csv(self, valid_client_ids: set) -> None:
         """
-        Parse and validate the products CSV file.
+        Parse and validate the product_sales CSV file.
 
         Args:
             valid_client_ids: Set of valid client import_id values
@@ -717,7 +717,7 @@ class ImportService:
         if not self._products_path or not self._products_path.exists():
             return
 
-        file_name = "products.csv"
+        file_name = "product_sales.csv"
 
         try:
             with open(self._products_path, "r", encoding="utf-8-sig", newline="") as f:

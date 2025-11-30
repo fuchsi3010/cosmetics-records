@@ -251,16 +251,12 @@ class AuditLogView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Title bar
-        title_bar = QWidget()
-        title_bar.setFixedHeight(60)
-        title_bar.setProperty("top_bar", True)
-
-        title_layout = QHBoxLayout(title_bar)
-        title_layout.setContentsMargins(16, 10, 16, 10)
+        # Title row (no background, just title and refresh button)
+        title_layout = QHBoxLayout()
+        title_layout.setContentsMargins(16, 16, 16, 8)
 
         title_label = QLabel("Audit Log")
-        title_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        title_label.setStyleSheet("font-size: 20px; font-weight: bold; background: transparent;")
         title_layout.addWidget(title_label)
 
         title_layout.addStretch()
@@ -271,7 +267,7 @@ class AuditLogView(QWidget):
         refresh_btn.clicked.connect(self.refresh)
         title_layout.addWidget(refresh_btn)
 
-        main_layout.addWidget(title_bar)
+        main_layout.addLayout(title_layout)
 
         # Scrollable audit entries list
         self._scroll_area = QScrollArea()

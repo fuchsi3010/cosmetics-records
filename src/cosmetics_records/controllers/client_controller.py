@@ -36,6 +36,7 @@ from thefuzz import fuzz
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.client import Client
+from cosmetics_records.services.audit_service import AuditService
 
 # Configure module logger for debugging and error tracking
 logger = logging.getLogger(__name__)
@@ -146,6 +147,10 @@ class ClientController:
         # Get the auto-generated ID from the database
         client_id = self.db.get_last_insert_id()
 
+        # Log creation to audit log
+        audit = AuditService(self.db)
+        audit.log_create("clients", client_id, client.full_name(), "ClientController")
+
         logger.info(f"Created client: {client.full_name()} (ID: {client_id})")
         return client_id
 
@@ -221,6 +226,12 @@ class ClientController:
                 "Cannot update client without ID. Use create_client() instead."
             )
 
+        # Fetch old client for audit logging
+        old_client = self.get_client(client.id)
+        if old_client is None:
+            logger.warning(f"Update failed: Client ID {client.id} not found")
+            return False
+
         # Convert tags list to comma-separated string
         tags_str = client.tags_string()
 
@@ -255,14 +266,41 @@ class ClientController:
         # Commit the transaction
         self.db.commit()
 
-        # Check if any row was actually updated
-        # WHY check rowcount: Detect if client_id doesn't exist
-        # cursor.rowcount returns number of rows affected by last query
-        rows_affected = self.db.cursor.rowcount
+        # Log changes to audit log
+        audit = AuditService(self.db)
+        client_name = client.full_name()
 
-        if rows_affected == 0:
-            logger.warning(f"Update failed: Client ID {client.id} not found")
-            return False
+        if old_client.first_name != client.first_name:
+            audit.log_update("clients", client.id, "first_name",
+                           old_client.first_name, client.first_name, "ClientController")
+        if old_client.last_name != client.last_name:
+            audit.log_update("clients", client.id, "last_name",
+                           old_client.last_name, client.last_name, "ClientController")
+        if old_client.email != client.email:
+            audit.log_update("clients", client.id, "email",
+                           old_client.email or "", client.email or "", "ClientController")
+        if old_client.phone != client.phone:
+            audit.log_update("clients", client.id, "phone",
+                           old_client.phone or "", client.phone or "", "ClientController")
+        if old_client.address != client.address:
+            audit.log_update("clients", client.id, "address",
+                           old_client.address or "", client.address or "", "ClientController")
+        if str(old_client.date_of_birth) != str(client.date_of_birth):
+            audit.log_update("clients", client.id, "date_of_birth",
+                           str(old_client.date_of_birth) if old_client.date_of_birth else "",
+                           str(client.date_of_birth) if client.date_of_birth else "", "ClientController")
+        if old_client.allergies != client.allergies:
+            audit.log_update("clients", client.id, "allergies",
+                           old_client.allergies or "", client.allergies or "", "ClientController")
+        if old_client.tags_string() != client.tags_string():
+            audit.log_update("clients", client.id, "tags",
+                           old_client.tags_string(), client.tags_string(), "ClientController")
+        if old_client.planned_treatment != client.planned_treatment:
+            audit.log_update("clients", client.id, "planned_treatment",
+                           old_client.planned_treatment or "", client.planned_treatment or "", "ClientController")
+        if old_client.notes != client.notes:
+            audit.log_update("clients", client.id, "notes",
+                           old_client.notes or "", client.notes or "", "ClientController")
 
         logger.info(f"Updated client: {client.full_name()} (ID: {client.id})")
         return True
@@ -295,6 +333,14 @@ class ClientController:
             ... else:
             ...     print("Client not found")
         """
+        # Fetch client info for audit logging before deletion
+        client = self.get_client(client_id)
+        if client is None:
+            logger.warning(f"Delete failed: Client ID {client_id} not found")
+            return False
+
+        client_name = client.full_name()
+
         # Execute DELETE query
         # WHY ON DELETE CASCADE is important: When we delete a client,
         # their treatment_records and product_records are automatically deleted.
@@ -304,14 +350,11 @@ class ClientController:
         self.db.execute(query, (client_id,))
         self.db.commit()
 
-        # Check if any row was actually deleted
-        rows_affected = self.db.cursor.rowcount
+        # Log deletion to audit log
+        audit = AuditService(self.db)
+        audit.log_delete("clients", client_id, client_name, "ClientController")
 
-        if rows_affected == 0:
-            logger.warning(f"Delete failed: Client ID {client_id} not found")
-            return False
-
-        logger.info(f"Deleted client ID {client_id} and all associated records")
+        logger.info(f"Deleted client ID {client_id} ({client_name}) and all associated records")
         return True
 
     # =========================================================================

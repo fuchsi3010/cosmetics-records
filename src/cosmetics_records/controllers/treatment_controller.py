@@ -29,6 +29,7 @@ from typing import List, Optional
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.treatment import TreatmentRecord
+from cosmetics_records.services.audit_service import AuditService
 
 # Configure module logger for debugging and error tracking
 logger = logging.getLogger(__name__)
@@ -126,6 +127,11 @@ class TreatmentController:
         # Get the auto-generated ID from the database
         treatment_id = self.db.get_last_insert_id()
 
+        # Log creation to audit log
+        audit = AuditService(self.db)
+        description = f"Treatment on {treatment.treatment_date}"
+        audit.log_create("treatment_records", treatment_id, description, "TreatmentController")
+
         logger.info(
             f"Created treatment for client {treatment.client_id} "
             f"on {treatment.treatment_date} (ID: {treatment_id})"
@@ -203,6 +209,12 @@ class TreatmentController:
                 "Cannot update treatment without ID. Use create_treatment() instead."
             )
 
+        # Fetch old treatment for audit logging
+        old_treatment = self.get_treatment(treatment.id)
+        if old_treatment is None:
+            logger.warning(f"Update failed: Treatment ID {treatment.id} not found")
+            return False
+
         # Execute UPDATE query
         # WHY we update all fields: Simplifies logic, ensures consistency
         query = """
@@ -225,12 +237,16 @@ class TreatmentController:
         # Commit the transaction
         self.db.commit()
 
-        # Check if any row was actually updated
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Update failed: Treatment ID {treatment.id} not found")
-            return False
+        # Log changes to audit log
+        audit = AuditService(self.db)
+        if str(old_treatment.treatment_date) != str(treatment.treatment_date):
+            audit.log_update("treatment_records", treatment.id, "treatment_date",
+                           str(old_treatment.treatment_date), str(treatment.treatment_date),
+                           "TreatmentController")
+        if old_treatment.treatment_notes != treatment.treatment_notes:
+            audit.log_update("treatment_records", treatment.id, "treatment_notes",
+                           old_treatment.treatment_notes or "", treatment.treatment_notes or "",
+                           "TreatmentController")
 
         logger.info(f"Updated treatment ID {treatment.id}")
         return True
@@ -262,18 +278,23 @@ class TreatmentController:
             ... else:
             ...     print("Treatment not found")
         """
+        # Fetch treatment info for audit logging before deletion
+        treatment = self.get_treatment(treatment_id)
+        if treatment is None:
+            logger.warning(f"Delete failed: Treatment ID {treatment_id} not found")
+            return False
+
+        description = f"Treatment on {treatment.treatment_date}"
+
         # Execute DELETE query
         query = "DELETE FROM treatment_records WHERE id = ?"
 
         self.db.execute(query, (treatment_id,))
         self.db.commit()
 
-        # Check if any row was actually deleted
-        rows_affected = self.db.cursor.rowcount
-
-        if rows_affected == 0:
-            logger.warning(f"Delete failed: Treatment ID {treatment_id} not found")
-            return False
+        # Log deletion to audit log
+        audit = AuditService(self.db)
+        audit.log_delete("treatment_records", treatment_id, description, "TreatmentController")
 
         logger.info(f"Deleted treatment ID {treatment_id}")
         return True

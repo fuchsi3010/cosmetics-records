@@ -397,6 +397,40 @@ QFrame[settings_section="true"] {{
     border-radius: 8px;
 }}
 
+QFrame[settings_section="true"] QLabel {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QRadioButton {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QCheckBox {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QSlider {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QSlider::groove:horizontal {{
+    background-color: {DARK_BORDER};
+    height: 6px;
+    border-radius: 3px;
+}}
+
+QFrame[settings_section="true"] QSlider::handle:horizontal {{
+    background-color: {PRIMARY_BLUE};
+    width: 16px;
+    height: 16px;
+    margin: -5px 0;
+    border-radius: 8px;
+}}
+
+QFrame[settings_section="true"] QSlider::handle:horizontal:hover {{
+    background-color: {HOVER_BLUE};
+}}
+
 /* ==========================================================================
    Tag Chips (Small)
    ========================================================================== */
@@ -447,23 +481,59 @@ QLabel[allergies_warning="true"] {{
    ========================================================================== */
 
 QScrollArea[history_section="true"] {{
-    background-color: transparent;
+    background-color: {DARK_SURFACE};
     border: 1px solid {DARK_BORDER};
-    border-radius: {BORDER_RADIUS};
+    border-radius: 8px;
 }}
 
-QScrollArea[history_section="true"] > QWidget {{
+QWidget[history_container="true"] {{
     background-color: transparent;
 }}
 
 QFrame[history_item="true"] {{
-    background-color: {DARK_SURFACE};
+    background-color: {DARK_BG};
     border: none;
     border-radius: 6px;
 }}
 
 QFrame[history_item="true"]:hover {{
-    background-color: {DARK_HOVER};
+    background-color: #252525;
+}}
+
+QPushButton[class="icon_button"] {{
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    color: {DARK_TEXT_SECONDARY};
+}}
+
+QPushButton[class="icon_button"]:hover {{
+    background-color: rgba(255, 255, 255, 0.1);
+    color: {DARK_TEXT};
+}}
+
+/* History Edit Button - always takes space but visually hidden/shown */
+QPushButton[class="history_edit_button"] {{
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    padding: 2px 8px;
+}}
+
+QPushButton[class="history_edit_button"][visible_state="hidden"] {{
+    color: transparent;
+}}
+
+QPushButton[class="history_edit_button"][visible_state="visible"] {{
+    color: {DARK_TEXT_SECONDARY};
+    background-color: rgba(255, 255, 255, 0.1);
+}}
+
+QPushButton[class="history_edit_button"][visible_state="visible"]:hover {{
+    color: {DARK_TEXT};
+    background-color: rgba(255, 255, 255, 0.15);
 }}
 
 QLabel[history_date="true"] {{
@@ -1077,6 +1147,40 @@ QFrame[settings_section="true"] {{
     border-radius: 8px;
 }}
 
+QFrame[settings_section="true"] QLabel {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QRadioButton {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QCheckBox {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QSlider {{
+    background-color: transparent;
+}}
+
+QFrame[settings_section="true"] QSlider::groove:horizontal {{
+    background-color: {LIGHT_BORDER};
+    height: 6px;
+    border-radius: 3px;
+}}
+
+QFrame[settings_section="true"] QSlider::handle:horizontal {{
+    background-color: {PRIMARY_BLUE};
+    width: 16px;
+    height: 16px;
+    margin: -5px 0;
+    border-radius: 8px;
+}}
+
+QFrame[settings_section="true"] QSlider::handle:horizontal:hover {{
+    background-color: {HOVER_BLUE};
+}}
+
 /* ==========================================================================
    Tag Chips (Small)
    ========================================================================== */
@@ -1127,23 +1231,59 @@ QLabel[allergies_warning="true"] {{
    ========================================================================== */
 
 QScrollArea[history_section="true"] {{
-    background-color: transparent;
+    background-color: {LIGHT_SURFACE};
     border: 1px solid {LIGHT_BORDER};
-    border-radius: {BORDER_RADIUS};
+    border-radius: 8px;
 }}
 
-QScrollArea[history_section="true"] > QWidget {{
+QWidget[history_container="true"] {{
     background-color: transparent;
 }}
 
 QFrame[history_item="true"] {{
-    background-color: {LIGHT_SURFACE};
+    background-color: {LIGHT_BG};
     border: none;
     border-radius: 6px;
 }}
 
 QFrame[history_item="true"]:hover {{
-    background-color: {LIGHT_HOVER};
+    background-color: #e0e0e0;
+}}
+
+QPushButton[class="icon_button"] {{
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    color: {LIGHT_TEXT_SECONDARY};
+}}
+
+QPushButton[class="icon_button"]:hover {{
+    background-color: rgba(0, 0, 0, 0.1);
+    color: {LIGHT_TEXT};
+}}
+
+/* History Edit Button - always takes space but visually hidden/shown */
+QPushButton[class="history_edit_button"] {{
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    padding: 2px 8px;
+}}
+
+QPushButton[class="history_edit_button"][visible_state="hidden"] {{
+    color: transparent;
+}}
+
+QPushButton[class="history_edit_button"][visible_state="visible"] {{
+    color: {LIGHT_TEXT_SECONDARY};
+    background-color: rgba(0, 0, 0, 0.08);
+}}
+
+QPushButton[class="history_edit_button"][visible_state="visible"]:hover {{
+    color: {LIGHT_TEXT};
+    background-color: rgba(0, 0, 0, 0.12);
 }}
 
 QLabel[history_date="true"] {{

@@ -19,7 +19,7 @@
 #   │                                                 │
 #   │ Clients (required):  [path display    ] [Browse]│
 #   │ Treatments:          [path display    ] [Browse]│
-#   │ Products:            [path display    ] [Browse]│
+#   │ Product Sales:       [path display    ] [Browse]│
 #   │ Inventory:           [path display    ] [Browse]│
 #   │                                                 │
 #   │ ─────────────────────────────────────────────── │
@@ -104,7 +104,7 @@ class ImportDialog(BaseDialog):
             title=_("Import Data from CSV"),
             parent=parent,
             width=600,
-            height=500,
+            height=580,
         )
 
         logger.debug("ImportDialog initialized")
@@ -161,9 +161,9 @@ class ImportDialog(BaseDialog):
         )
         layout.addLayout(treatments_row)
 
-        # Products row
+        # Product Sales row
         products_row, self._products_input = self._create_file_row(
-            _("Products:"), self._browse_products
+            _("Product Sales:"), self._browse_products
         )
         layout.addLayout(products_row)
 
@@ -308,8 +308,8 @@ class ImportDialog(BaseDialog):
             self._reset_validation()
 
     def _browse_products(self) -> None:
-        """Open file dialog for products CSV."""
-        path = self._open_file_dialog(_("Select Products CSV"))
+        """Open file dialog for product_sales CSV."""
+        path = self._open_file_dialog(_("Select Product Sales CSV"))
         if path:
             self._products_path = path
             self._products_input.setText(path)
@@ -479,7 +479,7 @@ class ImportDialog(BaseDialog):
             self._status_layout.addWidget(label)
 
         if preview.products_count > 0:
-            label = QLabel(f"• {preview.products_count} " + _("product records"))
+            label = QLabel(f"• {preview.products_count} " + _("product sales"))
             label.setStyleSheet("color: #cccccc;")
             self._status_layout.addWidget(label)
 
@@ -532,7 +532,7 @@ class ImportDialog(BaseDialog):
             self._status_layout.addWidget(label)
 
         if result.products_imported > 0:
-            label = QLabel(f"• {result.products_imported} " + _("product records"))
+            label = QLabel(f"• {result.products_imported} " + _("product sales"))
             label.setStyleSheet("color: #cccccc;")
             self._status_layout.addWidget(label)
 

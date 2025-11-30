@@ -78,9 +78,6 @@ class HistoryItem(QFrame):
     # Signals
     edit_clicked = pyqtSignal()
 
-    # Fixed height for consistent layout
-    ITEM_HEIGHT = 60
-
     def __init__(self, item_id: int, item_data: dict, parent: Optional[QWidget] = None):
         """
         Initialize a history item.
@@ -99,7 +96,6 @@ class HistoryItem(QFrame):
         self.item_id = item_id
         self.item_data = item_data
 
-        self.setFixedHeight(self.ITEM_HEIGHT)
         self.setProperty("history_item", True)  # CSS class
 
         # Set up the UI
@@ -137,24 +133,23 @@ class HistoryItem(QFrame):
 
         top_row.addStretch()
 
-        # Edit button (initially hidden, shown on hover)
+        # Edit button (hidden via CSS property, shown on hover)
         # Delete is handled in the edit dialog
+        # Using "Edit" text for reliability across fonts
         self._edit_btn = QPushButton("Edit")
-        self._edit_btn.setProperty("class", "secondary")
-        self._edit_btn.setFixedWidth(60)
+        self._edit_btn.setProperty("class", "history_edit_button")
+        self._edit_btn.setProperty("visible_state", "hidden")
+        self._edit_btn.setFixedSize(50, 24)  # Fixed size to prevent layout shifts
         self._edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._edit_btn.clicked.connect(self.edit_clicked.emit)
-        self._edit_btn.setVisible(False)
         top_row.addWidget(self._edit_btn)
 
         layout.addLayout(top_row)
 
-        # Notes preview (truncated)
+        # Notes content (full text with word wrap)
         notes = self.item_data.get("notes", "")
-        # WHY 100 chars: Enough to give context without taking too much space
-        truncated_notes = notes[:100] + "..." if len(notes) > 100 else notes
 
-        notes_label = QLabel(truncated_notes)
+        notes_label = QLabel(notes)
         notes_label.setProperty("history_notes", True)  # CSS class
         notes_label.setWordWrap(True)
         layout.addWidget(notes_label)
@@ -166,7 +161,10 @@ class HistoryItem(QFrame):
         Args:
             event: Enter event
         """
-        self._edit_btn.setVisible(True)
+        self._edit_btn.setProperty("visible_state", "visible")
+        # Refresh stylesheet to apply new property state
+        self._edit_btn.style().unpolish(self._edit_btn)
+        self._edit_btn.style().polish(self._edit_btn)
         super().enterEvent(event)
 
     def leaveEvent(self, event):
@@ -176,7 +174,10 @@ class HistoryItem(QFrame):
         Args:
             event: Leave event
         """
-        self._edit_btn.setVisible(False)
+        self._edit_btn.setProperty("visible_state", "hidden")
+        # Refresh stylesheet to apply new property state
+        self._edit_btn.style().unpolish(self._edit_btn)
+        self._edit_btn.style().polish(self._edit_btn)
         super().leaveEvent(event)
 
 
@@ -265,20 +266,26 @@ class HistoryList(QWidget):
         )
 
         self._items_container = QWidget()
+        self._items_container.setProperty("history_container", True)  # CSS class
         self._items_layout = QVBoxLayout(self._items_container)
-        self._items_layout.setContentsMargins(0, 0, 0, 0)
+        self._items_layout.setContentsMargins(8, 8, 8, 8)
         self._items_layout.setSpacing(8)  # Gap between history items
         self._items_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # End of list message (inside scroll area, hidden by default)
+        self._end_label = QFrame()
+        self._end_label.setProperty("history_item", True)  # Same style as entries
+        self._end_label_layout = QVBoxLayout(self._end_label)
+        self._end_label_layout.setContentsMargins(12, 12, 12, 12)
+        self._end_label_text = QLabel()
+        self._end_label_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._end_label_text.setProperty("history_notes", True)
+        self._end_label_layout.addWidget(self._end_label_text)
+        self._end_label.setVisible(False)
+        self._items_layout.addWidget(self._end_label)
+
         self._scroll_area.setWidget(self._items_container)
         layout.addWidget(self._scroll_area, stretch=1)
-
-        # End of list message (hidden by default)
-        self._end_label = QLabel()
-        self._end_label.setProperty("history_end_message", True)  # CSS class
-        self._end_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._end_label.setVisible(False)
-        layout.addWidget(self._end_label)
 
     def _on_scroll_changed(self, value: int) -> None:
         """
@@ -312,6 +319,10 @@ class HistoryList(QWidget):
                   - created_at: Creation timestamp (optional)
                   - updated_at: Last update timestamp (optional)
         """
+        # Find the position before the end label (end label should always be last)
+        end_label_index = self._items_layout.indexOf(self._end_label)
+        insert_position = end_label_index if end_label_index >= 0 else self._items_layout.count()
+
         for item_data in items:
             item_id = item_data["id"]
 
@@ -321,8 +332,9 @@ class HistoryList(QWidget):
                 lambda iid=item_id: self.edit_item.emit(iid)
             )
 
-            # Add to layout
-            self._items_layout.addWidget(history_item)
+            # Insert before the end label
+            self._items_layout.insertWidget(insert_position, history_item)
+            insert_position += 1
 
             # Track loaded item
             self._items.append(item_id)
@@ -337,15 +349,20 @@ class HistoryList(QWidget):
     def _update_end_message(self) -> None:
         """
         Update the end-of-list message visibility and text.
+
+        Only shows when scrollbar is visible and all items are loaded.
         """
-        if not self._has_more and len(self._items) > 0:
+        scrollbar = self._scroll_area.verticalScrollBar()
+        scrollbar_visible = scrollbar.isVisible() and scrollbar.maximum() > 0
+
+        if not self._has_more and len(self._items) > 0 and scrollbar_visible:
             # Determine message based on title
             if "Treatment" in self._title:
-                self._end_label.setText("No more treatments")
+                self._end_label_text.setText("No more treatments")
             elif "Product" in self._title:
-                self._end_label.setText("No more products")
+                self._end_label_text.setText("No more products")
             else:
-                self._end_label.setText("No more items")
+                self._end_label_text.setText("No more items")
             self._end_label.setVisible(True)
         else:
             self._end_label.setVisible(False)
@@ -353,11 +370,15 @@ class HistoryList(QWidget):
     def clear_items(self) -> None:
         """
         Remove all items from the list.
+
+        Preserves the end label widget which is always at the end of the layout.
         """
-        while self._items_layout.count():
-            item = self._items_layout.takeAt(0)
+        # Remove items in reverse order, skipping the end_label
+        for i in reversed(range(self._items_layout.count())):
+            item = self._items_layout.itemAt(i)
             widget = item.widget()
-            if widget:
+            if widget and widget != self._end_label:
+                self._items_layout.takeAt(i)
                 widget.deleteLater()
 
         self._items.clear()
@@ -1157,11 +1178,69 @@ class ClientDetailView(QWidget):
         """
         Handle edit product button click.
 
+        Opens the edit product dialog and updates/deletes the product record.
+
         Args:
             product_id: Database ID of the product record to edit
         """
+        from PyQt6.QtWidgets import QDialog
+        from cosmetics_records.views.dialogs.add_product_record_dialog import AddProductRecordDialog
+        from cosmetics_records.views.dialogs.base_dialog import ConfirmDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.product_controller import ProductController
+        from cosmetics_records.controllers.inventory_controller import InventoryController
+
         logger.debug(f"Edit product clicked: {product_id}")
-        # PLACEHOLDER: Will show EditProductRecordDialog
+
+        try:
+            # Get current product data and inventory names
+            with DatabaseConnection() as db:
+                controller = ProductController(db)
+                product = controller.get_product_record(product_id)
+
+                if not product:
+                    logger.error(f"Product record not found: {product_id}")
+                    return
+
+                inv_controller = InventoryController(db)
+                inventory_names = inv_controller.get_all_names()
+
+            # Show edit dialog (reusing AddProductRecordDialog)
+            dialog = AddProductRecordDialog(self._client_id, inventory_names, parent=self)
+            dialog.setWindowTitle("Edit Product Sale")
+            dialog.set_existing_record(product_id, product.product_text)
+
+            result = dialog.exec()
+
+            if result == QDialog.DialogCode.Accepted:
+                with DatabaseConnection() as db:
+                    controller = ProductController(db)
+
+                    # Check if user wants to delete (empty text)
+                    product_data = dialog.get_product_record_data()
+                    if not product_data["product_text"].strip():
+                        # Show delete confirmation
+                        confirm = ConfirmDialog(
+                            "Delete Product Sale",
+                            "The product text is empty. Delete this record?",
+                            ok_text="Delete",
+                            cancel_text="Cancel",
+                            parent=self,
+                        )
+                        if confirm.exec() == QDialog.DialogCode.Accepted:
+                            controller.delete_product_record(product_id)
+                            logger.info(f"Product record {product_id} deleted")
+                    else:
+                        # Update the product record
+                        product.product_text = product_data["product_text"]
+                        controller.update_product_record(product)
+                        logger.info(f"Product record {product_id} updated")
+
+                # Refresh the history
+                self._load_history()
+
+        except Exception as e:
+            logger.error(f"Failed to edit product record {product_id}: {e}")
 
     def _on_delete_product(self, product_id: int) -> None:
         """
