@@ -724,7 +724,8 @@ class TestAuditLog:
         """
         Test get_description() for CREATE actions.
 
-        CREATE actions should generate descriptions like "New treatment added for Jane Doe".
+        CREATE actions should generate descriptions like
+        "New treatment added for Jane Doe".
         """
         # Test creating a treatment
         log = AuditLog(

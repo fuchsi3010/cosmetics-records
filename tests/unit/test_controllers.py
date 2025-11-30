@@ -30,11 +30,7 @@ from cosmetics_records.controllers.treatment_controller import TreatmentControll
 from cosmetics_records.models.client import Client
 from cosmetics_records.models.product import InventoryItem
 from cosmetics_records.models.treatment import TreatmentRecord
-from tests.conftest import (
-    create_client_in_db,
-    create_inventory_item_in_db,
-    create_treatment_in_db,
-)
+from tests.conftest import create_client_in_db
 
 
 # =============================================================================

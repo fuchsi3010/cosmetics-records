@@ -21,8 +21,6 @@ import pytest
 
 from cosmetics_records.services.import_service import (
     ImportService,
-    ImportPreview,
-    ImportResult,
     ValidationError,
 )
 

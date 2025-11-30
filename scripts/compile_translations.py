@@ -162,7 +162,7 @@ def main() -> int:
 
     # Summary
     logger.info("=" * 60)
-    logger.info(f"Compilation complete:")
+    logger.info("Compilation complete:")
     logger.info(f"  ✓ Compiled: {compiled_count}")
 
     if failed_count > 0:

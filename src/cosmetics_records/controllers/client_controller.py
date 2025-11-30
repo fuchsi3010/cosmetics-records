@@ -29,7 +29,6 @@
 
 import csv
 import logging
-from datetime import datetime
 from typing import List, Optional
 
 from thefuzz import fuzz
@@ -268,7 +267,6 @@ class ClientController:
 
         # Log changes to audit log
         audit = AuditService(self.db)
-        client_name = client.full_name()
 
         if old_client.first_name != client.first_name:
             audit.log_update(

@@ -184,7 +184,8 @@ class NavBar(QFrame):
         Create the expand/collapse toggle button.
 
         Args:
-            layout: Layout to add the button to (not used - button is positioned absolutely)
+            layout: Layout to add the button to
+                (not used - button is positioned absolutely)
 
         Note:
             This button uses ◀/▶ arrows to indicate the direction of expansion.

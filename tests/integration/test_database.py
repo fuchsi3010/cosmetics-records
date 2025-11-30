@@ -21,7 +21,7 @@ import pytest
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.database.migrations.migration_manager import MigrationManager
 from cosmetics_records.models.client import Client
-from tests.conftest import create_client_in_db, create_treatment_in_db
+from tests.conftest import create_client_in_db
 
 
 class TestDatabaseIntegration:
@@ -205,7 +205,7 @@ class TestDatabaseIntegration:
         db_connection.rollback()
 
         # Changes should be undone (email should still be the original)
-        retrieved = controller.get_client(client_id)
+        _retrieved = controller.get_client(client_id)  # noqa: F841
         # Note: The rollback doesn't work as expected here because we committed
         # in the update_client method. This test demonstrates that individual
         # operations commit immediately, which is the current design.
@@ -244,7 +244,7 @@ class TestDatabaseIntegration:
         controller.update_client(client)
 
         # Retrieve again
-        updated_client = controller.get_client(client_id)
+        _updated_client = controller.get_client(client_id)  # noqa: F841
 
         # updated_at should be different from created_at now
         # Note: This might not work if the update happens too fast

@@ -45,7 +45,6 @@ Technical Notes:
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -189,8 +188,6 @@ def _(text: str) -> str:
         # Bad (string concatenation makes translation impossible)
         message = _("Client") + " " + _("created successfully")
     """
-    global _translations
-
     # If translations not initialized, return original text
     # WHY: Graceful degradation - app works even if i18n not set up
     if _translations is None:
@@ -225,7 +222,6 @@ def get_current_locale() -> str:
     Note:
         Returns "en" if translations have not been initialized.
     """
-    global _current_locale
     return _current_locale
 
 

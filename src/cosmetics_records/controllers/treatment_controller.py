@@ -340,7 +340,9 @@ class TreatmentController:
             >>> recent = controller.get_treatments_for_client(42, limit=10)
             >>>
             >>> # Get next page (treatments 11-20)
-            >>> next_page = controller.get_treatments_for_client(42, limit=10, offset=10)
+            >>> next_page = controller.get_treatments_for_client(
+            ...     42, limit=10, offset=10
+            ... )
         """
         # Query with ORDER BY for chronological sorting (newest first)
         # WHY DESC: Most recent treatments are usually most relevant

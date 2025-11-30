@@ -26,7 +26,6 @@
 # =============================================================================
 
 import logging
-from datetime import date
 from typing import Optional
 
 from PyQt6.QtCore import Qt

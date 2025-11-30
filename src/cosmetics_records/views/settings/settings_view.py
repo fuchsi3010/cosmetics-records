@@ -59,12 +59,16 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from cosmetics_records import __version__
 from cosmetics_records.config import Config
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.services.audit_service import AuditService
 from cosmetics_records.services.backup_service import BackupService
 from cosmetics_records.services.export_service import ExportService
 from cosmetics_records.utils.localization import _
+from cosmetics_records.views.dialogs.backup_management_dialog import (
+    BackupManagementDialog,
+)
 from cosmetics_records.views.dialogs.import_dialog import ImportDialog
 
 # Configure module logger
@@ -465,6 +469,12 @@ class SettingsView(QWidget):
         open_folder_btn.clicked.connect(self._on_open_backups_folder)
         section.add_widget(open_folder_btn)
 
+        # Manage backups button
+        manage_backups_btn = QPushButton(_("Manage Backups"))
+        manage_backups_btn.setMinimumWidth(150)
+        manage_backups_btn.clicked.connect(self._on_manage_backups)
+        section.add_widget(manage_backups_btn)
+
         return section
 
     def _create_export_section(self) -> QWidget:
@@ -583,8 +593,8 @@ class SettingsView(QWidget):
         """
         section = SettingsSection(_("About"))
 
-        # Version
-        version_label = QLabel(_("Cosmetics Records v1.0"))
+        # Version - imported from cosmetics_records.__version__
+        version_label = QLabel(f"Cosmetics Records v{__version__}")
         version_label.setStyleSheet("font-weight: bold; background: transparent;")
         section.add_widget(version_label)
 
@@ -937,6 +947,20 @@ class SettingsView(QWidget):
                 _("Could not open backups folder") + f":\n{str(backup_dir)}",
             )
 
+    def _on_manage_backups(self) -> None:
+        """
+        Handle manage backups button click.
+
+        Opens the backup management dialog for viewing, restoring, and deleting backups.
+        """
+        logger.info("Opening backup management dialog...")
+
+        dialog = BackupManagementDialog(parent=self)
+        dialog.exec()
+
+        # Refresh last backup label in case backups were deleted/restored
+        self._update_last_backup_label()
+
     def _on_import_data(self) -> None:
         """
         Handle import data button click.
@@ -1054,7 +1078,7 @@ class SettingsView(QWidget):
                 message,
             )
 
-            logger.info(f"All data export complete")
+            logger.info("All data export complete")
 
         except Exception as e:
             logger.error(f"Export all data failed: {e}")

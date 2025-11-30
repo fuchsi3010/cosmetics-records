@@ -28,7 +28,6 @@ import logging
 import shutil
 from datetime import datetime
 import importlib.util
-import sys
 
 # Import the DatabaseConnection class from the parent package
 from cosmetics_records.database.connection import DatabaseConnection
@@ -196,7 +195,8 @@ class MigrationManager:
         ]
 
         logger.info(
-            f"Found {len(pending)} pending migrations out of {len(all_migrations)} total"
+            f"Found {len(pending)} pending migrations "
+            f"out of {len(all_migrations)} total"
         )
         return pending
 

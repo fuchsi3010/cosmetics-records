@@ -18,10 +18,8 @@
 
 import csv
 import tempfile
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-
-import pytest
 
 from cosmetics_records.models.audit import AuditAction
 from cosmetics_records.services.audit_service import AuditService
@@ -253,8 +251,8 @@ class TestBackupService:
             service = BackupService(db_path=temp_db, backup_dir=backup_dir)
 
             # Create multiple backups
-            backup1 = service.create_backup()
-            backup2 = service.create_backup()
+            service.create_backup()
+            service.create_backup()
 
             # Get list of backups
             backups = service.get_backups()
@@ -318,14 +316,21 @@ class TestBackupService:
         with tempfile.TemporaryDirectory() as backup_dir:
             service = BackupService(db_path=temp_db, backup_dir=backup_dir)
 
-            # No backups exist, should need auto-backup
-            assert service.should_auto_backup() is True
+            # No backups exist and no last backup time, should need auto-backup
+            assert service.should_auto_backup(
+                interval_minutes=60,
+                last_backup_time=None
+            ) is True
 
             # Create a backup
             service.create_backup()
 
-            # Just created a backup, should NOT need another one immediately
-            assert service.should_auto_backup() is False
+            # Just created a backup, with current time as last backup
+            # Should NOT need another one immediately
+            assert service.should_auto_backup(
+                interval_minutes=60,
+                last_backup_time=datetime.now()
+            ) is False
 
 
 # =============================================================================
@@ -346,7 +351,7 @@ class TestExportService:
         - Client data is properly exported
         """
         # Create some clients
-        client_id = create_client_in_db(db_connection, sample_client)
+        create_client_in_db(db_connection, sample_client)
 
         # Create a temporary file for the export
         with tempfile.NamedTemporaryFile(

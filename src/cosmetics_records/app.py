@@ -54,6 +54,9 @@ from cosmetics_records.views.components.navbar import NavBar
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.database.migrations.migration_manager import MigrationManager
 
+# Import backup service for auto-backup
+from cosmetics_records.services.backup_service import BackupService
+
 # Import localization
 from cosmetics_records.utils.localization import init_translations
 
@@ -120,6 +123,9 @@ class MainWindow(QMainWindow):
 
         # Initialize database
         self._init_database()
+
+        # Check and perform auto-backup if needed
+        self._check_auto_backup()
 
         # Apply theme
         self._apply_theme()
@@ -333,6 +339,60 @@ class MainWindow(QMainWindow):
             logger.error(f"Database initialization failed: {e}")
             # Don't crash the app, but it probably won't work correctly
             # TODO: Show error dialog to user
+
+    def _check_auto_backup(self) -> None:
+        """
+        Check if auto-backup is due and create one if needed.
+
+        Called during startup. Checks the backup settings and last backup
+        time to determine if a backup should be created automatically.
+
+        Note:
+            This method will not crash the app if backup fails. Backup
+            failures are logged but do not prevent normal operation.
+        """
+        try:
+            # Check if auto-backup is enabled
+            if not self.config.auto_backup:
+                logger.debug("Auto-backup is disabled")
+                return
+
+            # Initialize backup service
+            config_dir = self.config.get_config_dir()
+            backup_dir = config_dir / "backups"
+            db_path = config_dir / "cosmetics_records.db"
+            backup_service = BackupService(str(db_path), str(backup_dir))
+
+            # Check if backup is due
+            if backup_service.should_auto_backup(
+                self.config.backup_interval_minutes,
+                self.config.last_backup_time,
+            ):
+                logger.info("Auto-backup is due, creating backup...")
+
+                # Create backup
+                backup_path = backup_service.create_backup()
+
+                # Update last backup time
+                from datetime import datetime
+
+                self.config.last_backup_time = datetime.now()
+                self.config.save()
+
+                # Cleanup old backups based on retention setting
+                deleted = backup_service.cleanup_old_backups(
+                    self.config.backup_retention_count
+                )
+                if deleted > 0:
+                    logger.info(f"Cleaned up {deleted} old backups")
+
+                logger.info(f"Auto-backup created: {backup_path}")
+            else:
+                logger.debug("Auto-backup not due yet")
+
+        except Exception as e:
+            logger.error(f"Auto-backup failed: {e}")
+            # Don't crash the app if auto-backup fails
 
     def _apply_theme(self) -> None:
         """

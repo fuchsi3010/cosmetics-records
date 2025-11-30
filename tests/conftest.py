@@ -328,7 +328,9 @@ def create_inventory_item_in_db(db, item: InventoryItem) -> int:
 
     Example:
         >>> def test_something(db_connection, sample_inventory_item):
-        ...     item_id = create_inventory_item_in_db(db_connection, sample_inventory_item)
+        ...     item_id = create_inventory_item_in_db(
+        ...         db_connection, sample_inventory_item
+        ...     )
     """
     from cosmetics_records.controllers.inventory_controller import InventoryController
 

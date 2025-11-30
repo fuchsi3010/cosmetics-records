@@ -20,7 +20,14 @@
 from datetime import date
 from unittest.mock import MagicMock, patch
 
-import pytest
+
+# Module path constants for patching (to keep lines under 88 chars)
+_CTRL_BASE = "cosmetics_records.controllers"
+INVENTORY_CTRL = f"{_CTRL_BASE}.inventory_controller.InventoryController"
+PRODUCT_CTRL = f"{_CTRL_BASE}.product_controller.ProductController"
+TREATMENT_CTRL = f"{_CTRL_BASE}.treatment_controller.TreatmentController"
+_DLG_BASE = "cosmetics_records.views.dialogs"
+ADD_PRODUCT_DLG = f"{_DLG_BASE}.add_product_record_dialog.AddProductRecordDialog"
 
 
 # =============================================================================
@@ -229,8 +236,12 @@ class TestClientDetailHandlers:
                 mock_db_class.return_value.__enter__ = MagicMock(return_value=mock_db)
                 mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
+                treatment_controller_path = (
+                    "cosmetics_records.controllers."
+                    "treatment_controller.TreatmentController"
+                )
                 with patch(
-                    "cosmetics_records.controllers.treatment_controller.TreatmentController",
+                    treatment_controller_path,
                     return_value=mock_controller,
                 ):
                     view._on_add_treatment()
@@ -302,7 +313,7 @@ class TestClientDetailHandlers:
         mock_prod_controller.create_product.return_value = 1
 
         with patch(
-            "cosmetics_records.views.dialogs.add_product_record_dialog.AddProductRecordDialog",
+            ADD_PRODUCT_DLG,
             return_value=mock_dialog,
         ):
             with patch(
@@ -313,11 +324,11 @@ class TestClientDetailHandlers:
                 mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
                 with patch(
-                    "cosmetics_records.controllers.inventory_controller.InventoryController",
+                    INVENTORY_CTRL,
                     return_value=mock_inv_controller,
                 ):
                     with patch(
-                        "cosmetics_records.controllers.product_controller.ProductController",
+                        PRODUCT_CTRL,
                         return_value=mock_prod_controller,
                     ):
                         view._on_add_product()
@@ -438,7 +449,7 @@ class TestInventoryViewHandlers:
                 mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
                 with patch(
-                    "cosmetics_records.controllers.inventory_controller.InventoryController",
+                    INVENTORY_CTRL,
                     return_value=mock_controller,
                 ):
                     view._on_add_item()
@@ -512,7 +523,7 @@ class TestInventoryViewHandlers:
                 mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
                 with patch(
-                    "cosmetics_records.controllers.inventory_controller.InventoryController",
+                    INVENTORY_CTRL,
                     return_value=mock_controller,
                 ):
                     view._on_item_clicked(1)
@@ -545,7 +556,7 @@ class TestInventoryViewHandlers:
             mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
             with patch(
-                "cosmetics_records.controllers.inventory_controller.InventoryController",
+                INVENTORY_CTRL,
                 return_value=mock_controller,
             ):
                 view._on_item_clicked(99999)
@@ -584,7 +595,7 @@ class TestInventoryViewHandlers:
             mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
             with patch(
-                "cosmetics_records.controllers.inventory_controller.InventoryController",
+                INVENTORY_CTRL,
                 return_value=mock_controller,
             ):
                 view._load_more_items()
@@ -625,7 +636,7 @@ class TestInventoryViewHandlers:
             mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
             with patch(
-                "cosmetics_records.controllers.inventory_controller.InventoryController",
+                INVENTORY_CTRL,
                 return_value=mock_controller,
             ):
                 view._load_more_items()
@@ -811,11 +822,11 @@ class TestLoadHistory:
             mock_db_class.return_value.__exit__ = MagicMock(return_value=False)
 
             with patch(
-                "cosmetics_records.controllers.treatment_controller.TreatmentController",
+                TREATMENT_CTRL,
                 return_value=mock_treatment_controller,
             ):
                 with patch(
-                    "cosmetics_records.controllers.product_controller.ProductController",
+                    PRODUCT_CTRL,
                     return_value=mock_product_controller,
                 ):
                     view._load_history()

@@ -27,16 +27,13 @@ from typing import Optional
 
 from cosmetics_records.utils.time_utils import format_date_localized
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QDialog,
-    QFormLayout,
     QLabel,
     QTextEdit,
     QVBoxLayout,
 )
 
-from .base_dialog import BaseDialog, SimpleMessageDialog
+from .base_dialog import BaseDialog
 
 # Configure module logger
 logger = logging.getLogger(__name__)

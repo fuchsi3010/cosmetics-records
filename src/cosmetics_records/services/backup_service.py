@@ -34,7 +34,6 @@
 # =============================================================================
 
 import logging
-import os
 import shutil
 import zipfile
 from datetime import datetime
@@ -107,7 +106,7 @@ class BackupService:
         Example:
             >>> backup_path = backup_service.create_backup()
             >>> print(f"Backup created at: {backup_path}")
-            Backup created at: /path/to/backups/cosmetics_records_backup_20240115_143000.zip
+            Backup created at: /path/to/backups/backup_20240115_143000.zip
         """
         try:
             # Verify database file exists before attempting backup
@@ -171,10 +170,10 @@ class BackupService:
             ...     print("Database restored successfully")
         """
         try:
-            backup_path = Path(backup_path)
+            backup_path_obj = Path(backup_path)
 
             # Verify backup file exists
-            if not backup_path.exists():
+            if not backup_path_obj.exists():
                 raise FileNotFoundError(f"Backup file not found: {backup_path}")
 
             # Verify it's a valid ZIP file
@@ -266,7 +265,7 @@ class BackupService:
             ...     print(f"{backup['filename']}: {backup['size']} bytes")
         """
         try:
-            backups = []
+            backups: List[Dict[str, Any]] = []
 
             # Scan backup directory for ZIP files
             # We look for files matching our naming pattern
@@ -441,16 +440,16 @@ class BackupService:
             ...     print("Backup deleted successfully")
         """
         try:
-            backup_path = Path(backup_path)
+            backup_path_obj = Path(backup_path)
 
             # Verify the file exists
-            if not backup_path.exists():
+            if not backup_path_obj.exists():
                 logger.warning(f"Backup file not found: {backup_path}")
                 return False
 
             # Verify it's actually in the backup directory
             # This prevents accidental deletion of files outside the backup dir
-            if self.backup_dir not in backup_path.parents:
+            if self.backup_dir not in backup_path_obj.parents:
                 logger.error(
                     f"Security error: Backup file is outside backup directory: "
                     f"{backup_path}"
@@ -458,7 +457,7 @@ class BackupService:
                 return False
 
             # Delete the file
-            backup_path.unlink()
+            backup_path_obj.unlink()
 
             logger.info(f"Backup deleted: {backup_path}")
             return True
@@ -466,3 +465,64 @@ class BackupService:
         except Exception as e:
             logger.error(f"Failed to delete backup {backup_path}: {e}")
             return False
+
+    def verify_backup(self, backup_path: str) -> tuple[bool, str]:
+        """
+        Verify integrity of a backup file.
+
+        Performs basic integrity checks:
+        1. File exists and is readable
+        2. File is a valid ZIP archive
+        3. ZIP contains the expected database file
+        4. ZIP passes CRC integrity check
+
+        Args:
+            backup_path: Path to the backup file to verify
+
+        Returns:
+            Tuple of (is_valid: bool, message: str)
+            - is_valid: True if backup passes all checks
+            - message: Description of result or error
+
+        Example:
+            >>> is_valid, message = backup_service.verify_backup(
+            ...     "/path/to/backups/cosmetics_records_backup_20240115_143000.zip"
+            ... )
+            >>> if is_valid:
+            ...     print("Backup is valid")
+            ... else:
+            ...     print(f"Backup invalid: {message}")
+        """
+        try:
+            backup_path_obj = Path(backup_path)
+
+            # Check 1: File exists
+            if not backup_path_obj.exists():
+                return False, "Backup file not found"
+
+            # Check 2: Is a valid ZIP file
+            if not zipfile.is_zipfile(backup_path):
+                return False, "File is not a valid ZIP archive"
+
+            # Check 3: Can open and contains database file
+            with zipfile.ZipFile(backup_path, "r") as zipf:
+                file_list = zipf.namelist()
+
+                # Look for .db file
+                db_files = [f for f in file_list if f.endswith(".db")]
+                if not db_files:
+                    return False, "No database file found in backup"
+
+                # Check 4: Test ZIP integrity (CRC check)
+                bad_file = zipf.testzip()
+                if bad_file:
+                    return False, f"Corrupted file in archive: {bad_file}"
+
+            logger.debug(f"Backup verification passed: {backup_path}")
+            return True, "Backup is valid"
+
+        except zipfile.BadZipFile:
+            return False, "Backup file is corrupted"
+        except Exception as e:
+            logger.error(f"Failed to verify backup {backup_path}: {e}")
+            return False, f"Verification failed: {str(e)}"

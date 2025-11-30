@@ -339,7 +339,9 @@ class ConfirmDialog(BaseDialog):
     user confirmation before proceeding with an action.
 
     Example:
-        dialog = ConfirmDialog("Delete Client", "Are you sure you want to delete this client?")
+        dialog = ConfirmDialog(
+            "Delete Client", "Are you sure you want to delete this client?"
+        )
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # User clicked OK
             delete_client()

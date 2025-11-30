@@ -244,7 +244,7 @@ class HistoryList(QWidget):
 
         title_row.addStretch()
 
-        add_btn = QPushButton(f"+ Add")
+        add_btn = QPushButton("+ Add")
         add_btn.setProperty("class", "primary")
         add_btn.setMinimumWidth(80)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)

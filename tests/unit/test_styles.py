@@ -13,8 +13,6 @@
 # theme generation produces valid stylesheets.
 # =============================================================================
 
-import pytest
-
 from cosmetics_records.views.styles import (
     get_scaled_sizes,
     get_theme,

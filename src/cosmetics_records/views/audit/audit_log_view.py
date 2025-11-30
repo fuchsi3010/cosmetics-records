@@ -44,7 +44,6 @@ from PyQt6.QtWidgets import (
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.audit import AuditAction, AuditLog
 from cosmetics_records.services.audit_service import AuditService
-from cosmetics_records.utils.time_utils import format_date_localized
 
 # Configure module logger
 logger = logging.getLogger(__name__)

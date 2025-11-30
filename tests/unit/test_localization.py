@@ -14,8 +14,6 @@
 # and that language switching (one of the bug fixes) functions properly.
 # =============================================================================
 
-import pytest
-
 from cosmetics_records.utils.localization import (
     init_translations,
     _,

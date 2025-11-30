@@ -29,7 +29,6 @@ from typing import List, Optional
 
 from cosmetics_records.utils.time_utils import format_date_localized
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,

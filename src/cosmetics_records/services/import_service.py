@@ -50,8 +50,7 @@ from typing import Dict, List, Optional, Tuple
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.client import Client
-from cosmetics_records.models.product import InventoryItem, ProductRecord
-from cosmetics_records.models.treatment import TreatmentRecord
+from cosmetics_records.models.product import InventoryItem
 
 # Configure module logger for debugging import operations
 logger = logging.getLogger(__name__)
@@ -667,7 +666,8 @@ class ImportService:
                             file_name,
                             row_idx,
                             "client_import_id",
-                            f"client_import_id '{client_import_id}' not found in clients.csv",
+                            f"client_import_id '{client_import_id}' "
+                            "not found in clients.csv",
                         )
                         continue
 
@@ -772,7 +772,8 @@ class ImportService:
                             file_name,
                             row_idx,
                             "client_import_id",
-                            f"client_import_id '{client_import_id}' not found in clients.csv",
+                            f"client_import_id '{client_import_id}' "
+                            "not found in clients.csv",
                         )
                         continue
 
@@ -902,7 +903,8 @@ class ImportService:
                             file_name,
                             row_idx,
                             "unit",
-                            f"Invalid unit '{unit}' (must be one of: {', '.join(sorted(self.VALID_UNITS))})",
+                            f"Invalid unit '{unit}' "
+                            f"(must be one of: {', '.join(sorted(self.VALID_UNITS))})",
                         )
                         continue
 
@@ -921,7 +923,8 @@ class ImportService:
             self._add_error(file_name, None, None, f"Error reading file: {e}")
 
         logger.debug(
-            f"Parsed {len(self._parsed_data.inventory)} inventory items from {file_name}"
+            f"Parsed {len(self._parsed_data.inventory)} "
+            f"inventory items from {file_name}"
         )
 
     def _parse_date(
@@ -1080,13 +1083,15 @@ class ImportService:
             if client_id is None:
                 # This shouldn't happen after validation, but be safe
                 logger.warning(
-                    f"Skipping treatment: client_import_id '{client_import_id}' not found"
+                    f"Skipping treatment: client_import_id "
+                    f"'{client_import_id}' not found"
                 )
                 continue
 
             # Insert into database
             query = """
-                INSERT INTO treatment_records (client_id, treatment_date, treatment_notes)
+                INSERT INTO treatment_records
+                (client_id, treatment_date, treatment_notes)
                 VALUES (?, ?, ?)
             """
             db.execute(
