@@ -35,6 +35,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from cosmetics_records.utils.localization import _
+
 # Configure module logger
 logger = logging.getLogger(__name__)
 
@@ -104,16 +106,16 @@ class NavBar(QFrame):
 
         # Create navigation items
         # WHY this order: Most common tasks first, settings at bottom
-        self._add_nav_button("clients", "☰", "Clients", layout)
-        self._add_nav_button("client_detail", "☺", "Client Detail", layout)
-        self._add_nav_button("inventory", "■", "Inventory", layout)
-        self._add_nav_button("audit", "⟲", "Audit Log", layout)
+        self._add_nav_button("clients", "☰", _("Clients"), layout)
+        self._add_nav_button("client_detail", "☺", _("Client Detail"), layout)
+        self._add_nav_button("inventory", "■", _("Inventory"), layout)
+        self._add_nav_button("audit", "⟲", _("Audit Log"), layout)
 
         # Add spacer to push settings to bottom
         layout.addStretch()
 
         # Settings at bottom (common UI pattern)
-        self._add_nav_button("settings", "⚙", "Settings", layout)
+        self._add_nav_button("settings", "⚙", _("Settings"), layout)
 
         # Toggle button at very bottom
         self._create_toggle_button(layout)

@@ -64,6 +64,7 @@ from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.services.audit_service import AuditService
 from cosmetics_records.services.backup_service import BackupService
 from cosmetics_records.services.export_service import ExportService
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -162,7 +163,7 @@ class SettingsView(QWidget):
         container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Page title
-        title = QLabel("Settings")
+        title = QLabel(_("Settings"))
         title.setProperty("class", "title")
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
         container_layout.addWidget(title)
@@ -194,19 +195,19 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Appearance"))
+        layout.addWidget(SectionHeader(_("Appearance")))
 
         # Theme selector
-        theme_label = QLabel("Theme:")
+        theme_label = QLabel(_("Theme") + ":")
         layout.addWidget(theme_label)
 
         theme_row = QHBoxLayout()
         theme_row.setSpacing(12)
 
         # Radio buttons for theme
-        self._theme_dark = QRadioButton("Dark")
-        self._theme_light = QRadioButton("Light")
-        self._theme_system = QRadioButton("System")
+        self._theme_dark = QRadioButton(_("Dark"))
+        self._theme_light = QRadioButton(_("Light"))
+        self._theme_system = QRadioButton(_("System"))
 
         # Connect signals
         self._theme_dark.toggled.connect(lambda: self._on_theme_changed("dark"))
@@ -221,7 +222,7 @@ class SettingsView(QWidget):
         layout.addLayout(theme_row)
 
         # UI Scale slider
-        scale_label = QLabel("UI Scale:")
+        scale_label = QLabel(_("UI Scale") + ":")
         layout.addWidget(scale_label)
 
         scale_row = QHBoxLayout()
@@ -245,7 +246,7 @@ class SettingsView(QWidget):
         self._scale_label.setFixedWidth(50)
 
         # Apply button
-        self._scale_apply_btn = QPushButton("Apply")
+        self._scale_apply_btn = QPushButton(_("Apply"))
         self._scale_apply_btn.setFixedWidth(80)
         self._scale_apply_btn.clicked.connect(self._on_scale_apply)
 
@@ -272,10 +273,10 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Language"))
+        layout.addWidget(SectionHeader(_("Language")))
 
         # Language selector
-        lang_label = QLabel("Language:")
+        lang_label = QLabel(_("Language") + ":")
         layout.addWidget(lang_label)
 
         lang_row = QHBoxLayout()
@@ -283,8 +284,8 @@ class SettingsView(QWidget):
 
         # Radio buttons for language
         # WHY flag emojis: Visual identification of language
-        self._lang_en = QRadioButton("English")
-        self._lang_de = QRadioButton("Deutsch")
+        self._lang_en = QRadioButton(_("English"))
+        self._lang_de = QRadioButton(_("Deutsch"))
 
         # Connect signals
         self._lang_en.toggled.connect(lambda: self._on_language_changed("en"))
@@ -297,7 +298,7 @@ class SettingsView(QWidget):
         layout.addLayout(lang_row)
 
         # Note about restart
-        restart_note = QLabel("Note: Restart required for full effect")
+        restart_note = QLabel(_("Note: Restart required for full effect"))
         restart_note.setProperty("class", "secondary")
         restart_note.setStyleSheet("color: gray; font-style: italic;")
         layout.addWidget(restart_note)
@@ -319,10 +320,10 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Backup"))
+        layout.addWidget(SectionHeader(_("Backup")))
 
         # Auto-backup checkbox
-        self._auto_backup_check = QCheckBox("Auto-backup on startup")
+        self._auto_backup_check = QCheckBox(_("Auto-backup on startup"))
         self._auto_backup_check.toggled.connect(self._on_auto_backup_toggled)
         layout.addWidget(self._auto_backup_check)
 
@@ -330,11 +331,11 @@ class SettingsView(QWidget):
         interval_row = QHBoxLayout()
         interval_row.setSpacing(12)
 
-        interval_label = QLabel("Backup interval:")
+        interval_label = QLabel(_("Backup interval") + ":")
         self._backup_interval_spin = QSpinBox()
         self._backup_interval_spin.setMinimum(1)
         self._backup_interval_spin.setMaximum(1440)  # Max 1 day
-        self._backup_interval_spin.setSuffix(" minutes")
+        self._backup_interval_spin.setSuffix(" " + _("minutes"))
         self._backup_interval_spin.valueChanged.connect(
             self._on_backup_interval_changed
         )
@@ -349,11 +350,11 @@ class SettingsView(QWidget):
         retention_row = QHBoxLayout()
         retention_row.setSpacing(12)
 
-        retention_label = QLabel("Backup retention:")
+        retention_label = QLabel(_("Backup retention") + ":")
         self._backup_retention_spin = QSpinBox()
         self._backup_retention_spin.setMinimum(1)
         self._backup_retention_spin.setMaximum(100)
-        self._backup_retention_spin.setSuffix(" backups")
+        self._backup_retention_spin.setSuffix(" " + _("backups"))
         self._backup_retention_spin.valueChanged.connect(
             self._on_backup_retention_changed
         )
@@ -368,11 +369,11 @@ class SettingsView(QWidget):
         backup_row = QHBoxLayout()
         backup_row.setSpacing(12)
 
-        manual_backup_btn = QPushButton("Create Backup Now")
+        manual_backup_btn = QPushButton(_("Create Backup Now"))
         manual_backup_btn.setFixedWidth(150)
         manual_backup_btn.clicked.connect(self._on_manual_backup)
 
-        self._last_backup_label = QLabel("Last backup: Never")
+        self._last_backup_label = QLabel(_("Last backup") + ": " + _("Never"))
         self._last_backup_label.setProperty("class", "secondary")
 
         backup_row.addWidget(manual_backup_btn)
@@ -382,7 +383,7 @@ class SettingsView(QWidget):
         layout.addLayout(backup_row)
 
         # Open backups folder button
-        open_folder_btn = QPushButton("Open Backups Folder")
+        open_folder_btn = QPushButton(_("Open Backups Folder"))
         open_folder_btn.setFixedWidth(150)
         open_folder_btn.clicked.connect(self._on_open_backups_folder)
         layout.addWidget(open_folder_btn)
@@ -404,16 +405,16 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Export"))
+        layout.addWidget(SectionHeader(_("Export")))
 
         # Export for mail merge button
-        mail_merge_btn = QPushButton("Export Clients for Mail Merge")
+        mail_merge_btn = QPushButton(_("Export Clients for Mail Merge"))
         mail_merge_btn.setFixedWidth(220)
         mail_merge_btn.clicked.connect(self._on_export_mail_merge)
         layout.addWidget(mail_merge_btn)
 
         # Export all data button
-        export_all_btn = QPushButton("Export All Data")
+        export_all_btn = QPushButton(_("Export All Data"))
         export_all_btn.setFixedWidth(220)
         export_all_btn.clicked.connect(self._on_export_all_data)
         layout.addWidget(export_all_btn)
@@ -435,10 +436,10 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Database"))
+        layout.addWidget(SectionHeader(_("Database")))
 
         # Database path
-        path_label = QLabel("Database path:")
+        path_label = QLabel(_("Database path") + ":")
         layout.addWidget(path_label)
 
         config_dir = self.config.get_config_dir()
@@ -451,7 +452,7 @@ class SettingsView(QWidget):
         layout.addWidget(self._db_path_label)
 
         # Database size
-        self._db_size_label = QLabel("Size: Calculating...")
+        self._db_size_label = QLabel(_("Size") + ": " + _("Calculating..."))
         self._db_size_label.setProperty("class", "secondary")
         layout.addWidget(self._db_size_label)
 
@@ -475,18 +476,18 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("Audit Log"))
+        layout.addWidget(SectionHeader(_("Audit Log")))
 
         # Audit retention
         retention_row = QHBoxLayout()
         retention_row.setSpacing(12)
 
-        retention_label = QLabel("Audit log retention:")
+        retention_label = QLabel(_("Audit log retention") + ":")
         self._audit_retention_spin = QSpinBox()
         self._audit_retention_spin.setMinimum(100)
         self._audit_retention_spin.setMaximum(10000)
         self._audit_retention_spin.setValue(1000)  # Default
-        self._audit_retention_spin.setSuffix(" entries")
+        self._audit_retention_spin.setSuffix(" " + _("entries"))
         self._audit_retention_spin.setSingleStep(100)
 
         retention_row.addWidget(retention_label)
@@ -496,7 +497,7 @@ class SettingsView(QWidget):
         layout.addLayout(retention_row)
 
         # Cleanup button
-        cleanup_btn = QPushButton("Clean Up Now")
+        cleanup_btn = QPushButton(_("Clean Up Now"))
         cleanup_btn.setFixedWidth(150)
         cleanup_btn.clicked.connect(self._on_audit_cleanup)
         layout.addWidget(cleanup_btn)
@@ -518,15 +519,15 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader("About"))
+        layout.addWidget(SectionHeader(_("About")))
 
         # Version
-        version_label = QLabel("Cosmetics Records v1.0")
+        version_label = QLabel(_("Cosmetics Records v1.0"))
         version_label.setStyleSheet("font-weight: bold;")
         layout.addWidget(version_label)
 
         # Copyright
-        copyright_label = QLabel(f"Copyright 2024")
+        copyright_label = QLabel(_("Copyright 2024"))
         copyright_label.setProperty("class", "secondary")
         copyright_label.setStyleSheet("color: gray;")
         layout.addWidget(copyright_label)
@@ -581,19 +582,25 @@ class SettingsView(QWidget):
             delta = now - last_backup
 
             if delta.total_seconds() < 60:
-                time_str = "just now"
+                time_str = _("just now")
             elif delta.total_seconds() < 3600:
                 minutes = int(delta.total_seconds() / 60)
-                time_str = f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+                if minutes == 1:
+                    time_str = _("minute ago")
+                else:
+                    time_str = _("minutes ago") % minutes
             elif delta.total_seconds() < 86400:
                 hours = int(delta.total_seconds() / 3600)
-                time_str = f"{hours} hour{'s' if hours != 1 else ''} ago"
+                if hours == 1:
+                    time_str = _("hour ago")
+                else:
+                    time_str = _("hours ago") % hours
             else:
                 time_str = last_backup.strftime("%Y-%m-%d %H:%M")
 
-            self._last_backup_label.setText(f"Last backup: {time_str}")
+            self._last_backup_label.setText(_("Last backup") + ": " + time_str)
         else:
-            self._last_backup_label.setText("Last backup: Never")
+            self._last_backup_label.setText(_("Last backup") + ": " + _("Never"))
 
     def _update_database_size(self) -> None:
         """
@@ -618,12 +625,12 @@ class SettingsView(QWidget):
                     size_mb = size_bytes / (1024 * 1024)
                     size_str = f"{size_mb:.1f} MB"
 
-                self._db_size_label.setText(f"Size: {size_str}")
+                self._db_size_label.setText(_("Size") + ": " + size_str)
             else:
-                self._db_size_label.setText("Size: Database not found")
+                self._db_size_label.setText(_("Size") + ": Database not found")
         except Exception as e:
             logger.error(f"Failed to get database size: {e}")
-            self._db_size_label.setText("Size: Error calculating")
+            self._db_size_label.setText(_("Size") + ": Error calculating")
 
     # =========================================================================
     # Event Handlers
@@ -683,8 +690,8 @@ class SettingsView(QWidget):
         # Show confirmation
         QMessageBox.information(
             self,
-            "UI Scale Changed",
-            "UI scale has been changed. Please restart the application for the change to take full effect.",
+            _("UI Scale Changed"),
+            _("UI scale has been changed. Please restart the application for the change to take full effect."),
         )
 
     def _on_language_changed(self, language: str) -> None:
@@ -778,8 +785,8 @@ class SettingsView(QWidget):
             # Show success message
             QMessageBox.information(
                 self,
-                "Backup Created",
-                f"Backup created successfully:\n{backup_path}",
+                _("Backup Created"),
+                _("Backup created successfully") + f":\n{backup_path}",
             )
 
             logger.info(f"Manual backup created: {backup_path}")
@@ -788,8 +795,8 @@ class SettingsView(QWidget):
             logger.error(f"Manual backup failed: {e}")
             QMessageBox.critical(
                 self,
-                "Backup Failed",
-                f"Failed to create backup:\n{str(e)}",
+                _("Backup Failed"),
+                _("Failed to create backup") + f":\n{str(e)}",
             )
 
     def _on_open_backups_folder(self) -> None:
@@ -823,8 +830,8 @@ class SettingsView(QWidget):
             logger.error(f"Failed to open backups folder: {e}")
             QMessageBox.warning(
                 self,
-                "Cannot Open Folder",
-                f"Could not open backups folder:\n{str(backup_dir)}",
+                _("Cannot Open Folder"),
+                _("Could not open backups folder") + f":\n{str(backup_dir)}",
             )
 
     def _on_export_mail_merge(self) -> None:
@@ -855,8 +862,8 @@ class SettingsView(QWidget):
             # Show success message
             QMessageBox.information(
                 self,
-                "Export Complete",
-                f"Exported {count} clients for mail merge:\n{file_path}",
+                _("Export Complete"),
+                _("Exported %d clients for mail merge") % count + f":\n{file_path}",
             )
 
             logger.info(f"Mail merge export complete: {count} clients")
@@ -865,8 +872,8 @@ class SettingsView(QWidget):
             logger.error(f"Mail merge export failed: {e}")
             QMessageBox.critical(
                 self,
-                "Export Failed",
-                f"Failed to export clients:\n{str(e)}",
+                _("Export Failed"),
+                _("Failed to export clients") + f":\n{str(e)}",
             )
 
     def _on_export_all_data(self) -> None:
@@ -914,7 +921,7 @@ class SettingsView(QWidget):
 
             # Show success message
             message = (
-                f"All data exported successfully to:\n{directory}\n\n"
+                _("All data exported successfully") + f" to:\n{directory}\n\n"
                 f"- {clients_count} clients\n"
                 f"- {treatments_count} treatments\n"
                 f"- {inventory_count} inventory items\n"
@@ -923,7 +930,7 @@ class SettingsView(QWidget):
 
             QMessageBox.information(
                 self,
-                "Export Complete",
+                _("Export Complete"),
                 message,
             )
 
@@ -933,7 +940,7 @@ class SettingsView(QWidget):
             logger.error(f"Export all data failed: {e}")
             QMessageBox.critical(
                 self,
-                "Export Failed",
+                _("Export Failed"),
                 f"Failed to export data:\n{str(e)}",
             )
 
@@ -957,15 +964,15 @@ class SettingsView(QWidget):
             if deleted_count > 0:
                 QMessageBox.information(
                     self,
-                    "Cleanup Complete",
-                    f"Deleted {deleted_count} old audit log entries.\n"
+                    _("Cleanup Complete"),
+                    _("Deleted %d old audit log entries") % deleted_count + ".\n"
                     f"Kept {retention_count} most recent entries.",
                 )
             else:
                 QMessageBox.information(
                     self,
-                    "Cleanup Complete",
-                    "No audit logs needed cleanup.\n"
+                    _("Cleanup Complete"),
+                    _("No audit logs needed cleanup") + ".\n"
                     f"All logs are within retention limit ({retention_count} entries).",
                 )
 
@@ -975,6 +982,6 @@ class SettingsView(QWidget):
             logger.error(f"Audit cleanup failed: {e}")
             QMessageBox.critical(
                 self,
-                "Cleanup Failed",
-                f"Failed to cleanup audit logs:\n{str(e)}",
+                _("Cleanup Failed"),
+                _("Failed to cleanup audit logs") + f":\n{str(e)}",
             )

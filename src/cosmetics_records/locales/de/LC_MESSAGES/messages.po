@@ -1,0 +1,442 @@
+# German translations for Cosmetics Records.
+# Copyright (C) 2024
+# This file is distributed under the same license as the Cosmetics Records project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Cosmetics Records 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-11-30 12:00+0000\n"
+"PO-Revision-Date: 2024-11-30 12:00+0000\n"
+"Last-Translator: \n"
+"Language: de\n"
+"Language-Team: de <>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.13.0\n"
+
+# =============================================================================
+# Navigation
+# =============================================================================
+
+msgid "Clients"
+msgstr "Kunden"
+
+msgid "Client Detail"
+msgstr "Kundendetails"
+
+msgid "Inventory"
+msgstr "Inventar"
+
+msgid "Audit Log"
+msgstr "Änderungsprotokoll"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+# =============================================================================
+# Client List
+# =============================================================================
+
+msgid "Search clients by name or tags..."
+msgstr "Suchen..."
+
+msgid "Add Client"
+msgstr "Kunde hinzufügen"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "No clients found"
+msgstr "Keine Kunden gefunden"
+
+# =============================================================================
+# Client Detail
+# =============================================================================
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Planned Treatment"
+msgstr "Geplante Behandlung"
+
+msgid "Personal Notes"
+msgstr "Persönliche Notizen"
+
+msgid "Treatment History"
+msgstr "Behandlungsverlauf"
+
+msgid "Product History"
+msgstr "Produktverlauf"
+
+msgid "Add Treatment"
+msgstr "Behandlung hinzufügen"
+
+msgid "Add Product"
+msgstr "Produkt hinzufügen"
+
+msgid "Show More"
+msgstr "Mehr anzeigen"
+
+msgid "Allergies"
+msgstr "Allergien"
+
+msgid "years old"
+msgstr "Jahre alt"
+
+# =============================================================================
+# Dialogs - Common
+# =============================================================================
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "OK"
+msgstr "OK"
+
+# =============================================================================
+# Dialogs - Client Fields
+# =============================================================================
+
+msgid "First Name"
+msgstr "Vorname"
+
+msgid "Last Name"
+msgstr "Nachname"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Phone"
+msgstr "Telefon"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Date of Birth"
+msgstr "Geburtsdatum"
+
+msgid "Tags"
+msgstr "Tags"
+
+msgid "Notes"
+msgstr "Notizen"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Confirm Delete"
+msgstr "Löschen bestätigen"
+
+msgid "Are you sure?"
+msgstr "Sind Sie sicher?"
+
+# =============================================================================
+# Inventory
+# =============================================================================
+
+msgid "Add Item"
+msgstr "Artikel hinzufügen"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Capacity"
+msgstr "Kapazität"
+
+msgid "Unit"
+msgstr "Einheit"
+
+msgid "No items found"
+msgstr "Keine Artikel gefunden"
+
+# =============================================================================
+# Settings - Appearance
+# =============================================================================
+
+msgid "Appearance"
+msgstr "Darstellung"
+
+msgid "Theme"
+msgstr "Design"
+
+msgid "Dark"
+msgstr "Dunkel"
+
+msgid "Light"
+msgstr "Hell"
+
+msgid "System"
+msgstr "System"
+
+msgid "UI Scale"
+msgstr "Skalierung"
+
+msgid "Apply"
+msgstr "Anwenden"
+
+# =============================================================================
+# Settings - Language
+# =============================================================================
+
+msgid "Language"
+msgstr "Sprache"
+
+msgid "English"
+msgstr "English"
+
+msgid "Deutsch"
+msgstr "Deutsch"
+
+msgid "Note: Restart required for full effect"
+msgstr "Hinweis: Neustart erforderlich für vollständige Wirkung"
+
+# =============================================================================
+# Settings - Backup
+# =============================================================================
+
+msgid "Backup"
+msgstr "Sicherung"
+
+msgid "Auto-backup on startup"
+msgstr "Automatische Sicherung beim Start"
+
+msgid "Backup interval"
+msgstr "Sicherungsintervall"
+
+msgid "minutes"
+msgstr "Minuten"
+
+msgid "Backup retention"
+msgstr "Aufbewahrung"
+
+msgid "backups"
+msgstr "Sicherungen"
+
+msgid "Create Backup Now"
+msgstr "Jetzt sichern"
+
+msgid "Last backup"
+msgstr "Letzte Sicherung"
+
+msgid "Never"
+msgstr "Nie"
+
+msgid "Open Backups Folder"
+msgstr "Sicherungsordner öffnen"
+
+# =============================================================================
+# Settings - Export
+# =============================================================================
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Export Clients for Mail Merge"
+msgstr "Für Serienbriefe exportieren"
+
+msgid "Export All Data"
+msgstr "Alle Daten exportieren"
+
+# =============================================================================
+# Settings - Database
+# =============================================================================
+
+msgid "Database"
+msgstr "Datenbank"
+
+msgid "Database path"
+msgstr "Datenbankpfad"
+
+msgid "Path"
+msgstr "Pfad"
+
+msgid "Size"
+msgstr "Größe"
+
+msgid "Calculating..."
+msgstr "Berechne..."
+
+# =============================================================================
+# Settings - Audit
+# =============================================================================
+
+msgid "Audit"
+msgstr "Protokoll"
+
+msgid "Audit log retention"
+msgstr "Protokollaufbewahrung"
+
+msgid "Retention"
+msgstr "Aufbewahrung"
+
+msgid "entries"
+msgstr "Einträge"
+
+msgid "Clean Up Now"
+msgstr "Jetzt bereinigen"
+
+# =============================================================================
+# Settings - About
+# =============================================================================
+
+msgid "About"
+msgstr "Über"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Cosmetics Records v1.0"
+msgstr "Cosmetics Records v1.0"
+
+msgid "Copyright 2024"
+msgstr "Copyright 2024"
+
+# =============================================================================
+# Audit Log
+# =============================================================================
+
+msgid "Table"
+msgstr "Tabelle"
+
+msgid "Action"
+msgstr "Aktion"
+
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+msgid "Previous"
+msgstr "Zurück"
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "Page"
+msgstr "Seite"
+
+msgid "of"
+msgstr "von"
+
+msgid "Go"
+msgstr "Los"
+
+msgid "No audit entries"
+msgstr "Keine Einträge"
+
+# =============================================================================
+# Time (Relative Timestamps)
+# =============================================================================
+
+msgid "just now"
+msgstr "gerade eben"
+
+msgid "minute ago"
+msgstr "vor einer Minute"
+
+msgid "minutes ago"
+msgstr "vor %d Minuten"
+
+msgid "hour ago"
+msgstr "vor einer Stunde"
+
+msgid "hours ago"
+msgstr "vor %d Stunden"
+
+msgid "Yesterday at"
+msgstr "Gestern um"
+
+msgid "Today at"
+msgstr "Heute um"
+
+# =============================================================================
+# Messages
+# =============================================================================
+
+msgid "Success"
+msgstr "Erfolg"
+
+msgid "Error"
+msgstr "Fehler"
+
+msgid "Client created successfully"
+msgstr "Kunde erfolgreich erstellt"
+
+msgid "Client updated successfully"
+msgstr "Kunde erfolgreich aktualisiert"
+
+msgid "Client deleted"
+msgstr "Kunde gelöscht"
+
+msgid "Backup created"
+msgstr "Sicherung erstellt"
+
+msgid "Export completed"
+msgstr "Export abgeschlossen"
+
+msgid "records exported"
+msgstr "Datensätze exportiert"
+
+msgid "Backup Created"
+msgstr "Sicherung erstellt"
+
+msgid "Backup created successfully"
+msgstr "Sicherung erfolgreich erstellt"
+
+msgid "Backup Failed"
+msgstr "Sicherung fehlgeschlagen"
+
+msgid "Failed to create backup"
+msgstr "Sicherung konnte nicht erstellt werden"
+
+msgid "Cannot Open Folder"
+msgstr "Ordner kann nicht geöffnet werden"
+
+msgid "Could not open backups folder"
+msgstr "Sicherungsordner konnte nicht geöffnet werden"
+
+msgid "Export Complete"
+msgstr "Export abgeschlossen"
+
+msgid "Exported %d clients for mail merge"
+msgstr "%d Kunden für Serienbriefe exportiert"
+
+msgid "Export Failed"
+msgstr "Export fehlgeschlagen"
+
+msgid "Failed to export clients"
+msgstr "Kunden konnten nicht exportiert werden"
+
+msgid "Cleanup Complete"
+msgstr "Bereinigung abgeschlossen"
+
+msgid "Deleted %d old audit log entries"
+msgstr "%d alte Protokolleinträge gelöscht"
+
+msgid "No audit logs needed cleanup"
+msgstr "Keine Protokolle benötigen Bereinigung"
+
+msgid "Cleanup Failed"
+msgstr "Bereinigung fehlgeschlagen"
+
+msgid "Failed to cleanup audit logs"
+msgstr "Protokolle konnten nicht bereinigt werden"
+
+msgid "UI Scale Changed"
+msgstr "Skalierung geändert"
+
+msgid "UI scale has been changed. Please restart the application for the change to take full effect."
+msgstr "Die Skalierung wurde geändert. Bitte starten Sie die Anwendung neu, damit die Änderung vollständig wirksam wird."
+
+msgid "All data exported successfully"
+msgstr "Alle Daten erfolgreich exportiert"

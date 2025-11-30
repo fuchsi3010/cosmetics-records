@@ -48,6 +48,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from cosmetics_records.utils.localization import _
 from ..components.alphabet_filter import AlphabetFilter
 from ..components.search_bar import SearchBar
 
@@ -295,12 +296,12 @@ class ClientListView(QWidget):
 
         # Search bar
         self._search_bar = SearchBar()
-        self._search_bar.set_placeholder("Search clients by name or tags...")
+        self._search_bar.set_placeholder(_("Search clients by name or tags..."))
         self._search_bar.search_changed.connect(self._on_search_changed)
         layout.addWidget(self._search_bar, stretch=1)
 
         # Add client button
-        add_btn = QPushButton("+ Add Client")
+        add_btn = QPushButton("+ " + _("Add Client"))
         add_btn.setProperty("class", "primary")  # Primary button styling
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.add_client_clicked.emit)

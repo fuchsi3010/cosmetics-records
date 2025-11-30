@@ -42,6 +42,8 @@ from PyQt6.QtWidgets import (
     QFrame,
 )
 
+from cosmetics_records.utils.localization import _
+
 # Configure module logger
 logger = logging.getLogger(__name__)
 
@@ -180,8 +182,8 @@ class BaseDialog(QDialog):
 
     def create_button_row(
         self,
-        ok_text: str = "OK",
-        cancel_text: str = "Cancel",
+        ok_text: str = None,
+        cancel_text: str = None,
         show_cancel: bool = True,
     ) -> QHBoxLayout:
         """
@@ -191,8 +193,8 @@ class BaseDialog(QDialog):
         at the bottom of their dialog.
 
         Args:
-            ok_text: Text for the OK button (default: "OK")
-            cancel_text: Text for the cancel button (default: "Cancel")
+            ok_text: Text for the OK button (default: translated "OK")
+            cancel_text: Text for the cancel button (default: translated "Cancel")
             show_cancel: Whether to show the cancel button (default: True)
 
         Returns:
@@ -204,9 +206,15 @@ class BaseDialog(QDialog):
                 layout.addWidget(QLabel("Content"))
 
                 # Add button row at bottom
-                button_row = self.create_button_row("Save", "Cancel")
+                button_row = self.create_button_row(_("Save"), _("Cancel"))
                 layout.addLayout(button_row)
         """
+        # Use default translations if not provided
+        if ok_text is None:
+            ok_text = _("OK")
+        if cancel_text is None:
+            cancel_text = _("Cancel")
+
         # Horizontal layout for buttons
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
