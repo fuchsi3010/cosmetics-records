@@ -537,6 +537,29 @@ QToolTip {{
     padding: 4px;
     border-radius: 4px;
 }}
+
+/* ==========================================================================
+   Navigation Toggle Button
+   ========================================================================== */
+
+QPushButton[toggle_nav="true"] {{
+    background-color: #555555;
+    color: white;
+    border: 1px solid {DARK_BORDER};
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0px;
+}}
+
+QPushButton[toggle_nav="true"]:hover {{
+    background-color: #666666;
+    border-color: #777777;
+}}
+
+QPushButton[toggle_nav="true"]:pressed {{
+    background-color: #444444;
+}}
 """
 
 
@@ -952,6 +975,29 @@ QToolTip {{
     border: 1px solid {LIGHT_BORDER};
     padding: 4px;
     border-radius: 4px;
+}}
+
+/* ==========================================================================
+   Navigation Toggle Button
+   ========================================================================== */
+
+QPushButton[toggle_nav="true"] {{
+    background-color: #888888;
+    color: white;
+    border: 1px solid {LIGHT_BORDER};
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0px;
+}}
+
+QPushButton[toggle_nav="true"]:hover {{
+    background-color: #777777;
+    border-color: #666666;
+}}
+
+QPushButton[toggle_nav="true"]:pressed {{
+    background-color: #666666;
 }}
 """
 
