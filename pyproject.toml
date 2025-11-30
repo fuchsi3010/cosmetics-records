@@ -1,0 +1,128 @@
+# =============================================================================
+# Cosmetics Records - Project Configuration
+# =============================================================================
+# This file defines the project metadata and build configuration for the
+# Cosmetics Records application. It follows the PEP 517/518 standard for
+# Python project configuration.
+# =============================================================================
+
+[build-system]
+# Specify the build backend - we use setuptools which is the most common choice
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# Basic project metadata
+name = "cosmetics-records"
+version = "1.0.0"
+description = "A desktop application for cosmetics salon client management"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+
+# Author information
+authors = [
+    {name = "Daniel", email = "daniel@example.com"}
+]
+
+# Project keywords for discoverability
+keywords = ["cosmetics", "salon", "client management", "desktop", "pyqt6"]
+
+# Classifiers help users find your project on PyPI
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+]
+
+# Runtime dependencies - these are required to run the application
+dependencies = [
+    "PyQt6>=6.4.0",           # Modern Qt6 GUI framework
+    "pydantic>=2.0",          # Data validation and settings management
+    "thefuzz>=0.22.0",        # Fuzzy string matching for search
+    "python-Levenshtein>=0.25.0",  # Fast string matching (thefuzz speedup)
+    "Babel>=2.14.0",          # Internationalization (i18n) support
+    "python-json-logger>=2.0.0",  # Structured JSON logging
+    "darkdetect>=0.8.0",      # System theme detection (dark/light mode)
+]
+
+# Optional dependencies for development
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",          # Testing framework
+    "pytest-cov>=4.1.0",      # Code coverage for pytest
+    "pytest-qt>=4.2.0",       # PyQt testing utilities
+    "black>=23.0.0",          # Code formatter (PEP 8 compliant)
+    "flake8>=6.1.0",          # Linting tool
+    "mypy>=1.5.0",            # Static type checker
+    "PyInstaller>=6.0.0",     # Executable packaging
+]
+
+# Entry point - allows running the app with `python -m cosmetics_records`
+[project.scripts]
+cosmetics-records = "cosmetics_records.app:main"
+
+# URLs for the project (displayed on PyPI)
+[project.urls]
+Homepage = "https://github.com/daniel/cosmetics-records"
+Repository = "https://github.com/daniel/cosmetics-records.git"
+
+# =============================================================================
+# Tool Configuration
+# =============================================================================
+
+# Black code formatter configuration
+[tool.black]
+line-length = 88                    # PEP 8 recommended line length
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'                 # Format .py and .pyi files
+extend-exclude = '''
+/(
+    \.git
+    | \.venv
+    | venv
+    | build
+    | dist
+)/
+'''
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]               # Look for tests in the tests/ directory
+python_files = ["test_*.py"]        # Test files start with test_
+python_classes = ["Test*"]          # Test classes start with Test
+python_functions = ["test_*"]       # Test functions start with test_
+addopts = "-v --tb=short"           # Verbose output, short tracebacks
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/cosmetics_records"]  # Measure coverage of our source code
+branch = true                        # Measure branch coverage too
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+# MyPy static type checker configuration
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true        # Require type hints on all functions
+ignore_missing_imports = true        # Don't error on untyped libraries
+
+# Setuptools configuration for package discovery
+[tool.setuptools.packages.find]
+where = ["src"]                      # Look for packages in src/

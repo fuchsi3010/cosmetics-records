@@ -1,0 +1,50 @@
+# =============================================================================
+# Cosmetics Records - Development Dependencies
+# =============================================================================
+# These packages are required for development, testing, and building.
+# Install with: pip install -r requirements-dev.txt
+# Note: This also installs production dependencies from requirements.txt
+# =============================================================================
+
+# Include production dependencies
+-r requirements.txt
+
+# =============================================================================
+# Testing Tools
+# =============================================================================
+
+# pytest is the de-facto standard for Python testing
+# It provides a simple way to write and run tests
+pytest>=7.4.0
+
+# pytest-cov provides code coverage reporting for pytest
+# It shows which lines of code are covered by tests
+pytest-cov>=4.1.0
+
+# pytest-qt provides fixtures and utilities for testing PyQt applications
+# It handles Qt's event loop and provides helpers for widget testing
+pytest-qt>=4.2.0
+
+# =============================================================================
+# Code Quality Tools
+# =============================================================================
+
+# black is an opinionated code formatter that enforces consistent style
+# It follows PEP 8 with a line length of 88 characters
+black>=23.0.0
+
+# flake8 is a linting tool that checks for style guide violations,
+# programming errors, and code complexity issues
+flake8>=6.1.0
+
+# mypy is a static type checker that validates type hints
+# It catches type-related bugs before runtime
+mypy>=1.5.0
+
+# =============================================================================
+# Build Tools
+# =============================================================================
+
+# PyInstaller packages Python applications into standalone executables
+# It bundles all dependencies so users don't need Python installed
+PyInstaller>=6.0.0

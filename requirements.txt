@@ -1,0 +1,41 @@
+# =============================================================================
+# Cosmetics Records - Production Dependencies
+# =============================================================================
+# These packages are required to run the application.
+# Install with: pip install -r requirements.txt
+# =============================================================================
+
+# GUI Framework
+# PyQt6 is a modern Python binding for Qt6, providing native-looking
+# cross-platform GUI components
+PyQt6>=6.4.0
+
+# Data Validation
+# Pydantic provides runtime data validation using Python type hints.
+# It's used for all our data models to ensure data integrity.
+pydantic>=2.0
+
+# Fuzzy Search
+# thefuzz (formerly fuzzywuzzy) provides fuzzy string matching algorithms
+# for searching clients by name even with typos
+thefuzz>=0.22.0
+
+# Fuzzy Search Speed Optimization
+# python-Levenshtein provides C-optimized string matching functions
+# that make thefuzz significantly faster
+python-Levenshtein>=0.25.0
+
+# Internationalization (i18n)
+# Babel provides tools for internationalizing Python applications,
+# including message extraction and translation support
+Babel>=2.14.0
+
+# Structured Logging
+# python-json-logger formats log messages as JSON for easier parsing
+# and analysis
+python-json-logger>=2.0.0
+
+# System Theme Detection
+# darkdetect detects whether the system is using dark or light mode,
+# allowing the app to match the system theme
+darkdetect>=0.8.0
