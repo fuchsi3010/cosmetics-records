@@ -366,41 +366,72 @@ class InventoryView(QWidget):
 
     def _load_more_items(self) -> None:
         """
-        Load the next page of items.
+        Load the next page of items from the database.
 
-        This method will be connected to a controller later. For now,
-        it contains placeholder logic.
+        Uses InventoryController to fetch items based on current
+        search query and alphabet filter.
 
         Note:
             Sets _loading flag to prevent duplicate requests.
             Updates _has_more flag based on results.
         """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.inventory_controller import InventoryController
+
         if self._loading:
             return
 
         self._loading = True
+        offset = len(self._loaded_items)
         logger.debug(
-            f"Loading items (offset: {len(self._loaded_items)}, "
+            f"Loading items (offset: {offset}, "
             f"search: '{self._current_search}', filter: '{self._current_filter}')"
         )
 
-        # PLACEHOLDER: Controller method will be called here
-        # For now, we'll simulate with a timer
-        QTimer.singleShot(100, self._on_items_loaded_placeholder)
+        try:
+            with DatabaseConnection() as db:
+                controller = InventoryController(db)
 
-    def _on_items_loaded_placeholder(self) -> None:
-        """
-        Placeholder for when items are loaded.
+                if self._current_search:
+                    # Search mode
+                    items = controller.search_inventory(
+                        self._current_search, limit=self.ITEMS_PER_PAGE
+                    )
+                    self._has_more = False  # Search returns all matches
+                elif self._current_filter != "All":
+                    # Filter mode - filter by first letter
+                    items = controller.filter_by_letter(
+                        self._current_filter,
+                        limit=self.ITEMS_PER_PAGE,
+                        offset=offset
+                    )
+                    self._has_more = len(items) >= self.ITEMS_PER_PAGE
+                else:
+                    # Default mode - all items
+                    items = controller.get_all_items(
+                        limit=self.ITEMS_PER_PAGE, offset=offset
+                    )
+                    self._has_more = len(items) >= self.ITEMS_PER_PAGE
 
-        In real implementation, this will be called by the controller
-        with actual item data.
-        """
-        # PLACEHOLDER: This simulates no items loaded
-        # Real implementation will call add_items() with actual data
+            # Convert to dictionaries for display
+            item_dicts = []
+            for item in items:
+                item_dicts.append({
+                    "id": item.id,
+                    "name": item.name,
+                    "capacity": item.capacity,
+                    "unit": item.unit,
+                    "description": item.description or "",
+                })
+
+            self.add_items(item_dicts)
+            logger.debug(f"Loaded {len(items)} items from database")
+
+        except Exception as e:
+            logger.error(f"Failed to load items: {e}")
+            self._has_more = False
+
         self._loading = False
-        self._has_more = False
-
-        logger.debug("Placeholder: No items loaded (controller not connected)")
 
     def add_items(self, items: List[dict]) -> None:
         """
@@ -443,25 +474,91 @@ class InventoryView(QWidget):
         """
         Handle item row click.
 
-        Opens the edit inventory dialog.
+        Opens the edit inventory dialog and updates the item on save.
 
         Args:
             item_id: Database ID of the clicked item
         """
+        from cosmetics_records.views.dialogs.edit_inventory_dialog import EditInventoryDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.inventory_controller import InventoryController
+
         logger.debug(f"Item clicked: {item_id}")
 
-        # PLACEHOLDER: Will show EditInventoryDialog
-        # For now, just log it
+        try:
+            # Load item data
+            with DatabaseConnection() as db:
+                controller = InventoryController(db)
+                item = controller.get_item(item_id)
+
+            if not item:
+                logger.error(f"Item not found: {item_id}")
+                return
+
+            # Show edit dialog
+            dialog = EditInventoryDialog(item, self)
+            if dialog.exec():
+                # Get updated data
+                item_data = dialog.get_item_data()
+
+                # Update item
+                item.name = item_data["name"]
+                item.description = item_data.get("description")
+                item.capacity = item_data["capacity"]
+                item.unit = item_data["unit"]
+
+                # Save to database
+                with DatabaseConnection() as db:
+                    controller = InventoryController(db)
+                    controller.update_item(item)
+                    logger.info(f"Item updated: {item.name}")
+
+                # Refresh list
+                self.refresh()
+                self.item_updated.emit()
+
+        except Exception as e:
+            logger.error(f"Failed to edit item: {e}")
 
     def _on_add_item(self) -> None:
         """
         Handle add item button click.
 
-        Opens the add inventory dialog.
+        Opens the add inventory dialog and saves the new item.
         """
+        from cosmetics_records.views.dialogs.add_inventory_dialog import AddInventoryDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.models.product import InventoryItem
+
         logger.debug("Add item clicked")
 
-        # PLACEHOLDER: Will show AddInventoryDialog
+        try:
+            dialog = AddInventoryDialog(self)
+            if dialog.exec():
+                # Get item data from dialog
+                item_data = dialog.get_item_data()
+
+                # Create InventoryItem model
+                item = InventoryItem(
+                    name=item_data["name"],
+                    description=item_data.get("description"),
+                    capacity=item_data["capacity"],
+                    unit=item_data["unit"],
+                )
+
+                # Save to database
+                with DatabaseConnection() as db:
+                    controller = InventoryController(db)
+                    item_id = controller.create_item(item)
+                    logger.info(f"Item created with ID: {item_id}")
+
+                # Refresh list to show new item
+                self.refresh()
+                self.item_updated.emit()
+
+        except Exception as e:
+            logger.error(f"Failed to add item: {e}")
 
     def refresh(self) -> None:
         """
