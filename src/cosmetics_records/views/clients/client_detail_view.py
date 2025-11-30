@@ -39,6 +39,8 @@
 
 import logging
 from datetime import datetime, date
+
+from cosmetics_records.utils.time_utils import format_date_localized
 from typing import List, Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
@@ -118,12 +120,12 @@ class HistoryItem(QFrame):
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
 
-        # Date label - show date and time if available
+        # Date label - format according to user's date format preference
         item_date = self.item_data.get("date")
         created_at = self.item_data.get("created_at")
 
         if isinstance(item_date, date):
-            date_str = item_date.strftime("%b %d, %Y")
+            date_str = format_date_localized(item_date)
             # Add time from created_at if available
             if isinstance(created_at, datetime):
                 date_str += f" {created_at.strftime('%H:%M')}"

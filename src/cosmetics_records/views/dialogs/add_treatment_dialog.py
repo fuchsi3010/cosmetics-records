@@ -25,6 +25,8 @@ import logging
 from datetime import date
 from typing import Optional
 
+from cosmetics_records.utils.time_utils import format_date_localized
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QDialog,
@@ -88,7 +90,7 @@ class AddTreatmentDialog(BaseDialog):
         layout.addWidget(self._error_label)
 
         # Date display (read-only, always today)
-        today_str = date.today().strftime("%B %d, %Y")
+        today_str = format_date_localized(date.today())
         date_label = QLabel(f"Date: {today_str}")
         date_label.setProperty("form_note", True)
         layout.addWidget(date_label)

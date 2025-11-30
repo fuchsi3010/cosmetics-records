@@ -182,6 +182,7 @@ class Config:
             "theme": "system",  # Options: "dark", "light", "system"
             # Localization
             "language": "en",  # Options: "en", "de"
+            "date_format": "language",  # Options: "language", "iso8601", "us", "de"
             # UI Scaling
             "ui_scale": 1.0,  # Range: 0.8 to 2.0
             # Backup Settings
@@ -313,6 +314,28 @@ class Config:
         if value not in ["en", "de"]:
             raise ValueError(f"Invalid language: {value}. Must be en or de")
         self._settings["language"] = value
+
+    @property
+    def date_format(self) -> str:
+        """Get the current date format setting."""
+        return self._settings.get("date_format", "language")
+
+    @date_format.setter
+    def date_format(self, value: str) -> None:
+        """
+        Set the date format.
+
+        Args:
+            value: Date format - must be "language", "iso8601", "us", or "de"
+
+        Raises:
+            ValueError: If value is not a valid date format
+        """
+        if value not in ["language", "iso8601", "us", "de"]:
+            raise ValueError(
+                f"Invalid date_format: {value}. Must be language, iso8601, us, or de"
+            )
+        self._settings["date_format"] = value
 
     @property
     def ui_scale(self) -> float:

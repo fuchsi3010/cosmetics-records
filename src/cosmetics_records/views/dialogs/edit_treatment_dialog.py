@@ -28,6 +28,8 @@ import logging
 from datetime import date
 from typing import Optional
 
+from cosmetics_records.utils.time_utils import format_date_localized
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QDialog,
@@ -213,7 +215,7 @@ class EditTreatmentDialog(BaseDialog):
         # Get treatment date for confirmation message
         treatment_date = self._treatment_data.get("date")
         if isinstance(treatment_date, date):
-            date_str = treatment_date.strftime("%B %d, %Y")
+            date_str = format_date_localized(treatment_date)
         else:
             date_str = str(treatment_date)
 

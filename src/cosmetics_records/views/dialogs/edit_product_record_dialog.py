@@ -28,6 +28,8 @@ import logging
 from datetime import date
 from typing import List, Optional
 
+from cosmetics_records.utils.time_utils import format_date_localized
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QDialog,
@@ -228,7 +230,7 @@ class EditProductRecordDialog(BaseDialog):
         # Get record date for confirmation message
         record_date = self._record_data.get("date")
         if isinstance(record_date, date):
-            date_str = record_date.strftime("%B %d, %Y")
+            date_str = format_date_localized(record_date)
         else:
             date_str = str(record_date)
 

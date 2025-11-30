@@ -136,3 +136,54 @@ def format_datetime(dt: datetime) -> str:
         'Jan 15, 2024 14:32'
     """
     return dt.strftime("%b %d, %Y %H:%M")
+
+
+# Date format strings for each format setting
+DATE_FORMATS = {
+    "iso8601": "%Y-%m-%d",       # 2024-12-31
+    "us": "%m/%d/%Y",            # 12/31/2024
+    "de": "%d.%m.%Y",            # 31.12.2024
+}
+
+# Language defaults (what "language" setting uses per language)
+LANGUAGE_DATE_FORMATS = {
+    "en": "%m/%d/%Y",            # US format for English
+    "de": "%d.%m.%Y",            # German format for German
+}
+
+
+def format_date_localized(d) -> str:
+    """
+    Format a date according to the user's date format preference.
+
+    Uses the date_format setting from Config to determine the output format.
+    If set to "language", uses the language-appropriate default.
+
+    Args:
+        d: A date or datetime object to format
+
+    Returns:
+        A formatted date string according to user preferences
+
+    Examples:
+        >>> from datetime import date
+        >>> d = date(2024, 12, 31)
+        >>> format_date_localized(d)
+        '12/31/2024'  # if format is "us" or language="en" with format="language"
+        '31.12.2024'  # if format is "de" or language="de" with format="language"
+        '2024-12-31'  # if format is "iso8601"
+    """
+    from cosmetics_records.config import Config
+
+    config = Config.get_instance()
+    date_format_setting = config.date_format
+
+    if date_format_setting == "language":
+        # Use language-specific default
+        language = config.language
+        fmt = LANGUAGE_DATE_FORMATS.get(language, "%Y-%m-%d")
+    else:
+        # Use explicit format setting
+        fmt = DATE_FORMATS.get(date_format_setting, "%Y-%m-%d")
+
+    return d.strftime(fmt)

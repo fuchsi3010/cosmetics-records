@@ -175,6 +175,7 @@ class SettingsView(QWidget):
         # Add all sections
         container_layout.addWidget(self._create_appearance_section())
         container_layout.addWidget(self._create_language_section())
+        container_layout.addWidget(self._create_date_format_section())
         container_layout.addWidget(self._create_backup_section())
         container_layout.addWidget(self._create_export_section())
         container_layout.addWidget(self._create_database_section())
@@ -302,6 +303,71 @@ class SettingsView(QWidget):
         lang_row.addStretch()
 
         layout.addLayout(lang_row)
+
+        return section
+
+    def _create_date_format_section(self) -> QWidget:
+        """
+        Create the date format settings section.
+
+        Includes date format selector with language-specific defaults and ISO8601.
+
+        Returns:
+            QWidget containing date format settings
+        """
+        section = QWidget()
+        layout = QVBoxLayout(section)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+
+        # Section header
+        layout.addWidget(SectionHeader(_("Date Format")))
+
+        # Date format selector
+        format_label = QLabel(_("Date format") + ":")
+        layout.addWidget(format_label)
+
+        # Radio buttons for date format
+        # Options: Language default, ISO 8601, US (MM/DD/YYYY), German (DD.MM.YYYY)
+        format_row = QHBoxLayout()
+        format_row.setSpacing(12)
+
+        self._date_format_language = QRadioButton(
+            _("Language default")
+        )
+        self._date_format_iso = QRadioButton("ISO 8601 (2024-12-31)")
+        self._date_format_us = QRadioButton("US (12/31/2024)")
+        self._date_format_de = QRadioButton("DE (31.12.2024)")
+
+        # Connect signals
+        self._date_format_language.toggled.connect(
+            lambda: self._on_date_format_changed("language")
+        )
+        self._date_format_iso.toggled.connect(
+            lambda: self._on_date_format_changed("iso8601")
+        )
+        self._date_format_us.toggled.connect(
+            lambda: self._on_date_format_changed("us")
+        )
+        self._date_format_de.toggled.connect(
+            lambda: self._on_date_format_changed("de")
+        )
+
+        format_row.addWidget(self._date_format_language)
+        format_row.addWidget(self._date_format_iso)
+        format_row.addWidget(self._date_format_us)
+        format_row.addWidget(self._date_format_de)
+        format_row.addStretch()
+
+        layout.addLayout(format_row)
+
+        # Note about date format
+        note_label = QLabel(
+            _("Language default uses MM/DD/YYYY for English and DD.MM.YYYY for German")
+        )
+        note_label.setProperty("class", "secondary")
+        note_label.setStyleSheet("color: gray; font-size: 11px;")
+        layout.addWidget(note_label)
 
         return section
 
@@ -568,6 +634,17 @@ class SettingsView(QWidget):
         else:
             self._lang_de.setChecked(True)
 
+        # Date format
+        date_format = self.config.date_format
+        if date_format == "iso8601":
+            self._date_format_iso.setChecked(True)
+        elif date_format == "us":
+            self._date_format_us.setChecked(True)
+        elif date_format == "de":
+            self._date_format_de.setChecked(True)
+        else:  # "language" or default
+            self._date_format_language.setChecked(True)
+
         # Backup settings
         self._auto_backup_check.setChecked(self.config.auto_backup)
         self._backup_interval_spin.setValue(self.config.backup_interval_minutes)
@@ -730,6 +807,27 @@ class SettingsView(QWidget):
         # Emit signals
         self.settings_changed.emit()
         self.language_changed.emit(language)
+
+    def _on_date_format_changed(self, format_code: str) -> None:
+        """
+        Handle date format selection change.
+
+        Args:
+            format_code: Selected format ("language", "iso8601", "us", or "de")
+        """
+        # Only process if actually toggled on (not off)
+        sender = self.sender()
+        if not sender.isChecked():
+            return
+
+        logger.info(f"Date format changed to: {format_code}")
+
+        # Save to config
+        self.config.date_format = format_code
+        self.config.save()
+
+        # Emit signal
+        self.settings_changed.emit()
 
     def _on_auto_backup_toggled(self, checked: bool) -> None:
         """
