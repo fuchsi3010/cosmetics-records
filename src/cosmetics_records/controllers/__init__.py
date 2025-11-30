@@ -15,3 +15,15 @@
 #   - ProductController: Product record management
 #   - InventoryController: Inventory item management
 # =============================================================================
+
+from cosmetics_records.controllers.client_controller import ClientController
+from cosmetics_records.controllers.treatment_controller import TreatmentController
+from cosmetics_records.controllers.product_controller import ProductController
+from cosmetics_records.controllers.inventory_controller import InventoryController
+
+__all__ = [
+    "ClientController",
+    "TreatmentController",
+    "ProductController",
+    "InventoryController",
+]
