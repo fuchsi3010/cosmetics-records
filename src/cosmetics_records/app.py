@@ -397,19 +397,45 @@ class MainWindow(QMainWindow):
         """
         Handle add client button click.
 
-        Opens the add client dialog and refreshes the list on success.
+        Opens the add client dialog, saves the client to the database,
+        and refreshes the list on success.
         """
         from cosmetics_records.views.dialogs.add_client_dialog import AddClientDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+        from cosmetics_records.models.client import Client
 
         try:
             dialog = AddClientDialog(self)
             if dialog.exec():
-                # Client was added successfully, refresh the list
+                # Get the client data from the dialog
+                client_data = dialog.get_client_data()
+
+                # Create Client model from the data
+                client = Client(
+                    first_name=client_data["first_name"],
+                    last_name=client_data["last_name"],
+                    email=client_data["email"] or None,
+                    phone=client_data["phone"] or None,
+                    address=client_data["address"] or None,
+                    date_of_birth=client_data["date_of_birth"],
+                    allergies=client_data["allergies"] or None,
+                    tags=client_data["tags"],
+                )
+
+                # Save to database
+                with DatabaseConnection() as db:
+                    controller = ClientController(db)
+                    client_id = controller.create_client(client)
+                    logger.info(f"Client created with ID: {client_id}")
+
+                # Refresh the list to show the new client
                 if "clients" in self.views:
                     self.views["clients"].refresh()
-                logger.info("Client added successfully")
+
+                logger.info(f"Client added successfully: {client.full_name()}")
         except Exception as e:
-            logger.error(f"Failed to show add client dialog: {e}")
+            logger.error(f"Failed to add client: {e}")
 
     def _on_theme_changed(self, theme: str) -> None:
         """
