@@ -175,32 +175,88 @@ class MainWindow(QMainWindow):
         """
         Create all view widgets and add them to the stacked widget.
 
-        Currently uses placeholder views. These will be replaced with
-        actual implementations as they are developed.
+        Creates actual view implementations and wires them to controllers.
         """
+        # Import views
+        from cosmetics_records.views.clients.client_list_view import ClientListView
+        from cosmetics_records.views.clients.client_detail_view import ClientDetailView
+        from cosmetics_records.views.inventory.inventory_view import InventoryView
+        from cosmetics_records.views.audit.audit_log_view import AuditLogView
+        from cosmetics_records.views.settings.settings_view import SettingsView
+
         # Dictionary to store view references
         # WHY store references: Allows us to access views later for updates
         self.views = {}
 
-        # Create placeholder views
-        # TODO: Replace these with actual view implementations
-        views_to_create = [
-            ("clients", "Clients"),
-            ("client_detail", "Client Detail"),
-            ("inventory", "Inventory"),
-            ("audit", "Audit Log"),
-            ("settings", "Settings"),
-        ]
+        # Create clients list view
+        try:
+            clients_view = ClientListView()
+            # Wire up client selection to show detail view
+            clients_view.client_selected.connect(self.show_client_detail)
+            # Wire up add client to show add dialog
+            clients_view.add_client_clicked.connect(self._on_add_client_clicked)
+            self.views["clients"] = clients_view
+            self.stacked_widget.addWidget(clients_view)
+            logger.debug("ClientListView created and connected")
+        except Exception as e:
+            logger.error(f"Failed to create ClientListView: {e}")
+            # Fall back to placeholder
+            self.views["clients"] = PlaceholderView("Clients")
+            self.stacked_widget.addWidget(self.views["clients"])
 
-        for view_id, view_name in views_to_create:
-            # Create placeholder view
-            view = PlaceholderView(view_name)
+        # Create client detail view
+        try:
+            client_detail_view = ClientDetailView()
+            # Wire up back button to return to list
+            client_detail_view.back_clicked.connect(
+                lambda: self._navigate_to("clients")
+            )
+            self.views["client_detail"] = client_detail_view
+            self.stacked_widget.addWidget(client_detail_view)
+            logger.debug("ClientDetailView created and connected")
+        except Exception as e:
+            logger.error(f"Failed to create ClientDetailView: {e}")
+            # Fall back to placeholder
+            self.views["client_detail"] = PlaceholderView("Client Detail")
+            self.stacked_widget.addWidget(self.views["client_detail"])
 
-            # Store reference
-            self.views[view_id] = view
+        # Create inventory view
+        try:
+            inventory_view = InventoryView()
+            self.views["inventory"] = inventory_view
+            self.stacked_widget.addWidget(inventory_view)
+            logger.debug("InventoryView created")
+        except Exception as e:
+            logger.error(f"Failed to create InventoryView: {e}")
+            # Fall back to placeholder
+            self.views["inventory"] = PlaceholderView("Inventory")
+            self.stacked_widget.addWidget(self.views["inventory"])
 
-            # Add to stacked widget
-            self.stacked_widget.addWidget(view)
+        # Create audit log view
+        try:
+            audit_view = AuditLogView()
+            self.views["audit"] = audit_view
+            self.stacked_widget.addWidget(audit_view)
+            logger.debug("AuditLogView created")
+        except Exception as e:
+            logger.error(f"Failed to create AuditLogView: {e}")
+            # Fall back to placeholder
+            self.views["audit"] = PlaceholderView("Audit Log")
+            self.stacked_widget.addWidget(self.views["audit"])
+
+        # Create settings view
+        try:
+            settings_view = SettingsView()
+            # Wire up theme changes to apply immediately
+            settings_view.theme_changed.connect(self._on_theme_changed)
+            self.views["settings"] = settings_view
+            self.stacked_widget.addWidget(settings_view)
+            logger.debug("SettingsView created and connected")
+        except Exception as e:
+            logger.error(f"Failed to create SettingsView: {e}")
+            # Fall back to placeholder
+            self.views["settings"] = PlaceholderView("Settings")
+            self.stacked_widget.addWidget(self.views["settings"])
 
         logger.debug(f"Created {len(self.views)} views")
 
@@ -317,11 +373,58 @@ class MainWindow(QMainWindow):
             # From clients list view when user clicks a client
             main_window.show_client_detail(123)
         """
-        # TODO: Update client_detail view with the client data
-        # For now, just navigate to the view
+        # Update client_detail view with the client data
+        if "client_detail" in self.views:
+            try:
+                self.views["client_detail"].load_client(client_id)
+            except Exception as e:
+                logger.error(f"Failed to load client {client_id}: {e}")
+
+        # Navigate to the view
         self._navigate_to("client_detail")
 
         logger.info(f"Showing client detail for ID: {client_id}")
+
+    def _on_add_client_clicked(self) -> None:
+        """
+        Handle add client button click.
+
+        Opens the add client dialog and refreshes the list on success.
+        """
+        from cosmetics_records.views.dialogs.add_client_dialog import AddClientDialog
+
+        try:
+            dialog = AddClientDialog(self)
+            if dialog.exec():
+                # Client was added successfully, refresh the list
+                if "clients" in self.views:
+                    self.views["clients"].refresh()
+                logger.info("Client added successfully")
+        except Exception as e:
+            logger.error(f"Failed to show add client dialog: {e}")
+
+    def _on_theme_changed(self, theme: str) -> None:
+        """
+        Handle theme change from settings.
+
+        Applies the new theme to the application immediately.
+
+        Args:
+            theme: Theme name ("dark", "light", or "system")
+        """
+        logger.info(f"Applying theme change: {theme}")
+
+        try:
+            # Get stylesheet for new theme
+            stylesheet = get_theme(theme)
+
+            # Apply to application
+            QApplication.instance().setStyleSheet(stylesheet)
+
+            logger.info(f"Theme applied: {theme}")
+
+        except Exception as e:
+            logger.error(f"Failed to apply theme: {e}")
 
 
 def setup_logging() -> None:
