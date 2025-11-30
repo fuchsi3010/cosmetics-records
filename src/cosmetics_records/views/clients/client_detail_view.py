@@ -118,10 +118,15 @@ class HistoryItem(QFrame):
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
 
-        # Date label
+        # Date label - show date and time if available
         item_date = self.item_data.get("date")
+        created_at = self.item_data.get("created_at")
+
         if isinstance(item_date, date):
             date_str = item_date.strftime("%b %d, %Y")
+            # Add time from created_at if available
+            if isinstance(created_at, datetime):
+                date_str += f" {created_at.strftime('%H:%M')}"
         else:
             date_str = str(item_date)
 
@@ -160,44 +165,6 @@ class HistoryItem(QFrame):
         notes_label.setWordWrap(True)
         layout.addWidget(notes_label)
 
-        # Timestamp info (created/edited)
-        timestamp_text = self._format_timestamp()
-        if timestamp_text:
-            timestamp_label = QLabel(timestamp_text)
-            timestamp_label.setProperty("history_timestamp", True)  # CSS class
-            layout.addWidget(timestamp_label)
-
-    def _format_timestamp(self) -> str:
-        """
-        Format the timestamp text showing created and edited times.
-
-        Returns:
-            str: Formatted timestamp text (e.g., "Created: 14:32 (Edited: 14:35)")
-        """
-        created_at = self.item_data.get("created_at")
-        updated_at = self.item_data.get("updated_at")
-
-        if not created_at:
-            return ""
-
-        # Format created time
-        if isinstance(created_at, datetime):
-            created_str = created_at.strftime("%H:%M")
-        else:
-            created_str = str(created_at)
-
-        result = f"Created: {created_str}"
-
-        # Add edited time if different from created
-        if updated_at and updated_at != created_at:
-            if isinstance(updated_at, datetime):
-                updated_str = updated_at.strftime("%H:%M")
-            else:
-                updated_str = str(updated_at)
-            result += f" (Edited: {updated_str})"
-
-        return result
-
     def enterEvent(self, event):
         """
         Show action buttons when mouse enters the widget.
@@ -223,19 +190,21 @@ class HistoryItem(QFrame):
 
 class HistoryList(QWidget):
     """
-    List of history items with add and pagination buttons.
+    List of history items with auto-load on scroll.
 
-    Displays treatment or product history with load more functionality.
+    Displays treatment or product history with infinite scroll functionality.
+    Automatically loads more items when scrolling near the bottom.
 
     Signals:
         add_clicked(): Emitted when Add button is clicked
-        load_more_clicked(): Emitted when Show More button is clicked
+        load_more_clicked(): Emitted when more items need to be loaded
         edit_item(int): Emitted when item edit is clicked (passes item_id)
         delete_item(int): Emitted when item delete is clicked (passes item_id)
 
     Attributes:
         _title: Title for this history list
         _items: List of loaded item IDs
+        _loading: Whether items are currently being loaded
     """
 
     # Signals
@@ -260,6 +229,7 @@ class HistoryList(QWidget):
         self._title = title
         self._items: List[int] = []
         self._has_more: bool = True
+        self._loading: bool = False
 
         # Set up the UI
         self._init_ui()
@@ -268,7 +238,8 @@ class HistoryList(QWidget):
         """
         Initialize the user interface.
 
-        Creates layout with title, items list, and action buttons.
+        Creates layout with title, scrollable items list with auto-load,
+        and end-of-list message.
         """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
@@ -292,26 +263,52 @@ class HistoryList(QWidget):
         layout.addLayout(title_row)
 
         # Scrollable items list
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self._scroll_area = QScrollArea()
+        self._scroll_area.setWidgetResizable(True)
+        self._scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
+        self._scroll_area.setProperty("history_section", True)  # CSS class
+
+        # Connect scroll event for auto-load
+        self._scroll_area.verticalScrollBar().valueChanged.connect(
+            self._on_scroll_changed
+        )
 
         self._items_container = QWidget()
         self._items_layout = QVBoxLayout(self._items_container)
         self._items_layout.setContentsMargins(0, 0, 0, 0)
-        self._items_layout.setSpacing(4)
+        self._items_layout.setSpacing(8)  # Gap between history items
         self._items_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        scroll_area.setWidget(self._items_container)
-        layout.addWidget(scroll_area, stretch=1)
+        self._scroll_area.setWidget(self._items_container)
+        layout.addWidget(self._scroll_area, stretch=1)
 
-        # Show More button
-        self._show_more_btn = QPushButton("Show More")
-        self._show_more_btn.setProperty("class", "secondary")
-        self._show_more_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._show_more_btn.clicked.connect(self.load_more_clicked.emit)
-        layout.addWidget(self._show_more_btn)
+        # End of list message (hidden by default)
+        self._end_label = QLabel()
+        self._end_label.setProperty("history_end_message", True)  # CSS class
+        self._end_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._end_label.setVisible(False)
+        layout.addWidget(self._end_label)
+
+    def _on_scroll_changed(self, value: int) -> None:
+        """
+        Handle scroll position change for auto-loading.
+
+        Loads more items when scrolling near the bottom.
+
+        Args:
+            value: Current scroll position
+        """
+        if self._loading or not self._has_more:
+            return
+
+        scrollbar = self._scroll_area.verticalScrollBar()
+        max_value = scrollbar.maximum()
+
+        # Load more when within 50 pixels of bottom
+        if value >= max_value - 50:
+            self._loading = True
+            self.load_more_clicked.emit()
 
     def add_items(self, items: List[dict]) -> None:
         """
@@ -343,9 +340,28 @@ class HistoryList(QWidget):
             # Track loaded item
             self._items.append(item_id)
 
-        # Update Show More button visibility
+        # Update state
         self._has_more = len(items) >= self.ITEMS_PER_PAGE
-        self._show_more_btn.setVisible(self._has_more)
+        self._loading = False
+
+        # Show end message when no more items
+        self._update_end_message()
+
+    def _update_end_message(self) -> None:
+        """
+        Update the end-of-list message visibility and text.
+        """
+        if not self._has_more and len(self._items) > 0:
+            # Determine message based on title
+            if "Treatment" in self._title:
+                self._end_label.setText("No more treatments")
+            elif "Product" in self._title:
+                self._end_label.setText("No more products")
+            else:
+                self._end_label.setText("No more items")
+            self._end_label.setVisible(True)
+        else:
+            self._end_label.setVisible(False)
 
     def clear_items(self) -> None:
         """
@@ -358,6 +374,9 @@ class HistoryList(QWidget):
                 widget.deleteLater()
 
         self._items.clear()
+        self._has_more = True
+        self._loading = False
+        self._end_label.setVisible(False)
 
 
 class AutoSaveTextEdit(QTextEdit):
@@ -528,27 +547,36 @@ class ClientDetailView(QWidget):
             QWidget containing header elements
         """
         header = QWidget()
-        header.setFixedHeight(100)
+        header.setFixedHeight(70)  # Reduced height since allergies moved inline
         header.setProperty("detail_header", True)  # CSS class
 
         layout = QVBoxLayout(header)
         layout.setContentsMargins(16, 12, 16, 12)
         layout.setSpacing(8)
 
-        # Top row: name and buttons
+        # Single row: name, age, allergies, and edit button
         top_row = QHBoxLayout()
+        top_row.setSpacing(12)
 
+        # Client name - larger font via QSS
         self._name_label = QLabel("Client Name")
         self._name_label.setProperty("client_detail_name", True)  # CSS class
         top_row.addWidget(self._name_label)
 
+        # Age - slightly smaller than name
         self._age_label = QLabel("(Age: --)")
         self._age_label.setProperty("client_age", True)  # CSS class
         top_row.addWidget(self._age_label)
 
+        # Allergies warning - inline with age, red text
+        self._allergies_label = QLabel()
+        self._allergies_label.setProperty("allergies_warning", True)  # CSS class (red)
+        self._allergies_label.setVisible(False)
+        top_row.addWidget(self._allergies_label)
+
         top_row.addStretch()
 
-        # Edit button
+        # Edit button (back button removed - navigation via navbar)
         edit_btn = QPushButton("Edit")
         edit_btn.setProperty("class", "secondary")
         edit_btn.setFixedWidth(80)
@@ -556,21 +584,7 @@ class ClientDetailView(QWidget):
         edit_btn.clicked.connect(self._on_edit_client)
         top_row.addWidget(edit_btn)
 
-        # Back button
-        back_btn = QPushButton("Back")
-        back_btn.setProperty("class", "secondary")
-        back_btn.setFixedWidth(80)
-        back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        back_btn.clicked.connect(self.back_to_list.emit)
-        top_row.addWidget(back_btn)
-
         layout.addLayout(top_row)
-
-        # Allergies warning (if present)
-        self._allergies_label = QLabel()
-        self._allergies_label.setProperty("allergies_warning", True)  # CSS class (red)
-        self._allergies_label.setVisible(False)
-        layout.addWidget(self._allergies_label)
 
         return header
 
@@ -662,10 +676,10 @@ class ClientDetailView(QWidget):
             # Hide age label if no DOB
             self._age_label.setVisible(False)
 
-        # Update allergies
+        # Update allergies (shown in red, no prefix)
         allergies = self._client_data.get("allergies", "").strip()
         if allergies:
-            self._allergies_label.setText(f"⚠ Allergies: {allergies}")
+            self._allergies_label.setText(allergies)
             self._allergies_label.setVisible(True)
         else:
             self._allergies_label.setVisible(False)
@@ -738,7 +752,7 @@ class ClientDetailView(QWidget):
 
                 # Load products
                 product_controller = ProductController(db)
-                products = product_controller.get_products_for_client(
+                products = product_controller.get_product_records_for_client(
                     self._client_id, limit=20
                 )
 
@@ -900,6 +914,7 @@ class ClientDetailView(QWidget):
         Handle add treatment button click.
 
         Opens the add treatment dialog and saves the treatment to database.
+        If a treatment already exists for today, opens it for editing instead.
         """
         from cosmetics_records.views.dialogs.add_treatment_dialog import AddTreatmentDialog
         from cosmetics_records.database.connection import DatabaseConnection
@@ -914,24 +929,44 @@ class ClientDetailView(QWidget):
 
         try:
             dialog = AddTreatmentDialog(self._client_id, self)
+
+            # Check if treatment exists for today
+            with DatabaseConnection() as db:
+                controller = TreatmentController(db)
+                existing = controller.get_treatment_for_date(
+                    self._client_id, date.today()
+                )
+                if existing:
+                    # Edit existing treatment instead of creating new
+                    dialog.set_existing_treatment(existing.id, existing.treatment_notes)
+                    logger.debug(f"Found existing treatment for today: {existing.id}")
+
             if dialog.exec():
                 # Get treatment data from dialog
                 treatment_data = dialog.get_treatment_data()
 
-                # Create TreatmentRecord model
-                treatment = TreatmentRecord(
-                    client_id=treatment_data["client_id"],
-                    treatment_date=treatment_data["date"],
-                    treatment_notes=treatment_data["notes"],
-                )
-
-                # Save to database
                 with DatabaseConnection() as db:
                     controller = TreatmentController(db)
-                    treatment_id = controller.create_treatment(treatment)
-                    logger.info(f"Treatment created with ID: {treatment_id}")
 
-                # Reload history to show new treatment
+                    if dialog.is_editing_existing():
+                        # Update existing treatment
+                        existing_id = dialog.get_existing_treatment_id()
+                        treatment = controller.get_treatment(existing_id)
+                        if treatment:
+                            treatment.treatment_notes = treatment_data["notes"]
+                            controller.update_treatment(treatment)
+                            logger.info(f"Treatment {existing_id} updated")
+                    else:
+                        # Create new treatment
+                        treatment = TreatmentRecord(
+                            client_id=treatment_data["client_id"],
+                            treatment_date=treatment_data["date"],
+                            treatment_notes=treatment_data["notes"],
+                        )
+                        treatment_id = controller.create_treatment(treatment)
+                        logger.info(f"Treatment created with ID: {treatment_id}")
+
+                # Reload history to show changes
                 self._load_history()
                 self.client_updated.emit()
 
@@ -949,27 +984,118 @@ class ClientDetailView(QWidget):
         """
         Handle edit treatment button click.
 
+        Opens the edit treatment dialog and updates/deletes the treatment.
+
         Args:
             treatment_id: Database ID of the treatment to edit
         """
+        from PyQt6.QtWidgets import QDialog
+        from cosmetics_records.views.dialogs.edit_treatment_dialog import EditTreatmentDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.treatment_controller import TreatmentController
+
         logger.debug(f"Edit treatment clicked: {treatment_id}")
-        # PLACEHOLDER: Will show EditTreatmentDialog
+
+        try:
+            # Get current treatment data
+            with DatabaseConnection() as db:
+                controller = TreatmentController(db)
+                treatment = controller.get_treatment(treatment_id)
+
+                if not treatment:
+                    logger.error(f"Treatment not found: {treatment_id}")
+                    return
+
+                treatment_data = {
+                    "date": treatment.treatment_date,
+                    "notes": treatment.treatment_notes,
+                }
+
+            # Show edit dialog
+            dialog = EditTreatmentDialog(treatment_id, treatment_data, parent=self)
+            result = dialog.exec()
+
+            if result == QDialog.DialogCode.Accepted:
+                with DatabaseConnection() as db:
+                    controller = TreatmentController(db)
+
+                    if dialog.was_deleted():
+                        # Delete the treatment
+                        controller.delete_treatment(treatment_id)
+                        logger.info(f"Treatment {treatment_id} deleted")
+                    else:
+                        # Update the treatment
+                        updated_data = dialog.get_treatment_data()
+                        treatment.treatment_date = updated_data["date"]
+                        treatment.treatment_notes = updated_data["notes"]
+                        controller.update_treatment(treatment)
+                        logger.info(f"Treatment {treatment_id} updated")
+
+                # Refresh the history
+                self._load_history()
+
+        except Exception as e:
+            logger.error(f"Failed to edit treatment {treatment_id}: {e}")
 
     def _on_delete_treatment(self, treatment_id: int) -> None:
         """
         Handle delete treatment button click.
 
+        Shows confirmation dialog and deletes the treatment if confirmed.
+
         Args:
             treatment_id: Database ID of the treatment to delete
         """
+        from PyQt6.QtWidgets import QDialog
+        from cosmetics_records.views.dialogs.base_dialog import ConfirmDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.treatment_controller import TreatmentController
+
         logger.debug(f"Delete treatment clicked: {treatment_id}")
-        # PLACEHOLDER: Will show confirmation dialog and delete
+
+        try:
+            # Get treatment data for confirmation message
+            with DatabaseConnection() as db:
+                controller = TreatmentController(db)
+                treatment = controller.get_treatment(treatment_id)
+
+                if not treatment:
+                    logger.error(f"Treatment not found: {treatment_id}")
+                    return
+
+                date_str = treatment.treatment_date.strftime("%B %d, %Y")
+
+            # Show confirmation dialog
+            confirm = ConfirmDialog(
+                "Delete Treatment",
+                f"Are you sure you want to delete the treatment from {date_str}?\n\n"
+                f"This action cannot be undone.",
+                ok_text="Delete",
+                cancel_text="Cancel",
+                parent=self,
+                width=450,
+                height=200,
+            )
+
+            if confirm.exec() == QDialog.DialogCode.Accepted:
+                # Delete the treatment
+                with DatabaseConnection() as db:
+                    controller = TreatmentController(db)
+                    controller.delete_treatment(treatment_id)
+                    logger.info(f"Treatment {treatment_id} deleted")
+
+                # Refresh the history
+                self._load_history()
+
+        except Exception as e:
+            logger.error(f"Failed to delete treatment {treatment_id}: {e}")
 
     def _on_add_product(self) -> None:
         """
         Handle add product button click.
 
         Opens the add product dialog and saves the product record to database.
+        If a product record already exists for today, opens it for editing instead.
         """
         from cosmetics_records.views.dialogs.add_product_record_dialog import AddProductRecordDialog
         from cosmetics_records.database.connection import DatabaseConnection
@@ -991,24 +1117,44 @@ class ClientDetailView(QWidget):
                 inventory_names = inv_controller.get_all_names()
 
             dialog = AddProductRecordDialog(self._client_id, inventory_names, self)
+
+            # Check if product record exists for today
+            with DatabaseConnection() as db:
+                controller = ProductController(db)
+                existing = controller.get_product_for_date(
+                    self._client_id, date.today()
+                )
+                if existing:
+                    # Edit existing product record instead of creating new
+                    dialog.set_existing_record(existing.id, existing.product_text)
+                    logger.debug(f"Found existing product record for today: {existing.id}")
+
             if dialog.exec():
                 # Get product data from dialog
                 product_data = dialog.get_product_record_data()
 
-                # Create ProductRecord model
-                product = ProductRecord(
-                    client_id=product_data["client_id"],
-                    product_date=product_data["date"],
-                    product_text=product_data["product_text"],
-                )
-
-                # Save to database
                 with DatabaseConnection() as db:
                     controller = ProductController(db)
-                    product_id = controller.create_product(product)
-                    logger.info(f"Product record created with ID: {product_id}")
 
-                # Reload history to show new product
+                    if dialog.is_editing_existing():
+                        # Update existing product record
+                        existing_id = dialog.get_existing_record_id()
+                        product = controller.get_product_record(existing_id)
+                        if product:
+                            product.product_text = product_data["product_text"]
+                            controller.update_product_record(product)
+                            logger.info(f"Product record {existing_id} updated")
+                    else:
+                        # Create new product record
+                        product = ProductRecord(
+                            client_id=product_data["client_id"],
+                            product_date=product_data["date"],
+                            product_text=product_data["product_text"],
+                        )
+                        product_id = controller.create_product_record(product)
+                        logger.info(f"Product record created with ID: {product_id}")
+
+                # Reload history to show changes
                 self._load_history()
                 self.client_updated.emit()
 

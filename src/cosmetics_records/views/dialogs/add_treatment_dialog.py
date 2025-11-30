@@ -4,14 +4,13 @@
 # This module provides a dialog for adding new treatment records.
 #
 # Key Features:
-#   - Date picker (defaults to today)
+#   - Always uses today's date (no date picker)
 #   - Notes text area (required)
-#   - Check for existing treatment on same date
-#   - Offer to edit existing treatment instead
+#   - Auto-redirects to edit if treatment exists for today
 #
 # Design Philosophy:
 #   - Simple form with minimal required fields
-#   - Default to today's date for convenience
+#   - Uses current date automatically for convenience
 #   - Prevent duplicate treatments on same date
 #   - Clear validation messages
 #
@@ -36,7 +35,6 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog, SimpleMessageDialog
-from ..components.date_picker import DatePicker
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -46,14 +44,14 @@ class AddTreatmentDialog(BaseDialog):
     """
     Dialog for adding a new treatment record.
 
-    This dialog collects date and notes for a new treatment record.
-    It checks for existing treatments on the selected date.
+    This dialog collects notes for a new treatment record.
+    Always uses today's date - no date picker shown.
 
     Attributes:
         _client_id: Database ID of the client this treatment is for
-        _date_picker: DatePicker for treatment date
         _notes_input: QTextEdit for treatment notes
         _error_label: QLabel for displaying validation errors
+        _existing_treatment_id: If set, edit existing treatment instead
     """
 
     def __init__(self, client_id: int, parent: Optional = None):
@@ -65,13 +63,11 @@ class AddTreatmentDialog(BaseDialog):
             parent: Optional parent widget
         """
         self._client_id = client_id
+        self._existing_treatment_id: Optional[int] = None
 
         # Initialize base dialog
-        # WHY 500x400: Compact size for simple form
-        super().__init__("Add Treatment", parent, width=500, height=400)
-
-        # Set default date to today
-        self._date_picker.set_date(date.today())
+        # WHY 500x350: Compact size for simple form (smaller without date picker)
+        super().__init__("Add Treatment", parent, width=500, height=350)
 
         logger.debug(f"AddTreatmentDialog initialized for client {client_id}")
 
@@ -79,7 +75,7 @@ class AddTreatmentDialog(BaseDialog):
         """
         Create the dialog content.
 
-        Adds form fields for date and notes.
+        Adds form field for notes. Date is always today.
 
         Args:
             layout: Layout to add content to
@@ -91,30 +87,23 @@ class AddTreatmentDialog(BaseDialog):
         self._error_label.setWordWrap(True)
         layout.addWidget(self._error_label)
 
-        # Form layout for fields
-        form_layout = QFormLayout()
-        form_layout.setSpacing(12)
-        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-
-        # Date (required, defaults to today)
-        self._date_picker = DatePicker()
-        form_layout.addRow("Date: *", self._date_picker)
+        # Date display (read-only, always today)
+        today_str = date.today().strftime("%B %d, %Y")
+        date_label = QLabel(f"Date: {today_str}")
+        date_label.setProperty("form_note", True)
+        layout.addWidget(date_label)
 
         # Notes (required)
+        notes_label = QLabel("Notes: *")
+        layout.addWidget(notes_label)
+
         self._notes_input = QTextEdit()
         self._notes_input.setPlaceholderText("Enter treatment notes...")
         self._notes_input.setMinimumHeight(150)
-        form_layout.addRow("Notes: *", self._notes_input)
-
-        layout.addLayout(form_layout)
+        layout.addWidget(self._notes_input)
 
         # Add stretch to push buttons to bottom
         layout.addStretch()
-
-        # Required fields note
-        required_note = QLabel("* Required fields")
-        required_note.setProperty("form_note", True)  # CSS class (small, gray)
-        layout.addWidget(required_note)
 
         # Save/Cancel buttons
         button_row = self.create_button_row("Save", "Cancel")
@@ -124,15 +113,8 @@ class AddTreatmentDialog(BaseDialog):
         """
         Accept the dialog after validating input.
 
-        Validates that date and notes are provided, and checks for
-        existing treatment on the same date.
+        Validates that notes are provided.
         """
-        # Validate date
-        treatment_date = self._date_picker.get_date()
-        if not treatment_date:
-            self._show_error("Date is required.")
-            return
-
         # Validate notes
         notes = self._notes_input.toPlainText().strip()
         if not notes:
@@ -140,18 +122,9 @@ class AddTreatmentDialog(BaseDialog):
             self._notes_input.setFocus()
             return
 
-        # PLACEHOLDER: Check for existing treatment on this date
-        # In real implementation, this would query the controller
-        existing_treatment = self._check_existing_treatment(treatment_date)
-
-        if existing_treatment:
-            # Offer to edit existing treatment instead
-            self._offer_edit_existing()
-            return
-
         # Validation passed
         logger.debug(
-            f"Adding treatment for client {self._client_id} on {treatment_date}"
+            f"Adding treatment for client {self._client_id} on {date.today()}"
         )
 
         # Hide error if it was showing
@@ -160,42 +133,38 @@ class AddTreatmentDialog(BaseDialog):
         # Accept dialog
         super().accept()
 
-    def _check_existing_treatment(self, treatment_date: date) -> bool:
+    def set_existing_treatment(self, treatment_id: int, notes: str) -> None:
         """
-        Check if a treatment already exists on the given date.
+        Set up dialog to edit an existing treatment.
+
+        Called when a treatment already exists for today's date.
 
         Args:
-            treatment_date: Date to check
+            treatment_id: ID of existing treatment to edit
+            notes: Existing notes to pre-fill
+        """
+        self._existing_treatment_id = treatment_id
+        self._notes_input.setPlainText(notes)
+        self.setWindowTitle("Edit Treatment")
+        logger.debug(f"Editing existing treatment {treatment_id}")
+
+    def is_editing_existing(self) -> bool:
+        """
+        Check if dialog is editing an existing treatment.
 
         Returns:
-            bool: True if treatment exists, False otherwise
-
-        Note:
-            PLACEHOLDER: This will be implemented by the controller.
+            bool: True if editing existing, False if creating new
         """
-        # PLACEHOLDER: Controller method will be called here
-        # For now, return False (no existing treatment)
-        return False
+        return self._existing_treatment_id is not None
 
-    def _offer_edit_existing(self) -> None:
+    def get_existing_treatment_id(self) -> Optional[int]:
         """
-        Show a message offering to edit the existing treatment.
+        Get the ID of the existing treatment being edited.
 
-        This is called when a treatment already exists on the selected date.
+        Returns:
+            Optional[int]: Treatment ID if editing, None if creating new
         """
-        treatment_date = self._date_picker.get_date()
-        date_str = treatment_date.strftime("%B %d, %Y") if treatment_date else ""
-
-        message_dialog = SimpleMessageDialog(
-            "Treatment Already Exists",
-            f"A treatment record already exists for {date_str}.\n\n"
-            f"Please edit the existing treatment or choose a different date.",
-            parent=self,
-            width=450,
-            height=200,
-        )
-
-        message_dialog.exec()
+        return self._existing_treatment_id
 
     def _show_error(self, message: str) -> None:
         """
@@ -214,7 +183,7 @@ class AddTreatmentDialog(BaseDialog):
         Returns:
             dict: Dictionary containing treatment data with keys:
                  - client_id: int
-                 - date: date
+                 - date: date (always today)
                  - notes: str
 
         Note:
@@ -222,6 +191,6 @@ class AddTreatmentDialog(BaseDialog):
         """
         return {
             "client_id": self._client_id,
-            "date": self._date_picker.get_date(),
+            "date": date.today(),
             "notes": self._notes_input.toPlainText().strip(),
         }

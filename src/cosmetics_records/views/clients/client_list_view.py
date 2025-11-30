@@ -63,7 +63,7 @@ class ClientRow(QFrame):
     Single client row in the list.
 
     Displays client name in "LastName, FirstName" format with bold last name.
-    Shows tags as blue chips if they match the search query.
+    Shows tags as blue chips only when they match the search query.
 
     Signals:
         clicked(): Emitted when the row is clicked
@@ -71,6 +71,7 @@ class ClientRow(QFrame):
     Attributes:
         client_id: Database ID of this client
         client_data: Dictionary containing client information
+        _tags_widget: Widget containing tag chips (hidden by default)
     """
 
     # Signal emitted when row is clicked
@@ -95,6 +96,9 @@ class ClientRow(QFrame):
         self.client_id = client_id
         self.client_data = client_data
 
+        # Tags widget reference for visibility control
+        self._tags_widget: Optional[QWidget] = None
+
         # Set fixed height for consistent rows
         self.setFixedHeight(self.ROW_HEIGHT)
 
@@ -110,6 +114,7 @@ class ClientRow(QFrame):
         Initialize the user interface.
 
         Creates a layout with name label and optional tag chips.
+        Tags are hidden by default and shown only when search matches.
         """
         # Main horizontal layout
         layout = QHBoxLayout(self)
@@ -128,12 +133,12 @@ class ClientRow(QFrame):
         # Add stretch to push tags to the right
         layout.addStretch()
 
-        # Tags (if present and matching search)
-        # NOTE: Tag visibility logic will be handled by the parent view
+        # Tags (if present) - hidden by default, shown when search matches
         tags = self.client_data.get("tags", [])
         if tags:
-            tags_widget = self._create_tags_widget(tags)
-            layout.addWidget(tags_widget)
+            self._tags_widget = self._create_tags_widget(tags)
+            self._tags_widget.setVisible(False)  # Hidden by default
+            layout.addWidget(self._tags_widget)
 
     def _create_tags_widget(self, tags: List[str]) -> QWidget:
         """
@@ -165,6 +170,30 @@ class ClientRow(QFrame):
             tags_layout.addWidget(more_label)
 
         return tags_container
+
+    def set_search_query(self, query: str) -> None:
+        """
+        Update tag visibility based on search query.
+
+        Tags are shown only if the query matches any of the client's tags.
+
+        Args:
+            query: Current search query (empty string shows no tags)
+        """
+        if not self._tags_widget:
+            return
+
+        # No query = hide tags
+        if not query:
+            self._tags_widget.setVisible(False)
+            return
+
+        # Check if query matches any tag (case-insensitive)
+        tags = self.client_data.get("tags", [])
+        query_lower = query.lower()
+        matches_tag = any(query_lower in tag.lower() for tag in tags)
+
+        self._tags_widget.setVisible(matches_tag)
 
     def mousePressEvent(self, event):
         """
@@ -267,16 +296,17 @@ class ClientListView(QWidget):
         # Container for client rows
         self._client_container = QWidget()
         self._client_layout = QVBoxLayout(self._client_container)
-        self._client_layout.setContentsMargins(0, 0, 0, 0)
-        self._client_layout.setSpacing(0)
+        self._client_layout.setContentsMargins(8, 8, 8, 8)
+        self._client_layout.setSpacing(8)  # Gap between list entries
         self._client_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._scroll_area.setWidget(self._client_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
 
-        # Right sidebar: alphabet filter
+        # Right sidebar: alphabet filter with horizontal padding
         self._alphabet_filter = AlphabetFilter()
         self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
+        self._alphabet_filter.setContentsMargins(8, 0, 8, 0)  # Horizontal padding
         content_layout.addWidget(self._alphabet_filter)
 
         main_layout.addLayout(content_layout)
@@ -499,6 +529,10 @@ class ClientListView(QWidget):
             client_row.clicked.connect(
                 lambda cid=client_id: self._on_client_clicked(cid)
             )
+
+            # Update tag visibility based on current search query
+            # Tags are only shown when search matches a tag
+            client_row.set_search_query(self._current_search)
 
             # Add to layout
             self._client_layout.addWidget(client_row)

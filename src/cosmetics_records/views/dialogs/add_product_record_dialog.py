@@ -4,16 +4,16 @@
 # This module provides a dialog for adding new product usage records.
 #
 # Key Features:
-#   - Date picker (defaults to today)
+#   - Always uses today's date (no date picker)
 #   - Autocomplete product input (suggests from inventory)
 #   - Allows free text if product not in inventory
-#   - Simple two-field form
+#   - Auto-redirects to edit if product record exists for today
 #
 # Design Philosophy:
 #   - Quick data entry with autocomplete
 #   - Flexibility to record unlisted products
-#   - Default to today's date for convenience
-#   - Minimal required fields
+#   - Uses current date automatically for convenience
+#   - Prevent duplicate records on same date
 #
 # Usage Example:
 #   dialog = AddProductRecordDialog(client_id, inventory_items)
@@ -35,7 +35,6 @@ from PyQt6.QtWidgets import (
 
 from .base_dialog import BaseDialog
 from ..components.autocomplete import Autocomplete
-from ..components.date_picker import DatePicker
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -45,14 +44,15 @@ class AddProductRecordDialog(BaseDialog):
     """
     Dialog for adding a new product usage record.
 
-    This dialog collects date and product text for a new product record.
+    This dialog collects product text for a new product record.
+    Always uses today's date - no date picker shown.
     Product input uses autocomplete from inventory but allows free text.
 
     Attributes:
         _client_id: Database ID of the client this record is for
-        _date_picker: DatePicker for record date
         _product_input: Autocomplete for product text
         _error_label: QLabel for displaying validation errors
+        _existing_record_id: If set, edit existing record instead
     """
 
     def __init__(
@@ -68,13 +68,11 @@ class AddProductRecordDialog(BaseDialog):
         """
         self._client_id = client_id
         self._inventory_items = inventory_items or []
+        self._existing_record_id: Optional[int] = None
 
         # Initialize base dialog
         # WHY 500x300: Compact size for simple form
         super().__init__("Add Product Record", parent, width=500, height=300)
-
-        # Set default date to today
-        self._date_picker.set_date(date.today())
 
         # Set autocomplete suggestions
         if self._inventory_items:
@@ -86,7 +84,7 @@ class AddProductRecordDialog(BaseDialog):
         """
         Create the dialog content.
 
-        Adds form fields for date and product text.
+        Adds form field for product text. Date is always today.
 
         Args:
             layout: Layout to add content to
@@ -98,14 +96,16 @@ class AddProductRecordDialog(BaseDialog):
         self._error_label.setWordWrap(True)
         layout.addWidget(self._error_label)
 
+        # Date display (read-only, always today)
+        today_str = date.today().strftime("%B %d, %Y")
+        date_label = QLabel(f"Date: {today_str}")
+        date_label.setProperty("form_note", True)
+        layout.addWidget(date_label)
+
         # Form layout for fields
         form_layout = QFormLayout()
         form_layout.setSpacing(12)
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-
-        # Date (required, defaults to today)
-        self._date_picker = DatePicker()
-        form_layout.addRow("Date: *", self._date_picker)
 
         # Product (autocomplete from inventory, but allows free text)
         self._product_input = Autocomplete()
@@ -136,14 +136,8 @@ class AddProductRecordDialog(BaseDialog):
         """
         Accept the dialog after validating input.
 
-        Validates that date and product text are provided.
+        Validates that product text is provided.
         """
-        # Validate date
-        record_date = self._date_picker.get_date()
-        if not record_date:
-            self._show_error("Date is required.")
-            return
-
         # Validate product text
         product_text = self._product_input.get_text().strip()
         if not product_text:
@@ -153,7 +147,7 @@ class AddProductRecordDialog(BaseDialog):
 
         # Validation passed
         logger.debug(
-            f"Adding product record for client {self._client_id} on {record_date}"
+            f"Adding product record for client {self._client_id} on {date.today()}"
         )
 
         # Hide error if it was showing
@@ -172,6 +166,39 @@ class AddProductRecordDialog(BaseDialog):
         self._error_label.setText(message)
         self._error_label.setVisible(True)
 
+    def set_existing_record(self, record_id: int, product_text: str) -> None:
+        """
+        Set up dialog to edit an existing product record.
+
+        Called when a product record already exists for today's date.
+
+        Args:
+            record_id: ID of existing record to edit
+            product_text: Existing product text to pre-fill
+        """
+        self._existing_record_id = record_id
+        self._product_input.set_text(product_text)
+        self.setWindowTitle("Edit Product Record")
+        logger.debug(f"Editing existing product record {record_id}")
+
+    def is_editing_existing(self) -> bool:
+        """
+        Check if dialog is editing an existing record.
+
+        Returns:
+            bool: True if editing existing, False if creating new
+        """
+        return self._existing_record_id is not None
+
+    def get_existing_record_id(self) -> Optional[int]:
+        """
+        Get the ID of the existing record being edited.
+
+        Returns:
+            Optional[int]: Record ID if editing, None if creating new
+        """
+        return self._existing_record_id
+
     def get_product_record_data(self) -> dict:
         """
         Get the entered product record data.
@@ -179,7 +206,7 @@ class AddProductRecordDialog(BaseDialog):
         Returns:
             dict: Dictionary containing product record data with keys:
                  - client_id: int
-                 - date: date
+                 - date: date (always today)
                  - product_text: str
 
         Note:
@@ -187,6 +214,6 @@ class AddProductRecordDialog(BaseDialog):
         """
         return {
             "client_id": self._client_id,
-            "date": self._date_picker.get_date(),
+            "date": date.today(),
             "product_text": self._product_input.get_text().strip(),
         }

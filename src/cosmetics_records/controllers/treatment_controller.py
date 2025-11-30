@@ -418,6 +418,52 @@ class TreatmentController:
         )
         return existing_id
 
+    def get_treatment_for_date(
+        self, client_id: int, treatment_date: date
+    ) -> Optional[TreatmentRecord]:
+        """
+        Get a treatment record for a specific client and date.
+
+        This method retrieves the full treatment record for a client on a
+        specific date, useful when you need to edit an existing entry.
+
+        Args:
+            client_id: The unique identifier of the client
+            treatment_date: The date to look up
+
+        Returns:
+            TreatmentRecord if found, None otherwise
+
+        Example:
+            >>> from datetime import date
+            >>> today = date.today()
+            >>> treatment = controller.get_treatment_for_date(42, today)
+            >>> if treatment:
+            ...     print(f"Found treatment: {treatment.treatment_notes}")
+        """
+        query = """
+            SELECT id, client_id, treatment_date, treatment_notes,
+                   created_at, updated_at
+            FROM treatment_records
+            WHERE client_id = ? AND treatment_date = ?
+            LIMIT 1
+        """
+
+        self.db.execute(query, (client_id, treatment_date))
+        row = self.db.fetchone()
+
+        if row is None:
+            logger.debug(
+                f"No treatment found for client {client_id} on {treatment_date}"
+            )
+            return None
+
+        treatment = self._row_to_treatment(row)
+        logger.debug(
+            f"Retrieved treatment for client {client_id} on {treatment_date}"
+        )
+        return treatment
+
     # =========================================================================
     # Helper Methods (Private)
     # =========================================================================

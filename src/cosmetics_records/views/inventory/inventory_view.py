@@ -235,16 +235,17 @@ class InventoryView(QWidget):
         # Container for item rows
         self._item_container = QWidget()
         self._item_layout = QVBoxLayout(self._item_container)
-        self._item_layout.setContentsMargins(0, 0, 0, 0)
-        self._item_layout.setSpacing(0)
+        self._item_layout.setContentsMargins(8, 8, 8, 8)
+        self._item_layout.setSpacing(8)  # Gap between list entries
         self._item_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._scroll_area.setWidget(self._item_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
 
-        # Right sidebar: alphabet filter (including #)
+        # Right sidebar: alphabet filter (including #) with horizontal padding
         self._alphabet_filter = AlphabetFilter()
         self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
+        self._alphabet_filter.setContentsMargins(8, 0, 8, 0)  # Horizontal padding
         content_layout.addWidget(self._alphabet_filter)
 
         main_layout.addLayout(content_layout)
@@ -495,23 +496,38 @@ class InventoryView(QWidget):
                 logger.error(f"Item not found: {item_id}")
                 return
 
+            # Convert item to dictionary for dialog
+            item_data = {
+                "name": item.name,
+                "description": item.description or "",
+                "capacity": int(item.capacity),
+                "unit": item.unit,
+            }
+
             # Show edit dialog
-            dialog = EditInventoryDialog(item, self)
+            dialog = EditInventoryDialog(item.id, item_data, self)
             if dialog.exec():
-                # Get updated data
-                item_data = dialog.get_item_data()
+                if dialog.was_deleted():
+                    # Delete the item
+                    with DatabaseConnection() as db:
+                        controller = InventoryController(db)
+                        controller.delete_item(item_id)
+                        logger.info(f"Item deleted: {item.name}")
+                else:
+                    # Get updated data
+                    updated_data = dialog.get_inventory_data()
 
-                # Update item
-                item.name = item_data["name"]
-                item.description = item_data.get("description")
-                item.capacity = item_data["capacity"]
-                item.unit = item_data["unit"]
+                    # Update item
+                    item.name = updated_data["name"]
+                    item.description = updated_data.get("description")
+                    item.capacity = updated_data["capacity"]
+                    item.unit = updated_data["unit"]
 
-                # Save to database
-                with DatabaseConnection() as db:
-                    controller = InventoryController(db)
-                    controller.update_item(item)
-                    logger.info(f"Item updated: {item.name}")
+                    # Save to database
+                    with DatabaseConnection() as db:
+                        controller = InventoryController(db)
+                        controller.update_item(item)
+                        logger.info(f"Item updated: {item.name}")
 
                 # Refresh list
                 self.refresh()

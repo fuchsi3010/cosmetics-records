@@ -92,19 +92,10 @@ class SearchBar(QWidget):
         # Set fixed height for consistent layout
         self.setFixedHeight(40)
 
-        # Horizontal layout: [🔍 icon] [input field] [X clear button]
+        # Horizontal layout: [input field] [X clear button]
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
-
-        # Search icon (magnifying glass)
-        # WHY QPushButton instead of QLabel: Could make it clickable in future
-        # if we want to support click-to-search behavior
-        self._search_icon = QPushButton("🔍")
-        self._search_icon.setFixedSize(36, 36)
-        self._search_icon.setEnabled(False)  # Non-interactive
-        self._search_icon.setProperty("search_icon", True)  # CSS class
-        layout.addWidget(self._search_icon)
 
         # Main search input field
         self._line_edit = QLineEdit()

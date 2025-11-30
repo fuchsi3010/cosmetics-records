@@ -357,6 +357,149 @@ QFrame[frameShape="0"] {{
 }}
 
 /* ==========================================================================
+   Client/Inventory List Rows
+   ========================================================================== */
+
+QFrame[client_row="true"], QFrame[inventory_row="true"] {{
+    background-color: #3a3a3a;
+    border: none;
+    border-radius: 6px;
+}}
+
+QFrame[client_row="true"]:hover, QFrame[inventory_row="true"]:hover {{
+    background-color: #454545;
+}}
+
+QLabel[client_name="true"] {{
+    background-color: transparent;
+}}
+
+/* ==========================================================================
+   Tag Chips (Small)
+   ========================================================================== */
+
+QLabel[tag_chip_small="true"] {{
+    background-color: #444444;
+    color: {DARK_TEXT};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: {sizes["secondary"]};
+}}
+
+QLabel[tag_more="true"] {{
+    color: {DARK_TEXT_SECONDARY};
+    font-size: {sizes["secondary"]};
+}}
+
+/* ==========================================================================
+   Client Detail Header
+   ========================================================================== */
+
+QWidget[detail_header="true"] {{
+    background-color: transparent;
+}}
+
+QLabel[client_detail_name="true"] {{
+    background-color: transparent;
+    font-size: 24px;
+    font-weight: bold;
+    color: {DARK_TEXT};
+}}
+
+QLabel[client_age="true"] {{
+    background-color: transparent;
+    font-size: 18px;
+    color: {DARK_TEXT_SECONDARY};
+}}
+
+QLabel[allergies_warning="true"] {{
+    background-color: transparent;
+    font-size: 14px;
+    color: #cc3333;
+    font-weight: 500;
+}}
+
+/* ==========================================================================
+   History Section
+   ========================================================================== */
+
+QScrollArea[history_section="true"] {{
+    background-color: transparent;
+    border: 1px solid {DARK_BORDER};
+    border-radius: {BORDER_RADIUS};
+}}
+
+QFrame[history_item="true"] {{
+    background-color: #1e1e1e;
+    border: none;
+    border-radius: 6px;
+}}
+
+QFrame[history_item="true"]:hover {{
+    background-color: #282828;
+}}
+
+QLabel[history_date="true"] {{
+    background-color: transparent;
+    font-size: 11px;
+    color: {DARK_TEXT_SECONDARY};
+}}
+
+QLabel[history_notes="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT};
+}}
+
+QLabel[history_timestamp="true"] {{
+    background-color: transparent;
+    font-size: 10px;
+    color: {DARK_TEXT_SECONDARY};
+}}
+
+QLabel[history_end_message="true"] {{
+    background-color: transparent;
+    font-size: 12px;
+    color: {DARK_TEXT_SECONDARY};
+    padding: 8px;
+}}
+
+/* ==========================================================================
+   Dialog Styling
+   ========================================================================== */
+
+QFrame[dialog_frame="true"] {{
+    background-color: {DARK_SURFACE};
+    border: 1px solid {DARK_BORDER};
+    border-radius: 12px;
+}}
+
+QWidget[dialog_title_bar="true"] {{
+    background-color: transparent;
+    border: none;
+}}
+
+QLabel[dialog_title="true"] {{
+    background-color: transparent;
+    font-size: 20px;
+    font-weight: bold;
+    color: {DARK_TEXT};
+}}
+
+QPushButton[dialog_close="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT_SECONDARY};
+    border: none;
+    border-radius: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}}
+
+QPushButton[dialog_close="true"]:hover {{
+    background-color: {DARK_HOVER};
+    color: {DARK_TEXT};
+}}
+
+/* ==========================================================================
    Combo Box (Dropdown)
    ========================================================================== */
 
@@ -539,6 +682,29 @@ QToolTip {{
 }}
 
 /* ==========================================================================
+   Navigation Bar Buttons
+   ========================================================================== */
+
+QPushButton[nav_item="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT};
+    border: none;
+    border-radius: 4px;
+    font-size: {sizes["nav"]};
+    text-align: left;
+    padding-left: 16px;
+}}
+
+QPushButton[nav_item="true"]:hover {{
+    background-color: {DARK_HOVER};
+}}
+
+QPushButton[nav_item="true"][active="true"] {{
+    background-color: {PRIMARY_BLUE};
+    color: white;
+}}
+
+/* ==========================================================================
    Navigation Toggle Button
    ========================================================================== */
 
@@ -583,6 +749,28 @@ QPushButton[alphabet_filter="true"]:hover {{
 QPushButton[alphabet_filter="true"][active="true"] {{
     background-color: #555555;
     color: white;
+}}
+
+/* ==========================================================================
+   Alphabet Filter Arrow Buttons
+   ========================================================================== */
+
+QPushButton[alphabet_arrow="true"] {{
+    background-color: transparent;
+    color: #888888;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px;
+}}
+
+QPushButton[alphabet_arrow="true"]:hover {{
+    background-color: {DARK_HOVER};
+    color: {DARK_TEXT};
+}}
+
+QPushButton[alphabet_arrow="true"]:pressed {{
+    background-color: #555555;
 }}
 """
 
@@ -822,6 +1010,149 @@ QFrame[frameShape="0"] {{
 }}
 
 /* ==========================================================================
+   Client/Inventory List Rows
+   ========================================================================== */
+
+QFrame[client_row="true"], QFrame[inventory_row="true"] {{
+    background-color: #e8e8e8;
+    border: none;
+    border-radius: 6px;
+}}
+
+QFrame[client_row="true"]:hover, QFrame[inventory_row="true"]:hover {{
+    background-color: #d8d8d8;
+}}
+
+QLabel[client_name="true"] {{
+    background-color: transparent;
+}}
+
+/* ==========================================================================
+   Tag Chips (Small)
+   ========================================================================== */
+
+QLabel[tag_chip_small="true"] {{
+    background-color: #e0e0e0;
+    color: #333333;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: {sizes["secondary"]};
+}}
+
+QLabel[tag_more="true"] {{
+    color: {LIGHT_TEXT_SECONDARY};
+    font-size: {sizes["secondary"]};
+}}
+
+/* ==========================================================================
+   Client Detail Header
+   ========================================================================== */
+
+QWidget[detail_header="true"] {{
+    background-color: transparent;
+}}
+
+QLabel[client_detail_name="true"] {{
+    background-color: transparent;
+    font-size: 24px;
+    font-weight: bold;
+    color: {LIGHT_TEXT};
+}}
+
+QLabel[client_age="true"] {{
+    background-color: transparent;
+    font-size: 18px;
+    color: {LIGHT_TEXT_SECONDARY};
+}}
+
+QLabel[allergies_warning="true"] {{
+    background-color: transparent;
+    font-size: 14px;
+    color: #aa0000;
+    font-weight: 500;
+}}
+
+/* ==========================================================================
+   History Section
+   ========================================================================== */
+
+QScrollArea[history_section="true"] {{
+    background-color: transparent;
+    border: 1px solid {LIGHT_BORDER};
+    border-radius: {BORDER_RADIUS};
+}}
+
+QFrame[history_item="true"] {{
+    background-color: #ffffff;
+    border: none;
+    border-radius: 6px;
+}}
+
+QFrame[history_item="true"]:hover {{
+    background-color: #f5f5f5;
+}}
+
+QLabel[history_date="true"] {{
+    background-color: transparent;
+    font-size: 11px;
+    color: {LIGHT_TEXT_SECONDARY};
+}}
+
+QLabel[history_notes="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT};
+}}
+
+QLabel[history_timestamp="true"] {{
+    background-color: transparent;
+    font-size: 10px;
+    color: {LIGHT_TEXT_SECONDARY};
+}}
+
+QLabel[history_end_message="true"] {{
+    background-color: transparent;
+    font-size: 12px;
+    color: {LIGHT_TEXT_SECONDARY};
+    padding: 8px;
+}}
+
+/* ==========================================================================
+   Dialog Styling
+   ========================================================================== */
+
+QFrame[dialog_frame="true"] {{
+    background-color: {LIGHT_SURFACE};
+    border: 1px solid {LIGHT_BORDER};
+    border-radius: 12px;
+}}
+
+QWidget[dialog_title_bar="true"] {{
+    background-color: transparent;
+    border: none;
+}}
+
+QLabel[dialog_title="true"] {{
+    background-color: transparent;
+    font-size: 20px;
+    font-weight: bold;
+    color: {LIGHT_TEXT};
+}}
+
+QPushButton[dialog_close="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT_SECONDARY};
+    border: none;
+    border-radius: 15px;
+    font-size: 20px;
+    font-weight: bold;
+}}
+
+QPushButton[dialog_close="true"]:hover {{
+    background-color: {LIGHT_HOVER};
+    color: {LIGHT_TEXT};
+}}
+
+/* ==========================================================================
    Combo Box (Dropdown)
    ========================================================================== */
 
@@ -1002,6 +1333,29 @@ QToolTip {{
 }}
 
 /* ==========================================================================
+   Navigation Bar Buttons
+   ========================================================================== */
+
+QPushButton[nav_item="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT};
+    border: none;
+    border-radius: 4px;
+    font-size: {sizes["nav"]};
+    text-align: left;
+    padding-left: 16px;
+}}
+
+QPushButton[nav_item="true"]:hover {{
+    background-color: {LIGHT_HOVER};
+}}
+
+QPushButton[nav_item="true"][active="true"] {{
+    background-color: {PRIMARY_BLUE};
+    color: white;
+}}
+
+/* ==========================================================================
    Navigation Toggle Button
    ========================================================================== */
 
@@ -1046,6 +1400,28 @@ QPushButton[alphabet_filter="true"]:hover {{
 QPushButton[alphabet_filter="true"][active="true"] {{
     background-color: #888888;
     color: white;
+}}
+
+/* ==========================================================================
+   Alphabet Filter Arrow Buttons
+   ========================================================================== */
+
+QPushButton[alphabet_arrow="true"] {{
+    background-color: transparent;
+    color: #666666;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px;
+}}
+
+QPushButton[alphabet_arrow="true"]:hover {{
+    background-color: {LIGHT_HOVER};
+    color: {LIGHT_TEXT};
+}}
+
+QPushButton[alphabet_arrow="true"]:pressed {{
+    background-color: #888888;
 }}
 """
 

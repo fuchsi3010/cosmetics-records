@@ -429,6 +429,52 @@ class ProductController:
         )
         return existing_id
 
+    def get_product_for_date(
+        self, client_id: int, product_date: date
+    ) -> Optional[ProductRecord]:
+        """
+        Get a product record for a specific client and date.
+
+        This method retrieves the full product record for a client on a
+        specific date, useful when you need to edit an existing entry.
+
+        Args:
+            client_id: The unique identifier of the client
+            product_date: The date to look up
+
+        Returns:
+            ProductRecord if found, None otherwise
+
+        Example:
+            >>> from datetime import date
+            >>> today = date.today()
+            >>> product = controller.get_product_for_date(42, today)
+            >>> if product:
+            ...     print(f"Found product: {product.product_text}")
+        """
+        query = """
+            SELECT id, client_id, product_date, product_text,
+                   created_at, updated_at
+            FROM product_records
+            WHERE client_id = ? AND product_date = ?
+            LIMIT 1
+        """
+
+        self.db.execute(query, (client_id, product_date))
+        row = self.db.fetchone()
+
+        if row is None:
+            logger.debug(
+                f"No product record found for client {client_id} on {product_date}"
+            )
+            return None
+
+        product = self._row_to_product_record(row)
+        logger.debug(
+            f"Retrieved product record for client {client_id} on {product_date}"
+        )
+        return product
+
     # =========================================================================
     # Helper Methods (Private)
     # =========================================================================
