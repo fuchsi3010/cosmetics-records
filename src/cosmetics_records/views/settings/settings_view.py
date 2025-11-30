@@ -230,15 +230,16 @@ class SettingsView(QWidget):
         scale_row = QHBoxLayout()
         scale_row.setSpacing(12)
 
-        # Slider for UI scale (80% - 200%)
+        # Slider for UI scale (80% - 200%) in 5% intervals
         # WHY 80-200 range: Reasonable bounds for accessibility
+        # WHY 5% intervals: Gives fine-grained control while avoiding odd values
         self._scale_slider = QSlider(Qt.Orientation.Horizontal)
         self._scale_slider.setMinimum(80)  # 80%
         self._scale_slider.setMaximum(200)  # 200%
-        self._scale_slider.setSingleStep(10)
-        self._scale_slider.setPageStep(20)
+        self._scale_slider.setSingleStep(5)  # 5% intervals
+        self._scale_slider.setPageStep(10)  # 10% for page up/down
         self._scale_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self._scale_slider.setTickInterval(20)
+        self._scale_slider.setTickInterval(10)  # Tick marks every 10%
 
         # Connect slider to update label
         self._scale_slider.valueChanged.connect(self._on_scale_slider_changed)
