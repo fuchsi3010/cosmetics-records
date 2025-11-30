@@ -39,3 +39,8 @@ python-json-logger>=2.0.0
 # darkdetect detects whether the system is using dark or light mode,
 # allowing the app to match the system theme
 darkdetect>=0.8.0
+
+# FontAwesome Icons
+# qtawesome provides FontAwesome and other icon fonts for PyQt6
+# Used for navigation icons and other UI elements
+qtawesome>=1.3.0

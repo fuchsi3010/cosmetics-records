@@ -162,6 +162,7 @@ class BaseDialog(QDialog):
         close_btn.setFixedSize(30, 30)
         close_btn.setProperty("dialog_close", True)  # CSS class
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.setToolTip(_("Close"))  # Accessibility tooltip
         close_btn.clicked.connect(self.reject)
         title_layout.addWidget(close_btn)
 

@@ -27,6 +27,7 @@
 import logging
 from typing import Optional
 
+import qtawesome as qta
 from PyQt6.QtCore import QPropertyAnimation, QSize, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QFrame,
@@ -111,18 +112,19 @@ class NavBar(QFrame):
         # Create navigation items
         # WHY this order: Clients and client detail at top, then spacer,
         # then less common items (inventory, audit) above settings
-        self._add_nav_button("clients", "☰", _("Clients"), layout)
-        self._add_nav_button("client_detail", "☺", _("Client Detail"), layout)
+        # Using FontAwesome icons via qtawesome for crisp, scalable icons
+        self._add_nav_button("clients", "fa5s.bars", _("Clients"), layout)
+        self._add_nav_button("client_detail", "fa5s.user", _("Client Detail"), layout)
 
         # Add spacer to push remaining items to bottom
         layout.addStretch()
 
         # Less frequently used items above settings
-        self._add_nav_button("inventory", "■", _("Inventory"), layout)
-        self._add_nav_button("audit", "⟲", _("Audit Log"), layout)
+        self._add_nav_button("inventory", "fa5s.boxes", _("Inventory"), layout)
+        self._add_nav_button("audit", "fa5s.history", _("Audit Log"), layout)
 
         # Settings at bottom (common UI pattern)
-        self._add_nav_button("settings", "⚙", _("Settings"), layout)
+        self._add_nav_button("settings", "fa5s.cog", _("Settings"), layout)
 
         # Toggle button at very bottom
         self._create_toggle_button(layout)
@@ -132,33 +134,40 @@ class NavBar(QFrame):
         self.set_item_visible("client_detail", False)
 
     def _add_nav_button(
-        self, item_id: str, icon: str, label: str, layout: QVBoxLayout
+        self, item_id: str, icon_name: str, label: str, layout: QVBoxLayout
     ) -> None:
         """
         Create and add a navigation button to the layout.
 
         Args:
             item_id: Unique identifier for this nav item (e.g., "clients")
-            icon: Unicode character to use as icon
+            icon_name: QtAwesome icon name (e.g., "fa5s.bars")
             label: Text label to show when expanded
             layout: Layout to add the button to
 
         Note:
-            The button text will be set to just the icon when collapsed,
-            or "icon label" when expanded.
+            Uses QtAwesome FontAwesome icons for crisp, scalable graphics.
+            The button text will be just the label when expanded,
+            or icon-only when collapsed.
         """
         button = QPushButton()
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.setFixedHeight(50)
         button.setProperty("nav_item", True)  # CSS class for styling
 
-        # Store the icon and label for use when toggling
+        # Store the icon name and label for use when toggling
         # WHY "nav_icon" not "icon": PyQt may confuse "icon" with built-in property
-        button.setProperty("nav_icon", icon)
+        button.setProperty("nav_icon", icon_name)
         button.setProperty("nav_label", label)
 
-        # Set initial text (expanded mode)
-        button.setText(f"{icon}  {label}")
+        # Set FontAwesome icon using qtawesome
+        # Color #E0E0E0 works well on both dark and light nav backgrounds
+        icon = qta.icon(icon_name, color="#E0E0E0")
+        button.setIcon(icon)
+        button.setIconSize(QSize(20, 20))
+
+        # Set initial text (expanded mode shows label)
+        button.setText(label)
 
         # Connect click handler
         # WHY lambda: Captures item_id for this specific button
@@ -187,7 +196,7 @@ class NavBar(QFrame):
         # at 50% vertical height, which requires manual positioning
         self._toggle_btn = QPushButton("◀", self)
         self._toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._toggle_btn.setFixedSize(24, 24)  # Small, just fits the icon
+        self._toggle_btn.setFixedSize(24, 48)  # Doubled height for easier clicking
         self._toggle_btn.setProperty("toggle_nav", True)  # CSS class
 
         # Connect to toggle handler
@@ -252,17 +261,17 @@ class NavBar(QFrame):
         """
         Update button text based on expanded/collapsed state.
 
-        When collapsed, shows only icons.
+        When collapsed, shows only icons (text is empty).
         When expanded, shows icons + labels.
+        Icons are always visible via setIcon().
         """
         for button in self._nav_buttons.values():
-            icon = button.property("nav_icon")
             label = button.property("nav_label")
 
             if self.is_expanded:
-                button.setText(f"{icon}  {label}")
+                button.setText(str(label) if label else "")
             else:
-                button.setText(str(icon) if icon else "")
+                button.setText("")  # Icon-only mode
 
     def set_active(self, item_id: str) -> None:
         """
@@ -339,16 +348,16 @@ class NavBar(QFrame):
         """
         if item_id in self._nav_buttons:
             button = self._nav_buttons[item_id]
-            icon = button.property("nav_icon")
 
             # Store new label
             button.setProperty("nav_label", label)
 
             # Update displayed text based on expanded state
+            # Icon is always visible via setIcon()
             if self.is_expanded:
-                button.setText(f"{icon}  {label}")
+                button.setText(label)
             else:
-                button.setText(str(icon) if icon else "")
+                button.setText("")  # Icon-only mode
 
             logger.debug(f"NavBar item '{item_id}' label set to '{label}'")
 

@@ -243,8 +243,9 @@ class SettingsView(QWidget):
         self._scale_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self._scale_slider.setTickInterval(10)  # Tick marks every 10%
 
-        # Connect slider to update label
+        # Connect slider to update label and snap to 5% intervals
         self._scale_slider.valueChanged.connect(self._on_scale_slider_changed)
+        self._scale_slider.sliderMoved.connect(self._on_scale_slider_moved)
 
         # Label showing current scale percentage
         self._scale_label = QLabel("100%")
@@ -666,7 +667,7 @@ class SettingsView(QWidget):
 
     def _on_scale_slider_changed(self, value: int) -> None:
         """
-        Handle UI scale slider change.
+        Handle UI scale slider value change.
 
         Updates the percentage label as user drags the slider.
 
@@ -674,6 +675,20 @@ class SettingsView(QWidget):
             value: Slider value (80-200 representing 80%-200%)
         """
         self._scale_label.setText(f"{value}%")
+
+    def _on_scale_slider_moved(self, value: int) -> None:
+        """
+        Handle UI scale slider being dragged.
+
+        Snaps the slider to the nearest 5% interval during drag.
+
+        Args:
+            value: Current slider position (80-200)
+        """
+        # Snap to nearest 5% interval
+        snapped = round(value / 5) * 5
+        if snapped != value:
+            self._scale_slider.setValue(snapped)
 
     def _on_scale_apply(self) -> None:
         """
