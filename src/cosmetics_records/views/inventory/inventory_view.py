@@ -214,17 +214,12 @@ class InventoryView(QWidget):
         top_bar = self._create_top_bar()
         main_layout.addWidget(top_bar)
 
-        # Content area: filter sidebar + item list
+        # Content area: item list + filter sidebar
         content_layout = QHBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Left sidebar: alphabet filter (including #)
-        self._alphabet_filter = AlphabetFilter()
-        self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
-        content_layout.addWidget(self._alphabet_filter)
-
-        # Item list (scrollable)
+        # Item list (scrollable) - takes most of the space
         self._scroll_area = QScrollArea()
         self._scroll_area.setWidgetResizable(True)
         self._scroll_area.setHorizontalScrollBarPolicy(
@@ -246,6 +241,11 @@ class InventoryView(QWidget):
 
         self._scroll_area.setWidget(self._item_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
+
+        # Right sidebar: alphabet filter (including #)
+        self._alphabet_filter = AlphabetFilter()
+        self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
+        content_layout.addWidget(self._alphabet_filter)
 
         main_layout.addLayout(content_layout)
 

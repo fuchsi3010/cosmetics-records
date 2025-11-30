@@ -560,6 +560,30 @@ QPushButton[toggle_nav="true"]:hover {{
 QPushButton[toggle_nav="true"]:pressed {{
     background-color: #444444;
 }}
+
+/* ==========================================================================
+   Alphabet Filter Buttons
+   ========================================================================== */
+
+QPushButton[alphabet_filter="true"] {{
+    background-color: transparent;
+    color: #888888;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px;
+}}
+
+QPushButton[alphabet_filter="true"]:hover {{
+    background-color: {DARK_HOVER};
+    color: {DARK_TEXT};
+}}
+
+QPushButton[alphabet_filter="true"][active="true"] {{
+    background-color: #555555;
+    color: white;
+}}
 """
 
 
@@ -998,6 +1022,30 @@ QPushButton[toggle_nav="true"]:hover {{
 
 QPushButton[toggle_nav="true"]:pressed {{
     background-color: #666666;
+}}
+
+/* ==========================================================================
+   Alphabet Filter Buttons
+   ========================================================================== */
+
+QPushButton[alphabet_filter="true"] {{
+    background-color: transparent;
+    color: #666666;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px;
+}}
+
+QPushButton[alphabet_filter="true"]:hover {{
+    background-color: {LIGHT_HOVER};
+    color: {LIGHT_TEXT};
+}}
+
+QPushButton[alphabet_filter="true"][active="true"] {{
+    background-color: #888888;
+    color: white;
 }}
 """
 

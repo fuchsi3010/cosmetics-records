@@ -20,13 +20,13 @@
 # Layout:
 #   ┌─────────────────────────────────────────┐
 #   │ [Search Bar]             [+ Add Client] │
-#   ├───┬─────────────────────────────────────┤
-#   │ A │ Client Rows (scrollable)            │
-#   │ B │ - LastName, FirstName               │
-#   │ C │ - Tags (if matched)                 │
-#   │...│                                      │
-#   │ # │                                      │
-#   └───┴─────────────────────────────────────┘
+#   ├─────────────────────────────────────┬───┤
+#   │ Client Rows (scrollable)            │ A │
+#   │ - LastName, FirstName               │ B │
+#   │ - Tags (if matched)                 │ C │
+#   │                                      │...│
+#   │                                      │ # │
+#   └─────────────────────────────────────┴───┘
 #
 # Usage Example:
 #   client_list = ClientListView()
@@ -245,17 +245,12 @@ class ClientListView(QWidget):
         top_bar = self._create_top_bar()
         main_layout.addWidget(top_bar)
 
-        # Content area: filter sidebar + client list
+        # Content area: client list + filter sidebar
         content_layout = QHBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Left sidebar: alphabet filter
-        self._alphabet_filter = AlphabetFilter()
-        self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
-        content_layout.addWidget(self._alphabet_filter)
-
-        # Client list (scrollable)
+        # Client list (scrollable) - takes most of the space
         self._scroll_area = QScrollArea()
         self._scroll_area.setWidgetResizable(True)
         self._scroll_area.setHorizontalScrollBarPolicy(
@@ -278,6 +273,11 @@ class ClientListView(QWidget):
 
         self._scroll_area.setWidget(self._client_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
+
+        # Right sidebar: alphabet filter
+        self._alphabet_filter = AlphabetFilter()
+        self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
+        content_layout.addWidget(self._alphabet_filter)
 
         main_layout.addLayout(content_layout)
 
