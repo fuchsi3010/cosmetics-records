@@ -252,6 +252,10 @@ class MainWindow(QMainWindow):
             settings_view = SettingsView()
             # Wire up theme changes to apply immediately
             settings_view.theme_changed.connect(self._on_theme_changed)
+            # Wire up scale changes to apply immediately
+            settings_view.scale_changed.connect(self._on_scale_changed)
+            # Wire up language changes to apply immediately
+            settings_view.language_changed.connect(self._on_language_changed)
             self.views["settings"] = settings_view
             self.stacked_widget.addWidget(settings_view)
             logger.debug("SettingsView created and connected")
@@ -343,21 +347,22 @@ class MainWindow(QMainWindow):
         Apply the current theme to the application.
 
         Reads the theme setting from config and applies the appropriate
-        stylesheet.
+        stylesheet with the current UI scale.
         """
         try:
-            # Get theme name from config
+            # Get theme name and scale from config
             theme_name = self.config.theme
+            ui_scale = self.config.ui_scale
 
-            # Get stylesheet
-            stylesheet = get_theme(theme_name)
+            # Get stylesheet with scale applied
+            stylesheet = get_theme(theme_name, ui_scale)
 
             # Apply to application
             # WHY apply to QApplication not MainWindow: Ensures all windows
             # and dialogs use the same theme
             QApplication.instance().setStyleSheet(stylesheet)
 
-            logger.info(f"Applied theme: {theme_name}")
+            logger.info(f"Applied theme: {theme_name} at scale {ui_scale:.0%}")
 
         except Exception as e:
             logger.error(f"Failed to apply theme: {e}")
@@ -410,7 +415,7 @@ class MainWindow(QMainWindow):
         """
         Handle theme change from settings.
 
-        Applies the new theme to the application immediately.
+        Applies the new theme to the application immediately with current scale.
 
         Args:
             theme: Theme name ("dark", "light", or "system")
@@ -418,16 +423,101 @@ class MainWindow(QMainWindow):
         logger.info(f"Applying theme change: {theme}")
 
         try:
-            # Get stylesheet for new theme
-            stylesheet = get_theme(theme)
+            # Get current scale from config
+            ui_scale = self.config.ui_scale
+
+            # Get stylesheet for new theme with scale
+            stylesheet = get_theme(theme, ui_scale)
 
             # Apply to application
             QApplication.instance().setStyleSheet(stylesheet)
 
-            logger.info(f"Theme applied: {theme}")
+            logger.info(f"Theme applied: {theme} at scale {ui_scale:.0%}")
 
         except Exception as e:
             logger.error(f"Failed to apply theme: {e}")
+
+    def _on_scale_changed(self, scale: float) -> None:
+        """
+        Handle UI scale change from settings.
+
+        Applies the new scale to the application immediately by regenerating
+        the stylesheet with scaled font sizes.
+
+        Args:
+            scale: Scale factor (e.g., 1.0 for 100%, 1.5 for 150%)
+        """
+        logger.info(f"Applying scale change: {scale:.0%}")
+
+        try:
+            # Get current theme from config
+            theme_name = self.config.theme
+
+            # Get stylesheet with new scale applied
+            stylesheet = get_theme(theme_name, scale)
+
+            # Apply to application
+            QApplication.instance().setStyleSheet(stylesheet)
+
+            logger.info(f"Scale applied: {scale:.0%} with theme {theme_name}")
+
+        except Exception as e:
+            logger.error(f"Failed to apply scale: {e}")
+
+    def _on_language_changed(self, language: str) -> None:
+        """
+        Handle language change from settings.
+
+        Reinitializes translations and recreates all views to apply the new
+        language immediately.
+
+        Args:
+            language: Language code ("en" or "de")
+        """
+        logger.info(f"Applying language change: {language}")
+
+        try:
+            # Reinitialize translations with new language
+            init_translations(language)
+
+            # Store current view before recreation
+            current_view_id = None
+            for view_id, view in self.views.items():
+                if self.stacked_widget.currentWidget() == view:
+                    current_view_id = view_id
+                    break
+
+            # Clear existing views
+            while self.stacked_widget.count():
+                widget = self.stacked_widget.widget(0)
+                self.stacked_widget.removeWidget(widget)
+                widget.deleteLater()
+            self.views.clear()
+
+            # Recreate all views with new language
+            self._create_views()
+
+            # Recreate navbar with new translations
+            old_navbar = self.navbar
+            self.navbar = NavBar()
+            self.navbar.nav_clicked.connect(self._on_navigation)
+
+            # Replace old navbar in layout
+            central_widget = self.centralWidget()
+            main_layout = central_widget.layout()
+            main_layout.replaceWidget(old_navbar, self.navbar)
+            old_navbar.deleteLater()
+
+            # Navigate to the previously selected view (or default to clients)
+            if current_view_id and current_view_id in self.views:
+                self._navigate_to(current_view_id)
+            else:
+                self._navigate_to("clients")
+
+            logger.info(f"Language applied: {language}")
+
+        except Exception as e:
+            logger.error(f"Failed to apply language change: {e}")
 
 
 def setup_logging() -> None:

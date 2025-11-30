@@ -49,6 +49,8 @@ from PyQt6.QtWidgets import (
 )
 
 from cosmetics_records.utils.localization import _
+from cosmetics_records.database.connection import DatabaseConnection
+from cosmetics_records.controllers.client_controller import ClientController
 from ..components.alphabet_filter import AlphabetFilter
 from ..components.search_bar import SearchBar
 
@@ -397,10 +399,10 @@ class ClientListView(QWidget):
 
     def _load_more_clients(self) -> None:
         """
-        Load the next page of clients.
+        Load the next page of clients from the database.
 
-        This method will be connected to a controller later. For now,
-        it contains placeholder logic.
+        Uses the ClientController to fetch clients based on current
+        search query and alphabet filter.
 
         Note:
             Sets _loading flag to prevent duplicate requests.
@@ -410,28 +412,68 @@ class ClientListView(QWidget):
             return
 
         self._loading = True
+        offset = len(self._loaded_clients)
         logger.debug(
-            f"Loading clients (offset: {len(self._loaded_clients)}, "
+            f"Loading clients (offset: {offset}, "
             f"search: '{self._current_search}', filter: '{self._current_filter}')"
         )
 
-        # PLACEHOLDER: Controller method will be called here
-        # For now, we'll simulate with a timer
-        QTimer.singleShot(100, self._on_clients_loaded_placeholder)
+        try:
+            # Load clients from database
+            # WHY context manager: Ensures database connection is properly closed
+            with DatabaseConnection() as db:
+                controller = ClientController(db)
 
-    def _on_clients_loaded_placeholder(self) -> None:
-        """
-        Placeholder for when clients are loaded.
+                # Determine which method to call based on search/filter state
+                if self._current_search:
+                    # Search mode: fuzzy search across name and tags
+                    # NOTE: Search doesn't support pagination, returns all matches
+                    clients = controller.search_clients(
+                        self._current_search, limit=self.CLIENTS_PER_PAGE
+                    )
+                    # Since search returns all at once, no more to load
+                    self._has_more = False
+                elif self._current_filter != "All":
+                    # Filter mode: filter by first letter of last name
+                    if self._current_filter == "#":
+                        # Special case: non-alphabetic first characters
+                        # WHY not implemented yet: Complex query, rare use case
+                        clients = []
+                        self._has_more = False
+                    else:
+                        clients = controller.filter_by_letter(
+                            self._current_filter,
+                            limit=self.CLIENTS_PER_PAGE,
+                            offset=offset
+                        )
+                        self._has_more = len(clients) >= self.CLIENTS_PER_PAGE
+                else:
+                    # Default mode: all clients, paginated
+                    clients = controller.get_all_clients(
+                        limit=self.CLIENTS_PER_PAGE, offset=offset
+                    )
+                    self._has_more = len(clients) >= self.CLIENTS_PER_PAGE
 
-        In real implementation, this will be called by the controller
-        with actual client data.
-        """
-        # PLACEHOLDER: This simulates no clients loaded
-        # Real implementation will call add_clients() with actual data
+            # Convert Client models to dictionaries for display
+            client_dicts = []
+            for client in clients:
+                client_dicts.append({
+                    "id": client.id,
+                    "first_name": client.first_name,
+                    "last_name": client.last_name,
+                    "tags": client.tags,
+                })
+
+            # Add clients to the view
+            self.add_clients(client_dicts)
+
+            logger.debug(f"Loaded {len(clients)} clients from database")
+
+        except Exception as e:
+            logger.error(f"Failed to load clients: {e}")
+            self._has_more = False
+
         self._loading = False
-        self._has_more = False
-
-        logger.debug("Placeholder: No clients loaded (controller not connected)")
 
     def add_clients(self, clients: List[dict]) -> None:
         """

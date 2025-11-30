@@ -95,7 +95,11 @@ class NavBar(QFrame):
         the initial appearance.
         """
         # Configure the frame itself
-        self.setFixedWidth(self.WIDTH_EXPANDED)
+        # WHY not setFixedWidth: We need to allow width animation between
+        # collapsed and expanded states. setFixedWidth sets both min and max
+        # which prevents the animation from working.
+        self.setMinimumWidth(self.WIDTH_COLLAPSED)
+        self.setMaximumWidth(self.WIDTH_EXPANDED)
         self.setFrameShape(QFrame.Shape.StyledPanel)
 
         # Main vertical layout - top to bottom
@@ -229,7 +233,9 @@ class NavBar(QFrame):
         self.is_expanded = not self.is_expanded
 
         # Update toggle button arrow immediately
-        self._toggle_btn.setText("▶" if self.is_expanded else "◀")
+        # WHY this direction: When expanded, show "◀" to indicate "collapse"
+        # When collapsed, show "▶" to indicate "expand"
+        self._toggle_btn.setText("◀" if self.is_expanded else "▶")
 
         logger.debug(f"NavBar toggled: expanded={self.is_expanded}")
 

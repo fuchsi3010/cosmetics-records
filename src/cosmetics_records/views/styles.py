@@ -69,22 +69,54 @@ ERROR_RED = "#e74c3c"  # Error states, delete actions
 SUCCESS_GREEN = "#27ae60"  # Success states, confirmations
 WARNING_ORANGE = "#f39c12"  # Warning states, caution
 
-# Typography Sizes
-SIZE_TITLE = "24pt"  # Page titles
-SIZE_HEADER = "18pt"  # Section headers
-SIZE_NAV = "14pt"  # Navigation items
-SIZE_BODY = "13pt"  # Body text, inputs
-SIZE_SECONDARY = "12pt"  # Secondary text, captions
+# Base Typography Sizes (in points, will be scaled)
+# These are the base sizes at 100% scale
+BASE_SIZE_TITLE = 24  # Page titles
+BASE_SIZE_HEADER = 18  # Section headers
+BASE_SIZE_NAV = 14  # Navigation items
+BASE_SIZE_BODY = 13  # Body text, inputs
+BASE_SIZE_SECONDARY = 12  # Secondary text, captions
 
 # Border Radius
 BORDER_RADIUS = "8px"  # Consistent rounded corners
 
 
+def get_scaled_sizes(scale: float = 1.0) -> dict:
+    """
+    Get font sizes scaled by the given factor.
+
+    Args:
+        scale: Scale factor (1.0 = 100%, 1.5 = 150%, etc.)
+
+    Returns:
+        Dictionary with scaled size strings (e.g., {"title": "24pt"})
+    """
+    return {
+        "title": f"{int(BASE_SIZE_TITLE * scale)}pt",
+        "header": f"{int(BASE_SIZE_HEADER * scale)}pt",
+        "nav": f"{int(BASE_SIZE_NAV * scale)}pt",
+        "body": f"{int(BASE_SIZE_BODY * scale)}pt",
+        "secondary": f"{int(BASE_SIZE_SECONDARY * scale)}pt",
+    }
+
+
 # =============================================================================
-# Dark Theme Stylesheet
+# Theme Stylesheet Generation Functions
 # =============================================================================
 
-DARK_THEME = f"""
+
+def generate_dark_theme(scale: float = 1.0) -> str:
+    """
+    Generate the dark theme stylesheet with optional scaling.
+
+    Args:
+        scale: Scale factor for font sizes (1.0 = 100%)
+
+    Returns:
+        Complete QSS stylesheet for dark theme
+    """
+    sizes = get_scaled_sizes(scale)
+    return f"""
 /* ==========================================================================
    Global Application Styles
    ========================================================================== */
@@ -98,7 +130,7 @@ QMainWindow {{
 QWidget {{
     background-color: {DARK_BG};
     color: {DARK_TEXT};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     font-family: "Segoe UI", "Ubuntu", "Arial", sans-serif;
 }}
 
@@ -108,21 +140,21 @@ QWidget {{
 
 /* Page titles - used for main page headings */
 .title {{
-    font-size: {SIZE_TITLE};
+    font-size: {sizes["title"]};
     font-weight: bold;
     color: {DARK_TEXT};
 }}
 
 /* Section headers - used for subsections within pages */
 .header {{
-    font-size: {SIZE_HEADER};
+    font-size: {sizes["header"]};
     font-weight: 600;
     color: {DARK_TEXT};
 }}
 
 /* Secondary text - used for captions, hints, metadata */
 .secondary {{
-    font-size: {SIZE_SECONDARY};
+    font-size: {sizes["secondary"]};
     color: {DARK_TEXT_SECONDARY};
 }}
 
@@ -133,7 +165,7 @@ QWidget {{
 QLabel {{
     background-color: transparent;
     color: {DARK_TEXT};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 /* ==========================================================================
@@ -146,7 +178,7 @@ QPushButton {{
     border: none;
     border-radius: {BORDER_RADIUS};
     padding: 8px 16px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     font-weight: 500;
 }}
 
@@ -197,7 +229,7 @@ QLineEdit {{
     border: 1px solid {DARK_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px 12px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 /* Focus state - blue border to indicate active input */
@@ -221,7 +253,7 @@ QTextEdit {{
     border: 1px solid {DARK_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QTextEdit:focus {{
@@ -237,7 +269,7 @@ QListWidget {{
     color: {DARK_TEXT};
     border: 1px solid {DARK_BORDER};
     border-radius: {BORDER_RADIUS};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     outline: none;  /* Remove focus outline - we use selection color instead */
 }}
 
@@ -334,7 +366,7 @@ QComboBox {{
     border: 1px solid {DARK_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px 12px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QComboBox:hover {{
@@ -368,7 +400,7 @@ QTableWidget {{
     color: {DARK_TEXT};
     border: 1px solid {DARK_BORDER};
     gridline-color: {DARK_BORDER};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QTableWidget::item {{
@@ -508,11 +540,18 @@ QToolTip {{
 """
 
 
-# =============================================================================
-# Light Theme Stylesheet
-# =============================================================================
+def generate_light_theme(scale: float = 1.0) -> str:
+    """
+    Generate the light theme stylesheet with optional scaling.
 
-LIGHT_THEME = f"""
+    Args:
+        scale: Scale factor for font sizes (1.0 = 100%)
+
+    Returns:
+        Complete QSS stylesheet for light theme
+    """
+    sizes = get_scaled_sizes(scale)
+    return f"""
 /* ==========================================================================
    Global Application Styles
    ========================================================================== */
@@ -525,7 +564,7 @@ QMainWindow {{
 QWidget {{
     background-color: {LIGHT_BG};
     color: {LIGHT_TEXT};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     font-family: "Segoe UI", "Ubuntu", "Arial", sans-serif;
 }}
 
@@ -534,19 +573,19 @@ QWidget {{
    ========================================================================== */
 
 .title {{
-    font-size: {SIZE_TITLE};
+    font-size: {sizes["title"]};
     font-weight: bold;
     color: {LIGHT_TEXT};
 }}
 
 .header {{
-    font-size: {SIZE_HEADER};
+    font-size: {sizes["header"]};
     font-weight: 600;
     color: {LIGHT_TEXT};
 }}
 
 .secondary {{
-    font-size: {SIZE_SECONDARY};
+    font-size: {sizes["secondary"]};
     color: {LIGHT_TEXT_SECONDARY};
 }}
 
@@ -557,7 +596,7 @@ QWidget {{
 QLabel {{
     background-color: transparent;
     color: {LIGHT_TEXT};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 /* ==========================================================================
@@ -570,7 +609,7 @@ QPushButton {{
     border: none;
     border-radius: {BORDER_RADIUS};
     padding: 8px 16px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     font-weight: 500;
 }}
 
@@ -616,7 +655,7 @@ QLineEdit {{
     border: 1px solid {LIGHT_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px 12px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QLineEdit:focus {{
@@ -638,7 +677,7 @@ QTextEdit {{
     border: 1px solid {LIGHT_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QTextEdit:focus {{
@@ -654,7 +693,7 @@ QListWidget {{
     color: {LIGHT_TEXT};
     border: 1px solid {LIGHT_BORDER};
     border-radius: {BORDER_RADIUS};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
     outline: none;
 }}
 
@@ -745,7 +784,7 @@ QComboBox {{
     border: 1px solid {LIGHT_BORDER};
     border-radius: {BORDER_RADIUS};
     padding: 8px 12px;
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QComboBox:hover {{
@@ -778,7 +817,7 @@ QTableWidget {{
     color: {LIGHT_TEXT};
     border: 1px solid {LIGHT_BORDER};
     gridline-color: {LIGHT_BORDER};
-    font-size: {SIZE_BODY};
+    font-size: {sizes["body"]};
 }}
 
 QTableWidget::item {{
@@ -922,15 +961,16 @@ QToolTip {{
 # =============================================================================
 
 
-def get_theme(theme_name: Literal["dark", "light", "system"]) -> str:
+def get_theme(theme_name: Literal["dark", "light", "system"], scale: float = 1.0) -> str:
     """
-    Get the QSS stylesheet for the specified theme.
+    Get the QSS stylesheet for the specified theme with optional scaling.
 
     Args:
         theme_name: The theme to load - "dark", "light", or "system"
+        scale: Scale factor for UI elements (1.0 = 100%, 1.5 = 150%, etc.)
 
     Returns:
-        str: The complete QSS stylesheet
+        str: The complete QSS stylesheet with scaled font sizes
 
     Note:
         If "system" is specified, this will detect the system theme
@@ -940,17 +980,20 @@ def get_theme(theme_name: Literal["dark", "light", "system"]) -> str:
         # Detect system theme
         system_theme = detect_system_theme()
         logger.info(f"System theme detected: {system_theme}")
-        return DARK_THEME if system_theme == "dark" else LIGHT_THEME
+        if system_theme == "dark":
+            return generate_dark_theme(scale)
+        else:
+            return generate_light_theme(scale)
 
     elif theme_name == "dark":
-        return DARK_THEME
+        return generate_dark_theme(scale)
 
     elif theme_name == "light":
-        return LIGHT_THEME
+        return generate_light_theme(scale)
 
     else:
         logger.warning(f"Unknown theme '{theme_name}', defaulting to dark")
-        return DARK_THEME
+        return generate_dark_theme(scale)
 
 
 def detect_system_theme() -> Literal["dark", "light"]:

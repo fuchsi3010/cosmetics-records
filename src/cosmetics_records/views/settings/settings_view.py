@@ -110,6 +110,8 @@ class SettingsView(QWidget):
     # Signals
     settings_changed = pyqtSignal()
     theme_changed = pyqtSignal(str)
+    scale_changed = pyqtSignal(float)  # Emits new scale factor (e.g., 1.0, 1.5)
+    language_changed = pyqtSignal(str)  # Emits new language code (e.g., "en", "de")
 
     def __init__(self, parent: Optional[QWidget] = None):
         """
@@ -296,12 +298,6 @@ class SettingsView(QWidget):
         lang_row.addStretch()
 
         layout.addLayout(lang_row)
-
-        # Note about restart
-        restart_note = QLabel(_("Note: Restart required for full effect"))
-        restart_note.setProperty("class", "secondary")
-        restart_note.setStyleSheet("color: gray; font-style: italic;")
-        layout.addWidget(restart_note)
 
         return section
 
@@ -673,7 +669,7 @@ class SettingsView(QWidget):
         """
         Handle UI scale apply button click.
 
-        Saves the new scale and emits settings_changed signal.
+        Saves the new scale and applies it immediately via scale_changed signal.
         """
         scale_percent = self._scale_slider.value()
         scale_float = scale_percent / 100.0
@@ -684,15 +680,9 @@ class SettingsView(QWidget):
         self.config.ui_scale = scale_float
         self.config.save()
 
-        # Emit signal
+        # Emit signals - scale_changed triggers immediate UI update
         self.settings_changed.emit()
-
-        # Show confirmation
-        QMessageBox.information(
-            self,
-            _("UI Scale Changed"),
-            _("UI scale has been changed. Please restart the application for the change to take full effect."),
-        )
+        self.scale_changed.emit(scale_float)
 
     def _on_language_changed(self, language: str) -> None:
         """
@@ -712,8 +702,9 @@ class SettingsView(QWidget):
         self.config.language = language
         self.config.save()
 
-        # Emit signal
+        # Emit signals
         self.settings_changed.emit()
+        self.language_changed.emit(language)
 
     def _on_auto_backup_toggled(self, checked: bool) -> None:
         """
@@ -841,7 +832,8 @@ class SettingsView(QWidget):
         Shows file save dialog and exports client data to CSV.
         """
         # Show file save dialog
-        file_path, _ = QFileDialog.getSaveFileName(
+        # WHY _filter not _: Using _ would shadow the translation function _()
+        file_path, _filter = QFileDialog.getSaveFileName(
             self,
             "Export Clients for Mail Merge",
             str(Path.home() / "clients_mailmerge.csv"),
