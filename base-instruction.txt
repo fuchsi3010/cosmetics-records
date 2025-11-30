@@ -1,0 +1,12 @@
+Create a team of agents to act as a software engineering team to create a small application with python3 and PyQt. The team should include a sqlite3 expert, a backend expert, a UI/UX expert and a testing expert, as well as any more you see fit. The team should adhere to style guidlines such as PIP8, and any more you see fit. A venv should be created and worked within that.  
+The App should provide a one-man cosmetics salon with a tool to remember things about their clients, such as their personal data (name, date of birth, email address, address, tags and allergies) and treatment plan as well as treatment and sales histoy. 
+The main userstory is: a client comes in, the user can look them up in the app and see the treatment plan, the last treatments and the products purchased by the client last time. Then the treatment begins, after that the treamnent is logged (with date and time), and the client can be recommended a product based on their purchase history. The then sold product is then logged in the sales history.
+The app was already written, but the codebase is not clean enough and the customtkinter framework was used.
+The app should be as easy and clean as possible, lots of comments should be added to make it comprehensible to a beginner programmer. The code should be clearly structured, with a emphesis on reusing parts of the code where fit.
+
+I have left the implementation plan in refrences/PREVIOUS.md - but this was built with customtkinter. take this as a basis for developing the implementation plan for the current app.
+
+The app icon was also left in refrences/icons.
+
+some more features features i would like:
+- export the names and addresses to a csv file, so it can be used in a serial letter with microsoft word.

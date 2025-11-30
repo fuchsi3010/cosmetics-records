@@ -54,6 +54,9 @@ from cosmetics_records.views.components.navbar import NavBar
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.database.migrations.migration_manager import MigrationManager
 
+# Import localization
+from cosmetics_records.utils.localization import init_translations
+
 # Configure module logger
 logger = logging.getLogger(__name__)
 
@@ -208,7 +211,7 @@ class MainWindow(QMainWindow):
         try:
             client_detail_view = ClientDetailView()
             # Wire up back button to return to list
-            client_detail_view.back_clicked.connect(
+            client_detail_view.back_to_list.connect(
                 lambda: self._navigate_to("clients")
             )
             self.views["client_detail"] = client_detail_view
@@ -479,6 +482,12 @@ def main() -> int:
     logger.info("Cosmetics Records Application Starting")
     logger.info("=" * 80)
 
+    # Enable high DPI scaling BEFORE creating QApplication
+    # WHY: Qt requires this to be set before QGuiApplication is created
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+
     # Create Qt Application
     # WHY sys.argv: Allows Qt to process command-line arguments
     app = QApplication(sys.argv)
@@ -488,11 +497,11 @@ def main() -> int:
     app.setOrganizationName("Cosmetics Records")
     app.setApplicationVersion("1.0.0")
 
-    # Enable high DPI scaling
-    # WHY: Ensures proper rendering on high-resolution displays
-    app.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
+    # Initialize translations before creating any UI
+    # Load language from config (defaults to English)
+    config = Config.get_instance()
+    init_translations(config.language)
+    logger.info(f"Translations initialized for language: {config.language}")
 
     # Create and show main window
     window = MainWindow()

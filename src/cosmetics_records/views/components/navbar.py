@@ -145,8 +145,9 @@ class NavBar(QFrame):
         button.setProperty("nav_item", True)  # CSS class for styling
 
         # Store the icon and label for use when toggling
-        button.setProperty("icon", icon)
-        button.setProperty("label", label)
+        # WHY "nav_icon" not "icon": PyQt may confuse "icon" with built-in property
+        button.setProperty("nav_icon", icon)
+        button.setProperty("nav_label", label)
 
         # Set initial text (expanded mode)
         button.setText(f"{icon}  {label}")
@@ -240,13 +241,13 @@ class NavBar(QFrame):
         When expanded, shows icons + labels.
         """
         for button in self._nav_buttons.values():
-            icon = button.property("icon")
-            label = button.property("label")
+            icon = button.property("nav_icon")
+            label = button.property("nav_label")
 
             if self.is_expanded:
                 button.setText(f"{icon}  {label}")
             else:
-                button.setText(icon)
+                button.setText(str(icon) if icon else "")
 
     def set_active(self, item_id: str) -> None:
         """
