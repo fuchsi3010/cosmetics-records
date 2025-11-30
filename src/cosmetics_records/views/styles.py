@@ -374,6 +374,29 @@ QLabel[client_name="true"] {{
     background-color: transparent;
 }}
 
+QLabel[inventory_name="true"] {{
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: {DARK_TEXT};
+}}
+
+QLabel[inventory_description="true"] {{
+    background-color: transparent;
+    font-size: 11px;
+    color: {DARK_TEXT_SECONDARY};
+}}
+
+/* ==========================================================================
+   Settings Sections
+   ========================================================================== */
+
+QFrame[settings_section="true"] {{
+    background-color: {DARK_SURFACE};
+    border: none;
+    border-radius: 8px;
+}}
+
 /* ==========================================================================
    Tag Chips (Small)
    ========================================================================== */
@@ -429,14 +452,18 @@ QScrollArea[history_section="true"] {{
     border-radius: {BORDER_RADIUS};
 }}
 
+QScrollArea[history_section="true"] > QWidget {{
+    background-color: transparent;
+}}
+
 QFrame[history_item="true"] {{
-    background-color: #1e1e1e;
+    background-color: {DARK_SURFACE};
     border: none;
     border-radius: 6px;
 }}
 
 QFrame[history_item="true"]:hover {{
-    background-color: #282828;
+    background-color: {DARK_HOVER};
 }}
 
 QLabel[history_date="true"] {{
@@ -1027,6 +1054,29 @@ QLabel[client_name="true"] {{
     background-color: transparent;
 }}
 
+QLabel[inventory_name="true"] {{
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: {LIGHT_TEXT};
+}}
+
+QLabel[inventory_description="true"] {{
+    background-color: transparent;
+    font-size: 11px;
+    color: {LIGHT_TEXT_SECONDARY};
+}}
+
+/* ==========================================================================
+   Settings Sections
+   ========================================================================== */
+
+QFrame[settings_section="true"] {{
+    background-color: {LIGHT_SURFACE};
+    border: none;
+    border-radius: 8px;
+}}
+
 /* ==========================================================================
    Tag Chips (Small)
    ========================================================================== */
@@ -1082,14 +1132,18 @@ QScrollArea[history_section="true"] {{
     border-radius: {BORDER_RADIUS};
 }}
 
+QScrollArea[history_section="true"] > QWidget {{
+    background-color: transparent;
+}}
+
 QFrame[history_item="true"] {{
-    background-color: #ffffff;
+    background-color: {LIGHT_SURFACE};
     border: none;
     border-radius: 6px;
 }}
 
 QFrame[history_item="true"]:hover {{
-    background-color: #f5f5f5;
+    background-color: {LIGHT_HOVER};
 }}
 
 QLabel[history_date="true"] {{

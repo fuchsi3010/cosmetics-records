@@ -64,11 +64,11 @@ class HistoryItem(QFrame):
     """
     Single history item (treatment or product record).
 
-    Displays date, notes preview, and edit/delete buttons on hover.
+    Displays date, notes preview, and edit button on hover.
+    Delete is handled in the edit dialog.
 
     Signals:
         edit_clicked(): Emitted when edit button is clicked
-        delete_clicked(): Emitted when delete button is clicked
 
     Attributes:
         item_id: Database ID of this history item
@@ -77,7 +77,6 @@ class HistoryItem(QFrame):
 
     # Signals
     edit_clicked = pyqtSignal()
-    delete_clicked = pyqtSignal()
 
     # Fixed height for consistent layout
     ITEM_HEIGHT = 60
@@ -138,7 +137,8 @@ class HistoryItem(QFrame):
 
         top_row.addStretch()
 
-        # Action buttons (initially hidden, shown on hover)
+        # Edit button (initially hidden, shown on hover)
+        # Delete is handled in the edit dialog
         self._edit_btn = QPushButton("Edit")
         self._edit_btn.setProperty("class", "secondary")
         self._edit_btn.setFixedWidth(60)
@@ -146,14 +146,6 @@ class HistoryItem(QFrame):
         self._edit_btn.clicked.connect(self.edit_clicked.emit)
         self._edit_btn.setVisible(False)
         top_row.addWidget(self._edit_btn)
-
-        self._delete_btn = QPushButton("Delete")
-        self._delete_btn.setProperty("class", "danger")
-        self._delete_btn.setFixedWidth(60)
-        self._delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._delete_btn.clicked.connect(self.delete_clicked.emit)
-        self._delete_btn.setVisible(False)
-        top_row.addWidget(self._delete_btn)
 
         layout.addLayout(top_row)
 
@@ -169,24 +161,22 @@ class HistoryItem(QFrame):
 
     def enterEvent(self, event):
         """
-        Show action buttons when mouse enters the widget.
+        Show edit button when mouse enters the widget.
 
         Args:
             event: Enter event
         """
         self._edit_btn.setVisible(True)
-        self._delete_btn.setVisible(True)
         super().enterEvent(event)
 
     def leaveEvent(self, event):
         """
-        Hide action buttons when mouse leaves the widget.
+        Hide edit button when mouse leaves the widget.
 
         Args:
             event: Leave event
         """
         self._edit_btn.setVisible(False)
-        self._delete_btn.setVisible(False)
         super().leaveEvent(event)
 
 
@@ -201,7 +191,6 @@ class HistoryList(QWidget):
         add_clicked(): Emitted when Add button is clicked
         load_more_clicked(): Emitted when more items need to be loaded
         edit_item(int): Emitted when item edit is clicked (passes item_id)
-        delete_item(int): Emitted when item delete is clicked (passes item_id)
 
     Attributes:
         _title: Title for this history list
@@ -213,7 +202,6 @@ class HistoryList(QWidget):
     add_clicked = pyqtSignal()
     load_more_clicked = pyqtSignal()
     edit_item = pyqtSignal(int)  # Passes item_id
-    delete_item = pyqtSignal(int)  # Passes item_id
 
     # Items per page
     ITEMS_PER_PAGE = 20
@@ -331,9 +319,6 @@ class HistoryList(QWidget):
             history_item = HistoryItem(item_id, item_data)
             history_item.edit_clicked.connect(
                 lambda iid=item_id: self.edit_item.emit(iid)
-            )
-            history_item.delete_clicked.connect(
-                lambda iid=item_id: self.delete_item.emit(iid)
             )
 
             # Add to layout
@@ -523,7 +508,6 @@ class ClientDetailView(QWidget):
         self._treatment_history.add_clicked.connect(self._on_add_treatment)
         self._treatment_history.load_more_clicked.connect(self._on_load_more_treatments)
         self._treatment_history.edit_item.connect(self._on_edit_treatment)
-        self._treatment_history.delete_item.connect(self._on_delete_treatment)
         grid.addWidget(self._treatment_history, 1, 0)
 
         # Bottom-right: Product History
@@ -531,7 +515,6 @@ class ClientDetailView(QWidget):
         self._product_history.add_clicked.connect(self._on_add_product)
         self._product_history.load_more_clicked.connect(self._on_load_more_products)
         self._product_history.edit_item.connect(self._on_edit_product)
-        self._product_history.delete_item.connect(self._on_delete_product)
         grid.addWidget(self._product_history, 1, 1)
 
         # Set row stretch: row 0 (freetext) = 1, row 1 (history) = 2

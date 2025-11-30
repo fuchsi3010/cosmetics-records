@@ -356,3 +356,9 @@ class Autocomplete(QWidget):
             text: Placeholder text to display when field is empty
         """
         self._line_edit.setPlaceholderText(text)
+
+    def set_focus(self) -> None:
+        """
+        Set focus to the input field.
+        """
+        self._line_edit.setFocus()

@@ -4,34 +4,21 @@
 # This module provides the audit history browsing view.
 #
 # Key Features:
-#   - Filterable audit log list (by table and action)
+#   - Displays all changes made in the application
+#   - Each entry shows header with timestamp
+#   - Side-by-side old/new state comparison
 #   - Pagination (50 entries per page)
-#   - Color-coded action icons (green=CREATE, blue=UPDATE, red=DELETE)
-#   - Human-readable descriptions
-#   - Relative timestamps ("2 hours ago", "Yesterday at 14:32")
-#   - UI location badges showing where changes were made
-#   - Page navigation with jump-to-page
-#
-# Design Philosophy:
-#   - Clarity: Visual icons and colors make scanning easy
-#   - Context: Descriptions include what changed and where
-#   - Performance: Pagination prevents loading entire audit history
-#   - Navigation: Jump to specific pages quickly
 #
 # Layout:
 #   ┌──────────────────────────────────────────────┐
-#   │ Table: [All ▼] Action: [All ▼] [Refresh]    │
+#   │ Treatment Plan for Jon Doe updated           │
+#   │ 2025-11-12 16:25                             │
+#   │ ┌─────────────────┬─────────────────────────┐│
+#   │ │ Old             │ New                     ││
+#   │ │ asdasdasd       │ acute acne, referred... ││
+#   │ └─────────────────┴─────────────────────────┘│
 #   ├──────────────────────────────────────────────┤
-#   │ ✓ New client created                         │
-#   │   2 hours ago | ClientListView               │
-#   ├──────────────────────────────────────────────┤
-#   │ ✎ Client updated: email changed...           │
-#   │   Yesterday at 14:32 | ClientEditView        │
-#   ├──────────────────────────────────────────────┤
-#   │ ✗ Treatment record deleted                   │
-#   │   Jan 15, 2024 10:30 | TreatmentHistoryView  │
-#   ├──────────────────────────────────────────────┤
-#   │ [< Previous] Page 1 of 10 [Next >] Go to: [_]│
+#   │ [< Previous] Page 1 of 10 [Next >]           │
 #   └──────────────────────────────────────────────┘
 #
 # Usage Example:
@@ -44,7 +31,6 @@ from typing import List, Optional
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -58,7 +44,7 @@ from PyQt6.QtWidgets import (
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.audit import AuditAction, AuditLog
 from cosmetics_records.services.audit_service import AuditService
-from cosmetics_records.utils.time_utils import format_relative_time
+from cosmetics_records.utils.time_utils import format_date_localized
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -68,7 +54,8 @@ class AuditEntryWidget(QFrame):
     """
     Single audit log entry display.
 
-    Shows an icon, description, timestamp, and UI location for one audit entry.
+    Shows a header with description and timestamp, plus side-by-side
+    old/new state comparison boxes.
 
     Attributes:
         audit_log: The AuditLog instance to display
@@ -97,98 +84,133 @@ class AuditEntryWidget(QFrame):
         """
         Initialize the user interface.
 
-        Creates a layout with icon, description, timestamp, and location.
+        Creates a layout with header and side-by-side old/new state boxes.
         """
-        # Main horizontal layout
-        layout = QHBoxLayout(self)
+        # Main vertical layout
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
-        # Icon based on action type
-        # WHY visual icons: Quick identification of action type
-        icon_label = QLabel()
-        icon_label.setFixedWidth(24)
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Header: description with timestamp
+        header_text = self._build_header_text()
+        header_label = QLabel(header_text)
+        header_label.setWordWrap(True)
+        header_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        layout.addWidget(header_label)
 
-        if self.audit_log.action == AuditAction.CREATE:
-            # Green checkmark for CREATE
-            icon_label.setText("✓")
-            icon_label.setStyleSheet(
-                "color: #4CAF50; font-size: 20px; font-weight: bold;"
-            )
-        elif self.audit_log.action == AuditAction.UPDATE:
-            # Blue pencil for UPDATE
-            icon_label.setText("✎")
-            icon_label.setStyleSheet(
-                "color: #2196F3; font-size: 20px; font-weight: bold;"
-            )
-        else:  # DELETE
-            # Red X for DELETE
-            icon_label.setText("✗")
-            icon_label.setStyleSheet(
-                "color: #F44336; font-size: 20px; font-weight: bold;"
-            )
-
-        layout.addWidget(icon_label)
-
-        # Content column (description, timestamp, location)
-        content_layout = QVBoxLayout()
-        content_layout.setSpacing(4)
-
-        # Description (human-readable)
-        description = self.audit_log.get_description()
-        desc_label = QLabel(description)
-        desc_label.setWordWrap(True)
-        desc_label.setStyleSheet("font-size: 14px;")
-        content_layout.addWidget(desc_label)
-
-        # Metadata row (timestamp and UI location)
-        meta_layout = QHBoxLayout()
-        meta_layout.setSpacing(8)
-
-        # Timestamp (relative format)
+        # Timestamp
         if self.audit_log.created_at:
-            timestamp_str = format_relative_time(self.audit_log.created_at)
+            timestamp_str = self.audit_log.created_at.strftime("%Y-%m-%d %H:%M")
         else:
             timestamp_str = "Unknown time"
 
         timestamp_label = QLabel(timestamp_str)
-        timestamp_label.setProperty("class", "secondary")
         timestamp_label.setStyleSheet("color: gray; font-size: 12px;")
-        meta_layout.addWidget(timestamp_label)
+        layout.addWidget(timestamp_label)
 
-        # Separator
-        separator = QLabel("|")
-        separator.setStyleSheet("color: gray; font-size: 12px;")
-        meta_layout.addWidget(separator)
+        # Side-by-side old/new state boxes (if applicable)
+        if self.audit_log.action == AuditAction.UPDATE:
+            # Show old and new values side by side
+            comparison_layout = QHBoxLayout()
+            comparison_layout.setSpacing(8)
 
-        # UI location badge
-        location_label = QLabel(self.audit_log.ui_location)
-        location_label.setProperty("class", "badge")
-        location_label.setStyleSheet(
-            "color: #2196F3; background-color: rgba(33, 150, 243, 0.1); "
-            "padding: 2px 8px; border-radius: 4px; font-size: 11px;"
+            # Old value box
+            old_box = self._create_state_box("Old", self.audit_log.old_value or "(empty)")
+            comparison_layout.addWidget(old_box, stretch=1)
+
+            # New value box
+            new_box = self._create_state_box("New", self.audit_log.new_value or "(empty)")
+            comparison_layout.addWidget(new_box, stretch=1)
+
+            layout.addLayout(comparison_layout)
+
+        elif self.audit_log.action == AuditAction.CREATE:
+            # Just show the new value
+            if self.audit_log.new_value:
+                value_box = self._create_state_box("Created", self.audit_log.new_value)
+                layout.addWidget(value_box)
+
+        elif self.audit_log.action == AuditAction.DELETE:
+            # Just show the old (deleted) value
+            if self.audit_log.old_value:
+                value_box = self._create_state_box("Deleted", self.audit_log.old_value)
+                layout.addWidget(value_box)
+
+    def _build_header_text(self) -> str:
+        """
+        Build the header text describing the change.
+
+        Returns:
+            A formatted header string like "Treatment Plan for Jon Doe updated"
+        """
+        # Map table names to human-readable names
+        table_names = {
+            "clients": "Client",
+            "treatment_records": "Treatment record",
+            "product_records": "Product sale record",
+            "inventory_items": "Inventory item",
+        }
+
+        # Map actions to verbs
+        action_verbs = {
+            AuditAction.CREATE: "created",
+            AuditAction.UPDATE: "updated",
+            AuditAction.DELETE: "deleted",
+        }
+
+        table_name = table_names.get(self.audit_log.table_name, self.audit_log.table_name)
+        action_verb = action_verbs.get(self.audit_log.action, "changed")
+
+        # Include field name for updates
+        if self.audit_log.action == AuditAction.UPDATE and self.audit_log.field_name:
+            return f"{table_name} {self.audit_log.field_name} {action_verb}"
+        else:
+            return f"{table_name} {action_verb}"
+
+    def _create_state_box(self, label: str, content: str) -> QFrame:
+        """
+        Create a labeled box showing state content.
+
+        Args:
+            label: Label for the box (e.g., "Old", "New", "Deleted")
+            content: The content to display
+
+        Returns:
+            QFrame containing the labeled state box
+        """
+        box = QFrame()
+        box.setFrameShape(QFrame.Shape.StyledPanel)
+        box.setStyleSheet(
+            "QFrame { background-color: rgba(100, 100, 100, 0.1); "
+            "border: 1px solid rgba(100, 100, 100, 0.3); border-radius: 4px; }"
         )
-        meta_layout.addWidget(location_label)
 
-        meta_layout.addStretch()
+        box_layout = QVBoxLayout(box)
+        box_layout.setContentsMargins(8, 6, 8, 6)
+        box_layout.setSpacing(4)
 
-        content_layout.addLayout(meta_layout)
+        # Label
+        label_widget = QLabel(label)
+        label_widget.setStyleSheet("font-weight: bold; font-size: 11px; color: gray;")
+        box_layout.addWidget(label_widget)
 
-        layout.addLayout(content_layout, stretch=1)
+        # Content (allow wrapping for long text)
+        content_label = QLabel(content)
+        content_label.setWordWrap(True)
+        content_label.setStyleSheet("font-size: 13px;")
+        box_layout.addWidget(content_label)
+
+        return box
 
 
 class AuditLogView(QWidget):
     """
     Audit history browsing view.
 
-    This view provides a filterable, paginated list of audit log entries.
-    Users can filter by table and action type, navigate between pages,
-    and jump to specific pages.
+    This view provides a paginated list of audit log entries showing all
+    changes made in the application with old/new state comparison.
 
     Attributes:
-        _current_table_filter: Current table filter selection
-        _current_action_filter: Current action filter selection
         _current_page: Current page number (1-indexed)
         _total_pages: Total number of pages
         _entries_per_page: Number of entries per page (50)
@@ -207,8 +229,6 @@ class AuditLogView(QWidget):
         super().__init__(parent)
 
         # State tracking
-        self._current_table_filter: Optional[str] = None  # None = "All"
-        self._current_action_filter: Optional[str] = None  # None = "All"
         self._current_page: int = 1
         self._total_pages: int = 1
 
@@ -224,16 +244,34 @@ class AuditLogView(QWidget):
         """
         Initialize the user interface.
 
-        Creates the layout with filters, audit entries, and pagination.
+        Creates the layout with title and audit entries list.
         """
         # Main vertical layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Top bar: filters and refresh button
-        top_bar = self._create_top_bar()
-        main_layout.addWidget(top_bar)
+        # Title bar
+        title_bar = QWidget()
+        title_bar.setFixedHeight(60)
+        title_bar.setProperty("top_bar", True)
+
+        title_layout = QHBoxLayout(title_bar)
+        title_layout.setContentsMargins(16, 10, 16, 10)
+
+        title_label = QLabel("Audit Log")
+        title_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        title_layout.addWidget(title_label)
+
+        title_layout.addStretch()
+
+        # Refresh button
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setFixedWidth(100)
+        refresh_btn.clicked.connect(self.refresh)
+        title_layout.addWidget(refresh_btn)
+
+        main_layout.addWidget(title_bar)
 
         # Scrollable audit entries list
         self._scroll_area = QScrollArea()
@@ -246,8 +284,8 @@ class AuditLogView(QWidget):
         # Container for audit entries
         self._entries_container = QWidget()
         self._entries_layout = QVBoxLayout(self._entries_container)
-        self._entries_layout.setContentsMargins(0, 0, 0, 0)
-        self._entries_layout.setSpacing(0)
+        self._entries_layout.setContentsMargins(8, 8, 8, 8)
+        self._entries_layout.setSpacing(8)
         self._entries_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._scroll_area.setWidget(self._entries_container)
@@ -256,59 +294,6 @@ class AuditLogView(QWidget):
         # Bottom bar: pagination controls
         bottom_bar = self._create_bottom_bar()
         main_layout.addWidget(bottom_bar)
-
-    def _create_top_bar(self) -> QWidget:
-        """
-        Create the top bar with filters and refresh button.
-
-        Returns:
-            QWidget containing filter controls
-        """
-        top_bar = QWidget()
-        top_bar.setFixedHeight(60)
-        top_bar.setProperty("top_bar", True)  # CSS class
-
-        layout = QHBoxLayout(top_bar)
-        layout.setContentsMargins(16, 10, 16, 10)
-        layout.setSpacing(12)
-
-        # Table filter
-        table_label = QLabel("Table:")
-        layout.addWidget(table_label)
-
-        self._table_filter = QComboBox()
-        self._table_filter.addItems(
-            [
-                "All",
-                "clients",
-                "treatment_records",
-                "product_records",
-                "inventory_items",
-            ]
-        )
-        self._table_filter.currentTextChanged.connect(self._on_filter_changed)
-        self._table_filter.setFixedWidth(180)
-        layout.addWidget(self._table_filter)
-
-        # Action filter
-        action_label = QLabel("Action:")
-        layout.addWidget(action_label)
-
-        self._action_filter = QComboBox()
-        self._action_filter.addItems(["All", "CREATE", "UPDATE", "DELETE"])
-        self._action_filter.currentTextChanged.connect(self._on_filter_changed)
-        self._action_filter.setFixedWidth(120)
-        layout.addWidget(self._action_filter)
-
-        layout.addStretch()
-
-        # Refresh button
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.setFixedWidth(100)
-        refresh_btn.clicked.connect(self.refresh)
-        layout.addWidget(refresh_btn)
-
-        return top_bar
 
     def _create_bottom_bar(self) -> QWidget:
         """
@@ -319,7 +304,7 @@ class AuditLogView(QWidget):
         """
         bottom_bar = QWidget()
         bottom_bar.setFixedHeight(60)
-        bottom_bar.setProperty("bottom_bar", True)  # CSS class
+        bottom_bar.setProperty("bottom_bar", True)
 
         layout = QHBoxLayout(bottom_bar)
         layout.setContentsMargins(16, 10, 16, 10)
@@ -358,78 +343,29 @@ class AuditLogView(QWidget):
 
         return bottom_bar
 
-    def _on_filter_changed(self) -> None:
-        """
-        Handle filter selection change.
-
-        Resets to first page and reloads audit logs with new filters.
-        """
-        # Get selected filters
-        table_filter = self._table_filter.currentText()
-        action_filter = self._action_filter.currentText()
-
-        # Convert "All" to None for database query
-        self._current_table_filter = None if table_filter == "All" else table_filter
-        self._current_action_filter = None if action_filter == "All" else action_filter
-
-        logger.debug(
-            f"Filters changed: table={self._current_table_filter}, "
-            f"action={self._current_action_filter}"
-        )
-
-        # Reset to first page and reload
-        self._current_page = 1
-        self._load_audit_logs()
-
     def _on_previous_page(self) -> None:
-        """
-        Handle previous page button click.
-
-        Loads the previous page of audit logs.
-        """
+        """Navigate to the previous page."""
         if self._current_page > 1:
             self._current_page -= 1
             self._load_audit_logs()
-            logger.debug(f"Navigated to page {self._current_page}")
 
     def _on_next_page(self) -> None:
-        """
-        Handle next page button click.
-
-        Loads the next page of audit logs.
-        """
+        """Navigate to the next page."""
         if self._current_page < self._total_pages:
             self._current_page += 1
             self._load_audit_logs()
-            logger.debug(f"Navigated to page {self._current_page}")
 
     def _on_jump_to_page(self, page: int) -> None:
-        """
-        Handle jump to page spinbox change.
-
-        Loads the specified page of audit logs.
-
-        Args:
-            page: Page number to jump to
-        """
+        """Jump to a specific page."""
         if 1 <= page <= self._total_pages and page != self._current_page:
             self._current_page = page
             self._load_audit_logs()
-            logger.debug(f"Jumped to page {self._current_page}")
 
     def _load_audit_logs(self) -> None:
         """
-        Load audit logs from database with current filters and pagination.
-
-        Updates the UI with loaded entries and pagination state.
+        Load audit logs from database with pagination.
         """
         try:
-            logger.debug(
-                f"Loading audit logs: page={self._current_page}, "
-                f"table={self._current_table_filter}, "
-                f"action={self._current_action_filter}"
-            )
-
             # Calculate offset for pagination
             offset = (self._current_page - 1) * self.ENTRIES_PER_PAGE
 
@@ -438,32 +374,25 @@ class AuditLogView(QWidget):
                 audit_service = AuditService(db)
 
                 # Get total count for pagination
-                total_count = audit_service.get_audit_log_count(
-                    table_filter=self._current_table_filter,
-                    action_filter=self._current_action_filter,
-                )
+                total_count = audit_service.get_audit_log_count()
 
                 # Calculate total pages
-                # WHY max(1, ...): Always show at least 1 page even if empty
                 self._total_pages = max(
                     1,
                     (total_count + self.ENTRIES_PER_PAGE - 1) // self.ENTRIES_PER_PAGE,
                 )
 
                 # Ensure current page is within bounds
-                # WHY: If filters change and reduce total pages, we might be on invalid page
                 if self._current_page > self._total_pages:
                     self._current_page = self._total_pages
 
-                # Recalculate offset after potential page adjustment
+                # Recalculate offset
                 offset = (self._current_page - 1) * self.ENTRIES_PER_PAGE
 
                 # Get audit logs for current page
                 audit_logs = audit_service.get_audit_logs(
                     limit=self.ENTRIES_PER_PAGE,
                     offset=offset,
-                    table_filter=self._current_table_filter,
-                    action_filter=self._current_action_filter,
                 )
 
             # Update UI
@@ -477,31 +406,20 @@ class AuditLogView(QWidget):
 
         except Exception as e:
             logger.error(f"Failed to load audit logs: {e}")
-            # Clear entries on error
             self._clear_entries()
-            # Show error in UI
             error_label = QLabel(f"Error loading audit logs: {str(e)}")
-            error_label.setProperty("class", "error")
             error_label.setStyleSheet("color: red; padding: 20px;")
             error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._entries_layout.addWidget(error_label)
 
     def _display_audit_logs(self, audit_logs: List[AuditLog]) -> None:
-        """
-        Display audit logs in the UI.
-
-        Clears existing entries and creates new widgets for each log.
-
-        Args:
-            audit_logs: List of AuditLog instances to display
-        """
+        """Display audit logs in the UI."""
         # Clear existing entries
         self._clear_entries()
 
         # If no logs, show message
         if not audit_logs:
             empty_label = QLabel("No audit logs found")
-            empty_label.setProperty("class", "secondary")
             empty_label.setStyleSheet("color: gray; padding: 20px; font-style: italic;")
             empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._entries_layout.addWidget(empty_label)
@@ -513,10 +431,7 @@ class AuditLogView(QWidget):
             self._entries_layout.addWidget(entry_widget)
 
     def _clear_entries(self) -> None:
-        """
-        Remove all audit entry widgets from the UI.
-        """
-        # Remove all widgets from layout
+        """Remove all audit entry widgets from the UI."""
         while self._entries_layout.count():
             item = self._entries_layout.takeAt(0)
             widget = item.widget()
@@ -524,11 +439,7 @@ class AuditLogView(QWidget):
                 widget.deleteLater()
 
     def _update_pagination_controls(self) -> None:
-        """
-        Update pagination controls based on current state.
-
-        Updates button states, page label, and jump spinbox.
-        """
+        """Update pagination controls based on current state."""
         # Update page label
         self._page_label.setText(f"Page {self._current_page} of {self._total_pages}")
 
@@ -538,17 +449,11 @@ class AuditLogView(QWidget):
 
         # Update jump spinbox
         self._jump_spin.setMaximum(self._total_pages)
-        # WHY blockSignals: Prevent triggering valueChanged during programmatic update
         self._jump_spin.blockSignals(True)
         self._jump_spin.setValue(self._current_page)
         self._jump_spin.blockSignals(False)
 
     def refresh(self) -> None:
-        """
-        Refresh the audit log view.
-
-        Reloads audit logs from the database with current filters and pagination.
-        This should be called after database changes.
-        """
+        """Refresh the audit log view."""
         logger.debug("Refreshing audit log view")
         self._load_audit_logs()

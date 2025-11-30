@@ -6,14 +6,15 @@
 # Key Features:
 #   - Always uses today's date (no date picker)
 #   - Autocomplete product input (suggests from inventory)
-#   - Allows free text if product not in inventory
+#   - Quantity selector (1x-10x)
+#   - Multi-product entry (accumulates products before saving)
 #   - Auto-redirects to edit if product record exists for today
 #
 # Design Philosophy:
 #   - Quick data entry with autocomplete
 #   - Flexibility to record unlisted products
+#   - Support for multiple products in one record
 #   - Uses current date automatically for convenience
-#   - Prevent duplicate records on same date
 #
 # Usage Example:
 #   dialog = AddProductRecordDialog(client_id, inventory_items)
@@ -30,8 +31,11 @@ from cosmetics_records.utils.time_utils import format_date_localized
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QFormLayout,
+    QComboBox,
+    QHBoxLayout,
     QLabel,
+    QPushButton,
+    QTextEdit,
     QVBoxLayout,
 )
 
@@ -49,10 +53,13 @@ class AddProductRecordDialog(BaseDialog):
     This dialog collects product text for a new product record.
     Always uses today's date - no date picker shown.
     Product input uses autocomplete from inventory but allows free text.
+    Supports adding multiple products with quantities.
 
     Attributes:
         _client_id: Database ID of the client this record is for
         _product_input: Autocomplete for product text
+        _quantity_combo: ComboBox for quantity selection
+        _products_text: QTextEdit showing accumulated products
         _error_label: QLabel for displaying validation errors
         _existing_record_id: If set, edit existing record instead
     """
@@ -72,9 +79,8 @@ class AddProductRecordDialog(BaseDialog):
         self._inventory_items = inventory_items or []
         self._existing_record_id: Optional[int] = None
 
-        # Initialize base dialog
-        # WHY 500x300: Compact size for simple form
-        super().__init__("Add Product Record", parent, width=500, height=300)
+        # Initialize base dialog - larger to fit suggestions
+        super().__init__("Add Product Record", parent, width=550, height=500)
 
         # Set autocomplete suggestions
         if self._inventory_items:
@@ -86,7 +92,8 @@ class AddProductRecordDialog(BaseDialog):
         """
         Create the dialog content.
 
-        Adds form field for product text. Date is always today.
+        Adds form field for product text with quantity selector and
+        accumulated products text area. Date is always today.
 
         Args:
             layout: Layout to add content to
@@ -104,46 +111,101 @@ class AddProductRecordDialog(BaseDialog):
         date_label.setProperty("form_note", True)
         layout.addWidget(date_label)
 
-        # Form layout for fields
-        form_layout = QFormLayout()
-        form_layout.setSpacing(12)
-        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        # Product entry row: [Quantity] [Product input] [Add button]
+        entry_row = QHBoxLayout()
+        entry_row.setSpacing(8)
 
-        # Product (autocomplete from inventory, but allows free text)
+        # Quantity selector (1x-10x)
+        self._quantity_combo = QComboBox()
+        for i in range(1, 11):
+            self._quantity_combo.addItem(f"{i}x")
+        self._quantity_combo.setFixedWidth(60)
+        entry_row.addWidget(self._quantity_combo)
+
+        # Product autocomplete input
         self._product_input = Autocomplete()
         self._product_input.set_placeholder("Type product name...")
-        form_layout.addRow("Product: *", self._product_input)
+        entry_row.addWidget(self._product_input, stretch=1)
 
-        layout.addLayout(form_layout)
+        # Add button
+        add_btn = QPushButton("Add")
+        add_btn.setFixedWidth(60)
+        add_btn.clicked.connect(self._on_add_product)
+        entry_row.addWidget(add_btn)
 
-        # Add stretch to push buttons to bottom
-        layout.addStretch()
+        layout.addLayout(entry_row)
 
         # Info note about free text
         info_note = QLabel("Type to search inventory, or enter custom product name")
-        info_note.setProperty("form_note", True)  # CSS class (small, gray)
+        info_note.setProperty("form_note", True)
         info_note.setWordWrap(True)
         layout.addWidget(info_note)
 
-        # Required fields note
-        required_note = QLabel("* Required fields")
-        required_note.setProperty("form_note", True)  # CSS class (small, gray)
-        layout.addWidget(required_note)
+        # Accumulated products text area
+        products_label = QLabel("Products:")
+        layout.addWidget(products_label)
+
+        self._products_text = QTextEdit()
+        self._products_text.setPlaceholderText("Added products will appear here...")
+        self._products_text.setMinimumHeight(150)
+        layout.addWidget(self._products_text)
 
         # Save/Cancel buttons
         button_row = self.create_button_row("Save", "Cancel")
         layout.addLayout(button_row)
 
+    def _on_add_product(self) -> None:
+        """
+        Handle Add button click.
+
+        Adds the current product with quantity to the products text area.
+        """
+        product_name = self._product_input.get_text().strip()
+        if not product_name:
+            self._show_error("Please enter a product name.")
+            self._product_input.set_focus()
+            return
+
+        # Get quantity
+        quantity = self._quantity_combo.currentText()
+
+        # Add to products text
+        current_text = self._products_text.toPlainText()
+        new_line = f"{quantity} {product_name}"
+
+        if current_text:
+            self._products_text.setPlainText(f"{current_text}\n{new_line}")
+        else:
+            self._products_text.setPlainText(new_line)
+
+        # Clear input for next product
+        self._product_input.clear()
+        self._quantity_combo.setCurrentIndex(0)
+        self._product_input.set_focus()
+
+        # Hide error if showing
+        self._error_label.setVisible(False)
+
+        logger.debug(f"Added product: {new_line}")
+
     def accept(self) -> None:
         """
         Accept the dialog after validating input.
 
-        Validates that product text is provided.
+        Validates that at least one product is in the list.
         """
-        # Validate product text
-        product_text = self._product_input.get_text().strip()
-        if not product_text:
-            self._show_error("Product is required.")
+        # Check if there's content in the products text
+        products_text = self._products_text.toPlainText().strip()
+
+        # Also check if there's something in the input field that wasn't added
+        pending_product = self._product_input.get_text().strip()
+        if pending_product and not products_text:
+            # Auto-add the pending product
+            self._on_add_product()
+            products_text = self._products_text.toPlainText().strip()
+
+        if not products_text:
+            self._show_error("Please add at least one product.")
             self._product_input.set_focus()
             return
 
@@ -179,7 +241,7 @@ class AddProductRecordDialog(BaseDialog):
             product_text: Existing product text to pre-fill
         """
         self._existing_record_id = record_id
-        self._product_input.set_text(product_text)
+        self._products_text.setPlainText(product_text)
         self.setWindowTitle("Edit Product Record")
         logger.debug(f"Editing existing product record {record_id}")
 
@@ -209,7 +271,7 @@ class AddProductRecordDialog(BaseDialog):
             dict: Dictionary containing product record data with keys:
                  - client_id: int
                  - date: date (always today)
-                 - product_text: str
+                 - product_text: str (all added products)
 
         Note:
             This should only be called after the dialog is accepted.
@@ -217,5 +279,5 @@ class AddProductRecordDialog(BaseDialog):
         return {
             "client_id": self._client_id,
             "date": date.today(),
-            "product_text": self._product_input.get_text().strip(),
+            "product_text": self._products_text.toPlainText().strip(),
         }

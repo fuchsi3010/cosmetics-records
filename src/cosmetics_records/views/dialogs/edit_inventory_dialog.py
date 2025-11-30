@@ -127,17 +127,24 @@ class EditInventoryDialog(BaseDialog):
         self._description_input.setFixedHeight(80)
         form_layout.addRow("Description:", self._description_input)
 
+        # Capacity and Unit on same row: [Capacity input] [Unit dropdown]
+        capacity_row = QHBoxLayout()
+        capacity_row.setSpacing(8)
+
         # Capacity (required, numeric)
         self._capacity_input = QSpinBox()
         self._capacity_input.setMinimum(1)  # Must be at least 1
         self._capacity_input.setMaximum(999999)  # Reasonable max
         self._capacity_input.setSuffix("")  # No suffix, unit is separate
-        form_layout.addRow("Capacity: *", self._capacity_input)
+        capacity_row.addWidget(self._capacity_input, stretch=1)
 
         # Unit (required, dropdown)
         self._unit_input = QComboBox()
         self._unit_input.addItems(self.UNITS)
-        form_layout.addRow("Unit: *", self._unit_input)
+        self._unit_input.setFixedWidth(80)
+        capacity_row.addWidget(self._unit_input)
+
+        form_layout.addRow("Capacity: *", capacity_row)
 
         layout.addLayout(form_layout)
 
