@@ -112,9 +112,6 @@ class Autocomplete(QWidget):
         self._line_edit.textChanged.connect(self._on_text_changed)
         self._line_edit.returnPressed.connect(self._on_return_pressed)
 
-        # Install event filter to handle arrow key navigation
-        self._line_edit.installEventFilter(self)
-
         layout.addWidget(self._line_edit)
 
         # Suggestions list (initially hidden)
@@ -122,10 +119,13 @@ class Autocomplete(QWidget):
         self._suggestions_list.setVisible(False)
         self._suggestions_list.itemClicked.connect(self._on_item_clicked)
 
-        # Install event filter to handle Enter key in list
-        self._suggestions_list.installEventFilter(self)
-
         layout.addWidget(self._suggestions_list)
+
+        # Install event filters AFTER both widgets are created
+        # WHY: eventFilter can be called during initialization, so both
+        # widgets must exist before any event filter is installed
+        self._line_edit.installEventFilter(self)
+        self._suggestions_list.installEventFilter(self)
 
     def eventFilter(self, obj, event):
         """
@@ -140,6 +140,10 @@ class Autocomplete(QWidget):
         Returns:
             bool: True if event was handled, False otherwise
         """
+        # Safety check: ensure widgets are initialized
+        if not hasattr(self, "_line_edit") or not hasattr(self, "_suggestions_list"):
+            return super().eventFilter(obj, event)
+
         # Handle key presses in the line edit
         if obj == self._line_edit and event.type() == event.Type.KeyPress:
             key = event.key()
