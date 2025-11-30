@@ -175,21 +175,26 @@ class NavBar(QFrame):
         Create the expand/collapse toggle button.
 
         Args:
-            layout: Layout to add the button to
+            layout: Layout to add the button to (not used - button is positioned absolutely)
 
         Note:
             This button uses ◀/▶ arrows to indicate the direction of expansion.
             The arrow direction changes based on current state.
+            Button is positioned on the right edge at 50% height.
         """
-        self._toggle_btn = QPushButton("◀")
+        # Create button with parent=self for absolute positioning
+        # WHY not adding to layout: We want to position it on the right edge
+        # at 50% vertical height, which requires manual positioning
+        self._toggle_btn = QPushButton("◀", self)
         self._toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._toggle_btn.setFixedHeight(40)
+        self._toggle_btn.setFixedSize(24, 24)  # Small, just fits the icon
         self._toggle_btn.setProperty("toggle_nav", True)  # CSS class
 
         # Connect to toggle handler
         self._toggle_btn.clicked.connect(self._toggle_expand)
 
-        layout.addWidget(self._toggle_btn)
+        # Position will be set in resizeEvent
+        self._position_toggle_button()
 
     def _on_nav_clicked(self, item_id: str) -> None:
         """
@@ -346,6 +351,34 @@ class NavBar(QFrame):
                 button.setText(str(icon) if icon else "")
 
             logger.debug(f"NavBar item '{item_id}' label set to '{label}'")
+
+    def _position_toggle_button(self) -> None:
+        """
+        Position the toggle button on the right edge at 50% height.
+
+        This is called during initialization and whenever the navbar resizes.
+        """
+        if not hasattr(self, "_toggle_btn"):
+            return
+
+        # Position on right edge, vertically centered
+        btn_width = self._toggle_btn.width()
+        btn_height = self._toggle_btn.height()
+
+        x = self.width() - btn_width - 4  # 4px from right edge
+        y = (self.height() - btn_height) // 2  # Vertically centered
+
+        self._toggle_btn.move(x, y)
+
+    def resizeEvent(self, event) -> None:
+        """
+        Handle resize events to reposition the toggle button.
+
+        Args:
+            event: Resize event
+        """
+        super().resizeEvent(event)
+        self._position_toggle_button()
 
     # Override sizeHint to prevent layout issues
     def sizeHint(self) -> QSize:
