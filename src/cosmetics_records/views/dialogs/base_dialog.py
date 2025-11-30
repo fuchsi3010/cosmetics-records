@@ -229,13 +229,13 @@ class BaseDialog(QDialog):
             cancel_btn = QPushButton(cancel_text)
             cancel_btn.setProperty("class", "secondary")  # Secondary styling
             cancel_btn.clicked.connect(self.reject)
-            cancel_btn.setFixedWidth(100)
+            cancel_btn.setMinimumWidth(100)
             button_layout.addWidget(cancel_btn)
 
         # OK button
         ok_btn = QPushButton(ok_text)
         ok_btn.clicked.connect(self.accept)
-        ok_btn.setFixedWidth(100)
+        ok_btn.setMinimumWidth(100)
         ok_btn.setDefault(True)  # Enter key triggers this button
         button_layout.addWidget(ok_btn)
 

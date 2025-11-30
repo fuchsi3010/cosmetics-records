@@ -152,7 +152,7 @@ class EditProductRecordDialog(BaseDialog):
         # Delete button (left side)
         delete_btn = QPushButton("Delete")
         delete_btn.setProperty("class", "danger")  # Danger button styling
-        delete_btn.setFixedWidth(100)
+        delete_btn.setMinimumWidth(100)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         delete_btn.clicked.connect(self._on_delete_clicked)
         button_row.addWidget(delete_btn)
@@ -163,14 +163,14 @@ class EditProductRecordDialog(BaseDialog):
         # Cancel button
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setProperty("class", "secondary")
-        cancel_btn.setFixedWidth(100)
+        cancel_btn.setMinimumWidth(100)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         cancel_btn.clicked.connect(self.reject)
         button_row.addWidget(cancel_btn)
 
         # Save button
         save_btn = QPushButton("Save")
-        save_btn.setFixedWidth(100)
+        save_btn.setMinimumWidth(100)
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self.accept)
         save_btn.setDefault(True)  # Enter key triggers this

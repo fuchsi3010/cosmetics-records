@@ -200,7 +200,7 @@ class ImportDialog(BaseDialog):
 
         # Browse button
         browse_btn = QPushButton(_("Browse"))
-        browse_btn.setFixedWidth(80)
+        browse_btn.setMinimumWidth(80)
         browse_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         browse_btn.clicked.connect(browse_callback)
         row_layout.addWidget(browse_btn)
@@ -267,20 +267,20 @@ class ImportDialog(BaseDialog):
         # Cancel button
         cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setProperty("class", "secondary")
-        cancel_btn.setFixedWidth(100)
+        cancel_btn.setMinimumWidth(100)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
 
         # Validate button
         self._validate_btn = QPushButton(_("Validate"))
-        self._validate_btn.setFixedWidth(100)
+        self._validate_btn.setMinimumWidth(100)
         self._validate_btn.clicked.connect(self._on_validate_clicked)
         button_layout.addWidget(self._validate_btn)
 
         # Import button (disabled until validation passes)
         self._import_btn = QPushButton(_("Import"))
         self._import_btn.setProperty("class", "primary")
-        self._import_btn.setFixedWidth(100)
+        self._import_btn.setMinimumWidth(100)
         self._import_btn.setEnabled(False)
         self._import_btn.clicked.connect(self._on_import_clicked)
         button_layout.addWidget(self._import_btn)

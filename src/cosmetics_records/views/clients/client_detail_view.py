@@ -246,7 +246,7 @@ class HistoryList(QWidget):
 
         add_btn = QPushButton(f"+ Add")
         add_btn.setProperty("class", "primary")
-        add_btn.setFixedWidth(80)
+        add_btn.setMinimumWidth(80)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self.add_clicked.emit)
         title_row.addWidget(add_btn)
@@ -585,7 +585,7 @@ class ClientDetailView(QWidget):
         # Edit button (back button removed - navigation via navbar)
         edit_btn = QPushButton("Edit")
         edit_btn.setProperty("class", "secondary")
-        edit_btn.setFixedWidth(80)
+        edit_btn.setMinimumWidth(80)
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         edit_btn.clicked.connect(self._on_edit_client)
         top_row.addWidget(edit_btn)

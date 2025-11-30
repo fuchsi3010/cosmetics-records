@@ -263,7 +263,7 @@ class AuditLogView(QWidget):
 
         # Refresh button
         refresh_btn = QPushButton("Refresh")
-        refresh_btn.setFixedWidth(100)
+        refresh_btn.setMinimumWidth(100)
         refresh_btn.clicked.connect(self.refresh)
         title_layout.addWidget(refresh_btn)
 
@@ -308,7 +308,7 @@ class AuditLogView(QWidget):
 
         # Previous button
         self._prev_btn = QPushButton("< Previous")
-        self._prev_btn.setFixedWidth(100)
+        self._prev_btn.setMinimumWidth(100)
         self._prev_btn.clicked.connect(self._on_previous_page)
         layout.addWidget(self._prev_btn)
 
@@ -320,7 +320,7 @@ class AuditLogView(QWidget):
 
         # Next button
         self._next_btn = QPushButton("Next >")
-        self._next_btn.setFixedWidth(100)
+        self._next_btn.setMinimumWidth(100)
         self._next_btn.clicked.connect(self._on_next_page)
         layout.addWidget(self._next_btn)
 

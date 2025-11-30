@@ -285,7 +285,7 @@ class SettingsView(QWidget):
 
         # Apply button
         self._scale_apply_btn = QPushButton(_("Apply"))
-        self._scale_apply_btn.setFixedWidth(80)
+        self._scale_apply_btn.setMinimumWidth(80)
         self._scale_apply_btn.clicked.connect(self._on_scale_apply)
 
         scale_row.addWidget(self._scale_slider, stretch=1)
@@ -449,7 +449,7 @@ class SettingsView(QWidget):
         backup_row.setSpacing(12)
 
         manual_backup_btn = QPushButton(_("Create Backup Now"))
-        manual_backup_btn.setFixedWidth(150)
+        manual_backup_btn.setMinimumWidth(150)
         manual_backup_btn.clicked.connect(self._on_manual_backup)
 
         self._last_backup_label = QLabel(_("Last backup") + ": " + _("Never"))
@@ -463,7 +463,7 @@ class SettingsView(QWidget):
 
         # Open backups folder button
         open_folder_btn = QPushButton(_("Open Backups Folder"))
-        open_folder_btn.setFixedWidth(150)
+        open_folder_btn.setMinimumWidth(150)
         open_folder_btn.clicked.connect(self._on_open_backups_folder)
         section.add_widget(open_folder_btn)
 
@@ -483,19 +483,19 @@ class SettingsView(QWidget):
         # Import data button
         # WHY first: Import is often a one-time operation for new users
         import_btn = QPushButton(_("Import Data from CSV"))
-        import_btn.setFixedWidth(220)
+        import_btn.setMinimumWidth(220)
         import_btn.clicked.connect(self._on_import_data)
         section.add_widget(import_btn)
 
         # Export for mail merge button
         mail_merge_btn = QPushButton(_("Export Clients for Mail Merge"))
-        mail_merge_btn.setFixedWidth(220)
+        mail_merge_btn.setMinimumWidth(220)
         mail_merge_btn.clicked.connect(self._on_export_mail_merge)
         section.add_widget(mail_merge_btn)
 
         # Export all data button
         export_all_btn = QPushButton(_("Export All Data"))
-        export_all_btn.setFixedWidth(220)
+        export_all_btn.setMinimumWidth(220)
         export_all_btn.clicked.connect(self._on_export_all_data)
         section.add_widget(export_all_btn)
 
@@ -566,7 +566,7 @@ class SettingsView(QWidget):
 
         # Cleanup button
         cleanup_btn = QPushButton(_("Clean Up Now"))
-        cleanup_btn.setFixedWidth(150)
+        cleanup_btn.setMinimumWidth(150)
         cleanup_btn.clicked.connect(self._on_audit_cleanup)
         section.add_widget(cleanup_btn)
 

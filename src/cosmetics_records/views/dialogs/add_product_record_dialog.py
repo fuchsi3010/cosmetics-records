@@ -129,7 +129,7 @@ class AddProductRecordDialog(BaseDialog):
 
         # Add button
         add_btn = QPushButton("Add")
-        add_btn.setFixedWidth(60)
+        add_btn.setMinimumWidth(60)
         add_btn.clicked.connect(self._on_add_product)
         entry_row.addWidget(add_btn)
 

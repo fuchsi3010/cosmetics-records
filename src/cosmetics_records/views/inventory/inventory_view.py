@@ -276,7 +276,7 @@ class InventoryView(QWidget):
         add_btn.setProperty("class", "primary")  # Primary button styling
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self._on_add_item)
-        add_btn.setFixedWidth(120)
+        add_btn.setMinimumWidth(120)
         layout.addWidget(add_btn)
 
         return top_bar
