@@ -513,6 +513,11 @@ class ClientDetailView(QWidget):
         self._product_history.delete_item.connect(self._on_delete_product)
         grid.addWidget(self._product_history, 1, 1)
 
+        # Set row stretch: row 0 (freetext) = 1, row 1 (history) = 2
+        # WHY 1:2 ratio: User requested 1/3 for freetext, 2/3 for history
+        grid.setRowStretch(0, 1)
+        grid.setRowStretch(1, 2)
+
         main_layout.addLayout(grid)
 
     def _create_header(self) -> QWidget:
@@ -594,30 +599,44 @@ class ClientDetailView(QWidget):
 
     def load_client(self, client_id: int) -> None:
         """
-        Load and display client details.
-
-        This method will be connected to a controller later.
+        Load and display client details from the database.
 
         Args:
             client_id: Database ID of the client to load
         """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+
         self._client_id = client_id
 
         logger.debug(f"Loading client: {client_id}")
 
-        # PLACEHOLDER: Controller method will be called here
-        # For now, set placeholder data
-        self._client_data = {
-            "id": client_id,
-            "first_name": "John",
-            "last_name": "Doe",
-            "date_of_birth": None,
-            "allergies": "",
-            "planned_treatment": "",
-            "personal_notes": "",
-        }
+        try:
+            with DatabaseConnection() as db:
+                controller = ClientController(db)
+                client = controller.get_client(client_id)
+
+                if client:
+                    self._client_data = {
+                        "id": client.id,
+                        "first_name": client.first_name,
+                        "last_name": client.last_name,
+                        "date_of_birth": client.date_of_birth,
+                        "allergies": client.allergies or "",
+                        "planned_treatment": client.planned_treatment or "",
+                        "notes": client.notes or "",
+                    }
+                    logger.debug(f"Loaded client: {client.full_name()}")
+                else:
+                    logger.error(f"Client not found: {client_id}")
+                    self._client_data = None
+
+        except Exception as e:
+            logger.error(f"Failed to load client {client_id}: {e}")
+            self._client_data = None
 
         self._update_ui()
+        self._load_history()
 
     def _update_ui(self) -> None:
         """
@@ -633,13 +652,15 @@ class ClientDetailView(QWidget):
         last_name = self._client_data.get("last_name", "")
         self._name_label.setText(f"{first_name} {last_name}")
 
-        # Update age (calculated from DOB)
+        # Update age (calculated from DOB) - show just the number in parentheses
         dob = self._client_data.get("date_of_birth")
         if dob and isinstance(dob, date):
             age = self._calculate_age(dob)
-            self._age_label.setText(f"(Age: {age})")
+            self._age_label.setText(f"({age})")
+            self._age_label.setVisible(True)
         else:
-            self._age_label.setText("(Age: --)")
+            # Hide age label if no DOB
+            self._age_label.setVisible(False)
 
         # Update allergies
         allergies = self._client_data.get("allergies", "").strip()
@@ -654,7 +675,7 @@ class ClientDetailView(QWidget):
         self._planned_treatment_edit.setPlainText(planned)
 
         # Update personal notes
-        notes = self._client_data.get("personal_notes", "")
+        notes = self._client_data.get("notes", "")
         self._personal_notes_edit.setPlainText(notes)
 
     def _calculate_age(self, birth_date: date) -> int:
@@ -676,6 +697,68 @@ class ClientDetailView(QWidget):
 
         return age
 
+    def _load_history(self) -> None:
+        """
+        Load treatment and product history from the database.
+
+        Clears existing history and loads fresh data for the current client.
+        """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.controllers.product_controller import ProductController
+
+        if not self._client_id:
+            return
+
+        # Clear existing items
+        self._treatment_history.clear_items()
+        self._product_history.clear_items()
+
+        try:
+            with DatabaseConnection() as db:
+                # Load treatments
+                treatment_controller = TreatmentController(db)
+                treatments = treatment_controller.get_treatments_for_client(
+                    self._client_id, limit=20
+                )
+
+                # Convert to format expected by HistoryList
+                treatment_items = []
+                for t in treatments:
+                    treatment_items.append({
+                        "id": t.id,
+                        "date": t.treatment_date,
+                        "notes": t.treatment_notes,
+                        "created_at": t.created_at,
+                        "updated_at": t.updated_at,
+                    })
+
+                self._treatment_history.add_items(treatment_items)
+                logger.debug(f"Loaded {len(treatment_items)} treatments")
+
+                # Load products
+                product_controller = ProductController(db)
+                products = product_controller.get_products_for_client(
+                    self._client_id, limit=20
+                )
+
+                # Convert to format expected by HistoryList
+                product_items = []
+                for p in products:
+                    product_items.append({
+                        "id": p.id,
+                        "date": p.product_date,
+                        "notes": p.product_text,
+                        "created_at": p.created_at,
+                        "updated_at": p.updated_at,
+                    })
+
+                self._product_history.add_items(product_items)
+                logger.debug(f"Loaded {len(product_items)} products")
+
+        except Exception as e:
+            logger.error(f"Failed to load history: {e}")
+
     def _on_planned_treatment_saved(self, text: str) -> None:
         """
         Handle planned treatment auto-save.
@@ -683,9 +766,25 @@ class ClientDetailView(QWidget):
         Args:
             text: Updated planned treatment text
         """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+
+        if not self._client_id:
+            return
+
         logger.debug("Saving planned treatment")
-        # PLACEHOLDER: Controller method will be called here
-        self.client_updated.emit()
+
+        try:
+            with DatabaseConnection() as db:
+                controller = ClientController(db)
+                client = controller.get_client(self._client_id)
+                if client:
+                    client.planned_treatment = text
+                    controller.update_client(client)
+                    logger.debug("Planned treatment saved")
+                    self.client_updated.emit()
+        except Exception as e:
+            logger.error(f"Failed to save planned treatment: {e}")
 
     def _on_personal_notes_saved(self, text: str) -> None:
         """
@@ -694,9 +793,25 @@ class ClientDetailView(QWidget):
         Args:
             text: Updated personal notes text
         """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+
+        if not self._client_id:
+            return
+
         logger.debug("Saving personal notes")
-        # PLACEHOLDER: Controller method will be called here
-        self.client_updated.emit()
+
+        try:
+            with DatabaseConnection() as db:
+                controller = ClientController(db)
+                client = controller.get_client(self._client_id)
+                if client:
+                    client.notes = text
+                    controller.update_client(client)
+                    logger.debug("Personal notes saved")
+                    self.client_updated.emit()
+        except Exception as e:
+            logger.error(f"Failed to save personal notes: {e}")
 
     def _on_edit_client(self) -> None:
         """
@@ -711,10 +826,44 @@ class ClientDetailView(QWidget):
         """
         Handle add treatment button click.
 
-        Opens the add treatment dialog (to be implemented).
+        Opens the add treatment dialog and saves the treatment to database.
         """
+        from cosmetics_records.views.dialogs.add_treatment_dialog import AddTreatmentDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.models.treatment import TreatmentRecord
+
+        if not self._client_id:
+            logger.error("Cannot add treatment: no client loaded")
+            return
+
         logger.debug("Add treatment clicked")
-        # PLACEHOLDER: Will show AddTreatmentDialog
+
+        try:
+            dialog = AddTreatmentDialog(self._client_id, self)
+            if dialog.exec():
+                # Get treatment data from dialog
+                treatment_data = dialog.get_treatment_data()
+
+                # Create TreatmentRecord model
+                treatment = TreatmentRecord(
+                    client_id=treatment_data["client_id"],
+                    treatment_date=treatment_data["date"],
+                    treatment_notes=treatment_data["notes"],
+                )
+
+                # Save to database
+                with DatabaseConnection() as db:
+                    controller = TreatmentController(db)
+                    treatment_id = controller.create_treatment(treatment)
+                    logger.info(f"Treatment created with ID: {treatment_id}")
+
+                # Reload history to show new treatment
+                self._load_history()
+                self.client_updated.emit()
+
+        except Exception as e:
+            logger.error(f"Failed to add treatment: {e}")
 
     def _on_load_more_treatments(self) -> None:
         """
@@ -747,10 +896,51 @@ class ClientDetailView(QWidget):
         """
         Handle add product button click.
 
-        Opens the add product dialog (to be implemented).
+        Opens the add product dialog and saves the product record to database.
         """
+        from cosmetics_records.views.dialogs.add_product_record_dialog import AddProductRecordDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.product_controller import ProductController
+        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.models.product import ProductRecord
+
+        if not self._client_id:
+            logger.error("Cannot add product: no client loaded")
+            return
+
         logger.debug("Add product clicked")
-        # PLACEHOLDER: Will show AddProductRecordDialog
+
+        try:
+            # Get inventory items for autocomplete
+            inventory_names = []
+            with DatabaseConnection() as db:
+                inv_controller = InventoryController(db)
+                inventory_names = inv_controller.get_all_names()
+
+            dialog = AddProductRecordDialog(self._client_id, inventory_names, self)
+            if dialog.exec():
+                # Get product data from dialog
+                product_data = dialog.get_product_record_data()
+
+                # Create ProductRecord model
+                product = ProductRecord(
+                    client_id=product_data["client_id"],
+                    product_date=product_data["date"],
+                    product_text=product_data["product_text"],
+                )
+
+                # Save to database
+                with DatabaseConnection() as db:
+                    controller = ProductController(db)
+                    product_id = controller.create_product(product)
+                    logger.info(f"Product record created with ID: {product_id}")
+
+                # Reload history to show new product
+                self._load_history()
+                self.client_updated.emit()
+
+        except Exception as e:
+            logger.error(f"Failed to add product: {e}")
 
     def _on_load_more_products(self) -> None:
         """
