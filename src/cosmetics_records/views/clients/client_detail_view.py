@@ -817,10 +817,83 @@ class ClientDetailView(QWidget):
         """
         Handle edit client button click.
 
-        Opens the edit client dialog (to be implemented).
+        Opens the edit client dialog and saves changes to database.
         """
+        from cosmetics_records.views.dialogs.edit_client_dialog import EditClientDialog
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.client_controller import ClientController
+
+        if not self._client_id or not self._client_data:
+            logger.error("Cannot edit client: no client loaded")
+            return
+
         logger.debug("Edit client clicked")
-        # PLACEHOLDER: Will show EditClientDialog
+
+        try:
+            # Prepare client data for dialog
+            dialog_data = {
+                "first_name": self._client_data.get("first_name", ""),
+                "last_name": self._client_data.get("last_name", ""),
+                "email": "",  # Need to load from database
+                "phone": "",
+                "address": "",
+                "date_of_birth": self._client_data.get("date_of_birth"),
+                "allergies": self._client_data.get("allergies", ""),
+                "tags": [],
+            }
+
+            # Load full client data from database
+            with DatabaseConnection() as db:
+                controller = ClientController(db)
+                client = controller.get_client(self._client_id)
+                if client:
+                    dialog_data = {
+                        "first_name": client.first_name,
+                        "last_name": client.last_name,
+                        "email": client.email or "",
+                        "phone": client.phone or "",
+                        "address": client.address or "",
+                        "date_of_birth": client.date_of_birth,
+                        "allergies": client.allergies or "",
+                        "tags": client.tags,
+                    }
+
+            dialog = EditClientDialog(self._client_id, dialog_data, self)
+            result = dialog.exec()
+
+            if dialog.was_deleted():
+                # Client was deleted - go back to list
+                with DatabaseConnection() as db:
+                    controller = ClientController(db)
+                    controller.delete_client(self._client_id)
+                    logger.info(f"Client deleted: {self._client_id}")
+                self.back_to_list.emit()
+
+            elif result:
+                # Client was updated
+                updated_data = dialog.get_client_data()
+
+                with DatabaseConnection() as db:
+                    controller = ClientController(db)
+                    client = controller.get_client(self._client_id)
+                    if client:
+                        client.first_name = updated_data["first_name"]
+                        client.last_name = updated_data["last_name"]
+                        client.email = updated_data.get("email") or None
+                        client.phone = updated_data.get("phone") or None
+                        client.address = updated_data.get("address") or None
+                        client.date_of_birth = updated_data.get("date_of_birth")
+                        client.allergies = updated_data.get("allergies") or None
+                        client.tags = updated_data.get("tags", [])
+                        controller.update_client(client)
+                        logger.info(f"Client updated: {client.full_name()}")
+
+                # Reload to show updated data
+                self.load_client(self._client_id)
+                self.client_updated.emit()
+
+        except Exception as e:
+            logger.error(f"Failed to edit client: {e}")
 
     def _on_add_treatment(self) -> None:
         """
