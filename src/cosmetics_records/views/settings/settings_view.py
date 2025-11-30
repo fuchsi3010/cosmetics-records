@@ -65,6 +65,7 @@ from cosmetics_records.services.audit_service import AuditService
 from cosmetics_records.services.backup_service import BackupService
 from cosmetics_records.services.export_service import ExportService
 from cosmetics_records.utils.localization import _
+from cosmetics_records.views.dialogs.import_dialog import ImportDialog
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -112,6 +113,7 @@ class SettingsView(QWidget):
     theme_changed = pyqtSignal(str)
     scale_changed = pyqtSignal(float)  # Emits new scale factor (e.g., 1.0, 1.5)
     language_changed = pyqtSignal(str)  # Emits new language code (e.g., "en", "de")
+    data_imported = pyqtSignal()  # Emits when data is imported (to refresh views)
 
     def __init__(self, parent: Optional[QWidget] = None):
         """
@@ -389,12 +391,12 @@ class SettingsView(QWidget):
 
     def _create_export_section(self) -> QWidget:
         """
-        Create the export settings section.
+        Create the import/export settings section.
 
-        Includes buttons for various export operations.
+        Includes buttons for data import and various export operations.
 
         Returns:
-            QWidget containing export settings
+            QWidget containing import/export settings
         """
         section = QWidget()
         layout = QVBoxLayout(section)
@@ -402,7 +404,14 @@ class SettingsView(QWidget):
         layout.setSpacing(12)
 
         # Section header
-        layout.addWidget(SectionHeader(_("Export")))
+        layout.addWidget(SectionHeader(_("Import / Export")))
+
+        # Import data button
+        # WHY first: Import is often a one-time operation for new users
+        import_btn = QPushButton(_("Import Data from CSV"))
+        import_btn.setFixedWidth(220)
+        import_btn.clicked.connect(self._on_import_data)
+        layout.addWidget(import_btn)
 
         # Export for mail merge button
         mail_merge_btn = QPushButton(_("Export Clients for Mail Merge"))
@@ -825,6 +834,22 @@ class SettingsView(QWidget):
                 _("Cannot Open Folder"),
                 _("Could not open backups folder") + f":\n{str(backup_dir)}",
             )
+
+    def _on_import_data(self) -> None:
+        """
+        Handle import data button click.
+
+        Opens the import dialog for CSV data import.
+        """
+        logger.info("Opening import dialog...")
+
+        # Create and show import dialog
+        dialog = ImportDialog(parent=self)
+
+        # If import was successful, emit signal to refresh views
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            logger.info("Import completed, emitting data_imported signal")
+            self.data_imported.emit()
 
     def _on_export_mail_merge(self) -> None:
         """

@@ -1,0 +1,4 @@
+import_id,first_name,last_name,email,phone,address,date_of_birth,allergies,tags,planned_treatment,notes
+1,Jane,Doe,jane.doe@example.com,+1-555-0123,123 Main St,1990-05-15,Sensitive to retinol,"VIP,Regular",Monthly facial,Prefers morning appointments
+2,John,Smith,john.smith@example.com,+1-555-0456,456 Oak Ave,1985-10-20,,"New Client",Initial consultation,
+3,Maria,Garcia,,+1-555-0789,789 Pine Rd,1978-03-08,Latex allergy,"VIP,Sensitive Skin",Deep cleansing,Needs gentle products
