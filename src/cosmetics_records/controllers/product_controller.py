@@ -29,6 +29,7 @@
 # =============================================================================
 
 import logging
+import sqlite3
 from datetime import date
 from typing import List, Optional
 
@@ -396,7 +397,9 @@ class ProductController:
         row = self.db.fetchone()
 
         # fetchone() returns a Row object, access first column
-        count = row[0]
+        if row is None:
+            return 0
+        count: int = row[0]
 
         logger.debug(f"Client {client_id} has {count} product records")
         return count
@@ -453,7 +456,7 @@ class ProductController:
             return None
 
         # Return the ID of the existing record
-        existing_id = row["id"]
+        existing_id: int = row["id"]
         logger.debug(
             f"Product record already exists: client {client_id}, "
             f"date {product_date}, ID {existing_id}"
@@ -510,7 +513,7 @@ class ProductController:
     # Helper Methods (Private)
     # =========================================================================
 
-    def _row_to_product_record(self, row) -> ProductRecord:
+    def _row_to_product_record(self, row: sqlite3.Row) -> ProductRecord:
         """
         Convert a database row to a ProductRecord model.
 

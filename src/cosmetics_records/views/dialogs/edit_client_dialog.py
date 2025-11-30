@@ -38,6 +38,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
@@ -70,7 +71,7 @@ class EditClientDialog(BaseDialog):
         _error_label: QLabel for displaying validation errors
     """
 
-    def __init__(self, client_id: int, client_data: dict, parent: Optional = None):
+    def __init__(self, client_id: int, client_data: dict, parent: Optional[QWidget] = None):
         """
         Initialize the edit client dialog.
 

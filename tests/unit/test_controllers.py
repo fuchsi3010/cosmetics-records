@@ -455,16 +455,16 @@ class TestTreatmentController:
         )
         controller.create_treatment(treatment)
 
-        # Check if treatment exists for today (should be True)
+        # Check if treatment exists for today (returns treatment ID if exists)
         exists = controller.treatment_exists_for_date(client_id, date.today())
-        assert exists is True
+        assert exists is not None
 
         # Check if treatment exists for yesterday (should be False)
         from datetime import timedelta
 
         yesterday = date.today() - timedelta(days=1)
         exists = controller.treatment_exists_for_date(client_id, yesterday)
-        assert exists is False
+        assert exists is None
 
 
 # =============================================================================
@@ -515,11 +515,11 @@ class TestInventoryController:
         controller.create_item(item3)
 
         # Search for "Serum" (should match 2 items)
-        results = controller.search_inventory("Serum")
+        results = controller.search_items("Serum")
         assert len(results) == 2
 
         # Search for "Retinol" (should match 1 item)
-        results = controller.search_inventory("Retinol")
+        results = controller.search_items("Retinol")
         assert len(results) == 1
         assert results[0].name == "Retinol Serum"
 
@@ -545,11 +545,11 @@ class TestInventoryController:
         # Get all names
         names = controller.get_all_names()
 
-        # Should have 3 names
+        # Should have 3 names (returns display names with capacity and unit)
         assert len(names) == 3
-        assert "Retinol Serum" in names
-        assert "Vitamin C Serum" in names
-        assert "Face Cream" in names
+        assert "Retinol Serum (30 ml)" in names
+        assert "Vitamin C Serum (30 ml)" in names
+        assert "Face Cream (50 g)" in names
 
     def test_get_all_names_empty_inventory(self, db_connection):
         """

@@ -183,8 +183,8 @@ class BaseDialog(QDialog):
 
     def create_button_row(
         self,
-        ok_text: str = None,
-        cancel_text: str = None,
+        ok_text: Optional[str] = None,
+        cancel_text: Optional[str] = None,
         show_cancel: bool = True,
     ) -> QHBoxLayout:
         """

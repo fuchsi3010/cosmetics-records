@@ -23,7 +23,7 @@
 
 import sqlite3
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import logging
 import shutil
 from datetime import datetime
@@ -49,7 +49,7 @@ class MigrationManager:
         migrations_dir: Path to the directory containing migration files
     """
 
-    def __init__(self, db_connection: DatabaseConnection = None):
+    def __init__(self, db_connection: Optional[DatabaseConnection] = None):
         """
         Initialize the migration manager.
 
@@ -200,7 +200,7 @@ class MigrationManager:
         )
         return pending
 
-    def _backup_database(self) -> Path:
+    def _backup_database(self) -> Optional[Path]:
         """
         Create a backup copy of the database before applying migrations.
 
@@ -243,7 +243,7 @@ class MigrationManager:
                 f"Aborting for safety. Error: {e}"
             )
 
-    def _load_migration_module(self, version: str, file_path: Path):
+    def _load_migration_module(self, version: str, file_path: Path) -> object:
         """
         Dynamically load a migration file as a Python module.
 

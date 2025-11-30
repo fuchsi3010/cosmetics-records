@@ -54,7 +54,7 @@ class TestAuditService:
         )
 
         # Verify the log was created
-        logs = service.get_audit_logs(table_name="clients", limit=10)
+        logs = service.get_audit_logs(table_filter="clients", limit=10)
         assert len(logs) == 1
 
         log = logs[0]
@@ -84,7 +84,7 @@ class TestAuditService:
         )
 
         # Verify the log was created
-        logs = service.get_audit_logs(table_name="clients", limit=10)
+        logs = service.get_audit_logs(table_filter="clients", limit=10)
         assert len(logs) == 1
 
         log = logs[0]
@@ -110,7 +110,7 @@ class TestAuditService:
         )
 
         # Verify the log was created
-        logs = service.get_audit_logs(table_name="clients", limit=10)
+        logs = service.get_audit_logs(table_filter="clients", limit=10)
         assert len(logs) == 1
 
         log = logs[0]
@@ -146,7 +146,7 @@ class TestAuditService:
         assert len(page2) == 2
 
         # Get logs filtered by table
-        client_logs = service.get_audit_logs(table_name="clients", limit=10)
+        client_logs = service.get_audit_logs(table_filter="clients", limit=10)
         assert len(client_logs) == 5
 
     def test_get_audit_logs_empty(self, db_connection):

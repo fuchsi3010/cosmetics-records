@@ -41,6 +41,7 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
@@ -70,7 +71,7 @@ class EditInventoryDialog(BaseDialog):
     # Available units
     UNITS = ["ml", "g", "Pc."]
 
-    def __init__(self, item_id: int, item_data: dict, parent: Optional = None):
+    def __init__(self, item_id: int, item_data: dict, parent: Optional[QWidget] = None):
         """
         Initialize the edit inventory dialog.
 

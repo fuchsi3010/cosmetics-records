@@ -38,6 +38,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
@@ -68,8 +69,8 @@ class EditProductRecordDialog(BaseDialog):
         self,
         record_id: int,
         record_data: dict,
-        inventory_items: List[str] = None,
-        parent: Optional = None,
+        inventory_items: Optional[List[str]] = None,
+        parent: Optional[QWidget] = None,
     ):
         """
         Initialize the edit product record dialog.

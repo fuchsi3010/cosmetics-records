@@ -56,6 +56,11 @@ class Config:
     _instance: Optional["Config"] = None
     _lock: Lock = Lock()  # Thread-safety lock for singleton creation
 
+    # Instance attributes (type hints for mypy)
+    _config_dir: Path
+    _config_file: Path
+    _settings: Dict[str, Any]
+
     def __new__(cls) -> "Config":
         """
         Implement singleton pattern with thread-safety.
@@ -82,7 +87,7 @@ class Config:
                     cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the configuration manager.
 
@@ -278,7 +283,7 @@ class Config:
     @property
     def theme(self) -> str:
         """Get the current UI theme."""
-        return self._settings.get("theme", "system")
+        return str(self._settings.get("theme", "system"))
 
     @theme.setter
     def theme(self, value: str) -> None:
@@ -298,7 +303,7 @@ class Config:
     @property
     def language(self) -> str:
         """Get the current application language."""
-        return self._settings.get("language", "en")
+        return str(self._settings.get("language", "en"))
 
     @language.setter
     def language(self, value: str) -> None:
@@ -318,7 +323,7 @@ class Config:
     @property
     def date_format(self) -> str:
         """Get the current date format setting."""
-        return self._settings.get("date_format", "language")
+        return str(self._settings.get("date_format", "language"))
 
     @date_format.setter
     def date_format(self, value: str) -> None:

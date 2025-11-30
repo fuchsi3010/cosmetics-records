@@ -24,6 +24,7 @@
 # =============================================================================
 
 import logging
+import sqlite3
 from datetime import date
 from typing import List, Optional
 
@@ -392,7 +393,9 @@ class TreatmentController:
         row = self.db.fetchone()
 
         # fetchone() returns a Row object, access first column
-        count = row[0]
+        if row is None:
+            return 0
+        count: int = row[0]
 
         logger.debug(f"Client {client_id} has {count} treatment records")
         return count
@@ -448,7 +451,7 @@ class TreatmentController:
             return None
 
         # Return the ID of the existing treatment
-        existing_id = row["id"]
+        existing_id: int = row["id"]
         logger.debug(
             f"Treatment already exists: client {client_id}, "
             f"date {treatment_date}, ID {existing_id}"
@@ -503,7 +506,7 @@ class TreatmentController:
     # Helper Methods (Private)
     # =========================================================================
 
-    def _row_to_treatment(self, row) -> TreatmentRecord:
+    def _row_to_treatment(self, row: sqlite3.Row) -> TreatmentRecord:
         """
         Convert a database row to a TreatmentRecord model.
 

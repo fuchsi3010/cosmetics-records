@@ -29,6 +29,7 @@
 # =============================================================================
 
 import logging
+import sqlite3
 from typing import List, Optional
 
 from thefuzz import fuzz
@@ -551,7 +552,9 @@ class InventoryController:
         row = self.db.fetchone()
 
         # fetchone() returns a Row object, access first column
-        count = row[0]
+        if row is None:
+            return 0
+        count: int = row[0]
 
         logger.debug(f"Total inventory item count: {count}")
         return count
@@ -606,7 +609,7 @@ class InventoryController:
     # Helper Methods (Private)
     # =========================================================================
 
-    def _row_to_inventory_item(self, row) -> InventoryItem:
+    def _row_to_inventory_item(self, row: sqlite3.Row) -> InventoryItem:
         """
         Convert a database row to an InventoryItem model.
 

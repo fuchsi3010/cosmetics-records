@@ -36,6 +36,7 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog
@@ -62,7 +63,7 @@ class AddInventoryDialog(BaseDialog):
     # Available units
     UNITS = ["ml", "g", "Pc."]
 
-    def __init__(self, parent: Optional = None):
+    def __init__(self, parent: Optional[QWidget] = None):
         """
         Initialize the add inventory dialog.
 

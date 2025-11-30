@@ -29,6 +29,7 @@
 
 import csv
 import logging
+import sqlite3
 from typing import List, Optional
 
 from thefuzz import fuzz
@@ -643,7 +644,9 @@ class ClientController:
         row = self.db.fetchone()
 
         # fetchone() returns a Row object, access first column
-        count = row[0]
+        if row is None:
+            return 0
+        count: int = row[0]
 
         logger.debug(f"Total client count: {count}")
         return count
@@ -731,7 +734,7 @@ class ClientController:
     # Helper Methods (Private)
     # =========================================================================
 
-    def _row_to_client(self, row) -> Client:
+    def _row_to_client(self, row: sqlite3.Row) -> Client:
         """
         Convert a database row to a Client model.
 

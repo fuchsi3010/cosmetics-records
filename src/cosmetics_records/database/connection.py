@@ -68,6 +68,8 @@ class DatabaseConnection:
         # These will be initialized when entering the context manager
         self.connection: Optional[sqlite3.Connection] = None
         self.cursor: Optional[sqlite3.Cursor] = None
+        # Track nested context manager entries to support re-entrant usage
+        self._context_depth: int = 0
 
         logger.info(f"DatabaseConnection initialized with path: {self.db_path}")
 
@@ -77,6 +79,7 @@ class DatabaseConnection:
 
         This method is called automatically when using 'with' statement.
         It creates the actual connection and enables foreign key support.
+        Supports re-entrant usage - nested 'with' blocks share the connection.
 
         Returns:
             self: The DatabaseConnection instance for chaining
@@ -87,6 +90,13 @@ class DatabaseConnection:
             integrity (e.g., preventing orphaned treatment records when
             a client is deleted).
         """
+        self._context_depth += 1
+
+        # If already connected, just return self (re-entrant usage)
+        if self.connection is not None:
+            logger.debug(f"Re-entering context manager (depth: {self._context_depth})")
+            return self
+
         try:
             # Create connection to the SQLite database file
             # If the file doesn't exist, SQLite creates it automatically
@@ -108,6 +118,7 @@ class DatabaseConnection:
             return self
 
         except sqlite3.Error as e:
+            self._context_depth -= 1  # Restore depth on failure
             logger.error(f"Failed to connect to database: {e}")
             # Re-raise the exception so caller knows connection failed
             raise
@@ -118,6 +129,7 @@ class DatabaseConnection:
 
         This method is called automatically when exiting 'with' block,
         even if an exception occurred. It ensures proper cleanup.
+        Supports re-entrant usage - only closes when exiting the outermost context.
 
         Args:
             exc_type: The type of exception that occurred (if any)
@@ -129,6 +141,13 @@ class DatabaseConnection:
             any uncommitted changes. This prevents partial updates that
             could leave the database in an inconsistent state.
         """
+        self._context_depth -= 1
+
+        # Only close the connection when exiting the outermost context
+        if self._context_depth > 0:
+            logger.debug(f"Exiting nested context (depth: {self._context_depth})")
+            return
+
         if self.connection:
             try:
                 # If an exception occurred, rollback any uncommitted changes

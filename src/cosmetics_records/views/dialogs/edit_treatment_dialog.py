@@ -39,6 +39,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
@@ -65,7 +66,7 @@ class EditTreatmentDialog(BaseDialog):
     """
 
     def __init__(
-        self, treatment_id: int, treatment_data: dict, parent: Optional = None
+        self, treatment_id: int, treatment_data: dict, parent: Optional[QWidget] = None
     ):
         """
         Initialize the edit treatment dialog.

@@ -27,7 +27,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional, cast
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         config: Application configuration
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the main window.
         """
@@ -534,7 +534,7 @@ class MainWindow(QMainWindow):
             ui_scale = self.config.ui_scale
 
             # Get stylesheet for new theme with scale
-            stylesheet = get_theme(theme, ui_scale)
+            stylesheet = get_theme(cast(Literal["dark", "light", "system"], theme), ui_scale)
 
             # Apply to application
             QApplication.instance().setStyleSheet(stylesheet)
@@ -706,7 +706,7 @@ def main() -> int:
 
     # Start event loop
     # WHY exec() not exec: Python 3 renamed exec to exec() to avoid keyword conflict
-    exit_code = app.exec()
+    exit_code: int = app.exec()
 
     logger.info("Application exiting with code: %d", exit_code)
     return exit_code

@@ -31,6 +31,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from .base_dialog import BaseDialog
@@ -53,7 +54,7 @@ class AddTreatmentDialog(BaseDialog):
         _existing_treatment_id: If set, edit existing treatment instead
     """
 
-    def __init__(self, client_id: int, parent: Optional = None):
+    def __init__(self, client_id: int, parent: Optional[QWidget] = None):
         """
         Initialize the add treatment dialog.
 
