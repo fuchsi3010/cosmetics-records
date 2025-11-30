@@ -248,13 +248,23 @@ class ProductController:
         # Log changes to audit log
         audit = AuditService(self.db)
         if str(old_record.product_date) != str(record.product_date):
-            audit.log_update("product_records", record.id, "product_date",
-                           str(old_record.product_date), str(record.product_date),
-                           "ProductController")
+            audit.log_update(
+                "product_records",
+                record.id,
+                "product_date",
+                str(old_record.product_date),
+                str(record.product_date),
+                "ProductController",
+            )
         if old_record.product_text != record.product_text:
-            audit.log_update("product_records", record.id, "product_text",
-                           old_record.product_text or "", record.product_text or "",
-                           "ProductController")
+            audit.log_update(
+                "product_records",
+                record.id,
+                "product_text",
+                old_record.product_text or "",
+                record.product_text or "",
+                "ProductController",
+            )
 
         logger.info(f"Updated product record ID {record.id}")
         return True

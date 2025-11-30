@@ -274,6 +274,7 @@ class AlphabetFilter(QWidget):
         super().showEvent(event)
         # Defer to next event loop to ensure layout is complete
         from PyQt6.QtCore import QTimer
+
         QTimer.singleShot(0, self._update_visible_buttons)
 
     def _calculate_visible_count(self) -> int:

@@ -75,9 +75,7 @@ class TestFileValidation:
 
     def test_validate_missing_clients_file(self, import_service):
         """Should return error when clients file doesn't exist."""
-        errors = import_service.validate_files(
-            clients_path="/nonexistent/clients.csv"
-        )
+        errors = import_service.validate_files(clients_path="/nonexistent/clients.csv")
 
         assert len(errors) == 1
         assert "not found" in errors[0].message.lower()
@@ -119,9 +117,7 @@ class TestColumnValidation:
         # Should mention missing 'last_name' column
         assert any("last_name" in str(e) for e in errors)
 
-    def test_validate_all_columns_present(
-        self, import_service, sample_clients_path
-    ):
+    def test_validate_all_columns_present(self, import_service, sample_clients_path):
         """Should pass validation when all required columns are present."""
         errors = import_service.validate_files(clients_path=sample_clients_path)
 
@@ -193,7 +189,9 @@ class TestDataValidation:
 class TestReferenceValidation:
     """Tests for cross-file reference validation."""
 
-    def test_validate_invalid_client_reference(self, import_service, sample_clients_path):
+    def test_validate_invalid_client_reference(
+        self, import_service, sample_clients_path
+    ):
         """Should return error when treatment references non-existent client."""
         # Create a treatments file with invalid client reference
         with tempfile.NamedTemporaryFile(
@@ -210,7 +208,9 @@ class TestReferenceValidation:
             )
 
             assert len(errors) >= 1
-            assert any("999" in str(e) and "not found" in str(e).lower() for e in errors)
+            assert any(
+                "999" in str(e) and "not found" in str(e).lower() for e in errors
+            )
         finally:
             Path(invalid_treatments_path).unlink(missing_ok=True)
 

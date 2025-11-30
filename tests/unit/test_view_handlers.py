@@ -753,7 +753,9 @@ class TestMainWindowHandlers:
         window.views["client_detail"].load_client.assert_called_once_with(1)
 
         # Verify navbar was updated with client name
-        window.navbar.set_item_label.assert_called_once_with("client_detail", "Jane Doe")
+        window.navbar.set_item_label.assert_called_once_with(
+            "client_detail", "Jane Doe"
+        )
         window.navbar.set_item_visible.assert_called_once_with("client_detail", True)
 
         # Verify navigation happened
@@ -795,7 +797,9 @@ class TestLoadHistory:
 
         # Mock controllers
         mock_treatment_controller = MagicMock()
-        mock_treatment_controller.get_treatments_for_client.return_value = [mock_treatment]
+        mock_treatment_controller.get_treatments_for_client.return_value = [
+            mock_treatment
+        ]
         mock_product_controller = MagicMock()
         mock_product_controller.get_products_for_client.return_value = [mock_product]
 

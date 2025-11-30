@@ -1625,7 +1625,9 @@ QPushButton[alphabet_arrow="true"]:pressed {{
 # =============================================================================
 
 
-def get_theme(theme_name: Literal["dark", "light", "system"], scale: float = 1.0) -> str:
+def get_theme(
+    theme_name: Literal["dark", "light", "system"], scale: float = 1.0
+) -> str:
     """
     Get the QSS stylesheet for the specified theme with optional scaling.
 

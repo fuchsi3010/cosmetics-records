@@ -276,7 +276,9 @@ class ClientListView(QWidget):
 
         # Content area: client list + filter sidebar
         content_layout = QHBoxLayout()
-        content_layout.setContentsMargins(0, 0, 12, 0)  # Right margin for alphabet filter
+        content_layout.setContentsMargins(
+            0, 0, 12, 0
+        )  # Right margin for alphabet filter
         content_layout.setSpacing(8)
 
         # Client list (scrollable) - takes most of the space
@@ -473,7 +475,7 @@ class ClientListView(QWidget):
                         clients = controller.filter_by_letter(
                             self._current_filter,
                             limit=self.CLIENTS_PER_PAGE,
-                            offset=offset
+                            offset=offset,
                         )
                         self._has_more = len(clients) >= self.CLIENTS_PER_PAGE
                 else:
@@ -486,12 +488,14 @@ class ClientListView(QWidget):
             # Convert Client models to dictionaries for display
             client_dicts = []
             for client in clients:
-                client_dicts.append({
-                    "id": client.id,
-                    "first_name": client.first_name,
-                    "last_name": client.last_name,
-                    "tags": client.tags,
-                })
+                client_dicts.append(
+                    {
+                        "id": client.id,
+                        "first_name": client.first_name,
+                        "last_name": client.last_name,
+                        "tags": client.tags,
+                    }
+                )
 
             # Add clients to the view
             self.add_clients(client_dicts)

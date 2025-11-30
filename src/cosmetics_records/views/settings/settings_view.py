@@ -88,7 +88,9 @@ class SectionHeader(QLabel):
         """
         super().__init__(text, parent)
         self.setProperty("class", "section_header")  # CSS class
-        self.setStyleSheet("font-size: 16px; font-weight: bold; background: transparent;")
+        self.setStyleSheet(
+            "font-size: 16px; font-weight: bold; background: transparent;"
+        )
 
 
 class SettingsSection(QFrame):
@@ -351,9 +353,7 @@ class SettingsView(QWidget):
         format_row = QHBoxLayout()
         format_row.setSpacing(12)
 
-        self._date_format_language = QRadioButton(
-            _("Language default")
-        )
+        self._date_format_language = QRadioButton(_("Language default"))
         self._date_format_iso = QRadioButton("ISO 8601 (2024-12-31)")
         self._date_format_us = QRadioButton("US (12/31/2024)")
         self._date_format_de = QRadioButton("DE (31.12.2024)")
@@ -365,12 +365,8 @@ class SettingsView(QWidget):
         self._date_format_iso.toggled.connect(
             lambda: self._on_date_format_changed("iso8601")
         )
-        self._date_format_us.toggled.connect(
-            lambda: self._on_date_format_changed("us")
-        )
-        self._date_format_de.toggled.connect(
-            lambda: self._on_date_format_changed("de")
-        )
+        self._date_format_us.toggled.connect(lambda: self._on_date_format_changed("us"))
+        self._date_format_de.toggled.connect(lambda: self._on_date_format_changed("de"))
 
         format_row.addWidget(self._date_format_language)
         format_row.addWidget(self._date_format_iso)
@@ -385,7 +381,9 @@ class SettingsView(QWidget):
             _("Language default uses MM/DD/YYYY for English and DD.MM.YYYY for German")
         )
         note_label.setProperty("class", "secondary")
-        note_label.setStyleSheet("color: gray; font-size: 11px; background: transparent;")
+        note_label.setStyleSheet(
+            "color: gray; font-size: 11px; background: transparent;"
+        )
         section.add_widget(note_label)
 
         return section
@@ -521,7 +519,9 @@ class SettingsView(QWidget):
 
         self._db_path_label = QLabel(str(db_path))
         self._db_path_label.setProperty("class", "monospace")
-        self._db_path_label.setStyleSheet("color: gray; font-family: monospace; background: transparent;")
+        self._db_path_label.setStyleSheet(
+            "color: gray; font-family: monospace; background: transparent;"
+        )
         self._db_path_label.setWordWrap(True)
         section.add_widget(self._db_path_label)
 

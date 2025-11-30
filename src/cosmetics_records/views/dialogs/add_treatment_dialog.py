@@ -125,9 +125,7 @@ class AddTreatmentDialog(BaseDialog):
             return
 
         # Validation passed
-        logger.debug(
-            f"Adding treatment for client {self._client_id} on {date.today()}"
-        )
+        logger.debug(f"Adding treatment for client {self._client_id} on {date.today()}")
 
         # Hide error if it was showing
         self._error_label.setVisible(False)

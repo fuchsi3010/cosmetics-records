@@ -231,6 +231,6 @@ class TestLanguageSwitchingIntegration:
             actual_locale = get_current_locale()
 
             # Locale should match what we set
-            assert actual_locale == expected_locale, (
-                f"Expected locale {expected_locale}, got {actual_locale}"
-            )
+            assert (
+                actual_locale == expected_locale
+            ), f"Expected locale {expected_locale}, got {actual_locale}"

@@ -140,15 +140,15 @@ def format_datetime(dt: datetime) -> str:
 
 # Date format strings for each format setting
 DATE_FORMATS = {
-    "iso8601": "%Y-%m-%d",       # 2024-12-31
-    "us": "%m/%d/%Y",            # 12/31/2024
-    "de": "%d.%m.%Y",            # 31.12.2024
+    "iso8601": "%Y-%m-%d",  # 2024-12-31
+    "us": "%m/%d/%Y",  # 12/31/2024
+    "de": "%d.%m.%Y",  # 31.12.2024
 }
 
 # Language defaults (what "language" setting uses per language)
 LANGUAGE_DATE_FORMATS = {
-    "en": "%m/%d/%Y",            # US format for English
-    "de": "%d.%m.%Y",            # German format for German
+    "en": "%m/%d/%Y",  # US format for English
+    "de": "%d.%m.%Y",  # German format for German
 }
 
 

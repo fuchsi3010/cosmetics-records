@@ -115,11 +115,15 @@ class AuditEntryWidget(QFrame):
             comparison_layout.setSpacing(8)
 
             # Old value box
-            old_box = self._create_state_box("Old", self.audit_log.old_value or "(empty)")
+            old_box = self._create_state_box(
+                "Old", self.audit_log.old_value or "(empty)"
+            )
             comparison_layout.addWidget(old_box, stretch=1)
 
             # New value box
-            new_box = self._create_state_box("New", self.audit_log.new_value or "(empty)")
+            new_box = self._create_state_box(
+                "New", self.audit_log.new_value or "(empty)"
+            )
             comparison_layout.addWidget(new_box, stretch=1)
 
             layout.addLayout(comparison_layout)
@@ -158,7 +162,9 @@ class AuditEntryWidget(QFrame):
             AuditAction.DELETE: "deleted",
         }
 
-        table_name = table_names.get(self.audit_log.table_name, self.audit_log.table_name)
+        table_name = table_names.get(
+            self.audit_log.table_name, self.audit_log.table_name
+        )
         action_verb = action_verbs.get(self.audit_log.action, "changed")
 
         # Include field name for updates
@@ -256,7 +262,9 @@ class AuditLogView(QWidget):
         title_layout.setContentsMargins(16, 16, 16, 8)
 
         title_label = QLabel("Audit Log")
-        title_label.setStyleSheet("font-size: 20px; font-weight: bold; background: transparent;")
+        title_label.setStyleSheet(
+            "font-size: 20px; font-weight: bold; background: transparent;"
+        )
         title_layout.addWidget(title_label)
 
         title_layout.addStretch()

@@ -197,7 +197,11 @@ class ImportService:
         "notes",
     }
 
-    TREATMENTS_REQUIRED_COLUMNS = {"client_import_id", "treatment_date", "treatment_notes"}
+    TREATMENTS_REQUIRED_COLUMNS = {
+        "client_import_id",
+        "treatment_date",
+        "treatment_notes",
+    }
 
     PRODUCTS_REQUIRED_COLUMNS = {"client_import_id", "product_date", "product_text"}
 
@@ -369,8 +373,7 @@ class ImportService:
 
         if self._parsed_data is None:
             raise RuntimeError(
-                "Cannot import: no data parsed. "
-                "Call validate_files() first."
+                "Cannot import: no data parsed. " "Call validate_files() first."
             )
 
         logger.info("Starting import...")
@@ -543,7 +546,10 @@ class ImportService:
 
                     if not first_name:
                         self._add_error(
-                            file_name, row_idx, "first_name", "first_name cannot be empty"
+                            file_name,
+                            row_idx,
+                            "first_name",
+                            "first_name cannot be empty",
                         )
                         continue
 
@@ -557,7 +563,9 @@ class ImportService:
                     dob_str = row.get("date_of_birth", "").strip()
                     dob = None
                     if dob_str:
-                        dob = self._parse_date(dob_str, file_name, row_idx, "date_of_birth")
+                        dob = self._parse_date(
+                            dob_str, file_name, row_idx, "date_of_birth"
+                        )
                         if dob is None and dob_str:
                             # Error already added by _parse_date
                             continue
@@ -587,7 +595,8 @@ class ImportService:
                         "date_of_birth": dob,
                         "allergies": row.get("allergies", "").strip() or None,
                         "tags": tags,
-                        "planned_treatment": row.get("planned_treatment", "").strip() or None,
+                        "planned_treatment": row.get("planned_treatment", "").strip()
+                        or None,
                         "notes": row.get("notes", "").strip() or None,
                     }
 
@@ -617,7 +626,9 @@ class ImportService:
         file_name = "treatments.csv"
 
         try:
-            with open(self._treatments_path, "r", encoding="utf-8-sig", newline="") as f:
+            with open(
+                self._treatments_path, "r", encoding="utf-8-sig", newline=""
+            ) as f:
                 reader = csv.DictReader(f)
 
                 # Validate header columns
@@ -695,7 +706,9 @@ class ImportService:
                     }
 
                     # Add to parsed data
-                    self._parsed_data.treatments.append((client_import_id, treatment_data))
+                    self._parsed_data.treatments.append(
+                        (client_import_id, treatment_data)
+                    )
 
         except Exception as e:
             self._add_error(file_name, None, None, f"Error reading file: {e}")

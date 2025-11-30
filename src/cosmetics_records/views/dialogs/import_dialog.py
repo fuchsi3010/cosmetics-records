@@ -355,7 +355,9 @@ class ImportDialog(BaseDialog):
         """Handle Validate button click."""
         # Check that clients file is selected
         if not self._clients_path:
-            self._update_status_error([_("Please select a clients CSV file (required)")])
+            self._update_status_error(
+                [_("Please select a clients CSV file (required)")]
+            )
             return
 
         logger.info("Starting validation...")
@@ -442,7 +444,9 @@ class ImportDialog(BaseDialog):
         self._clear_status()
 
         # Error count header
-        header = QLabel(_("Validation failed ({count} errors):").format(count=len(errors)))
+        header = QLabel(
+            _("Validation failed ({count} errors):").format(count=len(errors))
+        )
         header.setStyleSheet("color: #ff6666; font-weight: bold;")
         self._status_layout.addWidget(header)
 
@@ -515,9 +519,7 @@ class ImportDialog(BaseDialog):
             + result.inventory_imported
         )
 
-        summary = QLabel(
-            _("Imported {total} records total:").format(total=total)
-        )
+        summary = QLabel(_("Imported {total} records total:").format(total=total))
         summary.setStyleSheet("color: #cccccc;")
         self._status_layout.addWidget(summary)
 

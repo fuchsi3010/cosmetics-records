@@ -135,7 +135,9 @@ def check_code_formatting():
     )
 
     if not success:
-        print_warning("Code formatting issues found. Run 'black src/ tests/ scripts/' to fix.")
+        print_warning(
+            "Code formatting issues found. Run 'black src/ tests/ scripts/' to fix."
+        )
 
     return success
 
@@ -285,9 +287,7 @@ def verify_build():
 def main():
     """Main build process."""
     parser = argparse.ArgumentParser(description="Build Cosmetics Records executable")
-    parser.add_argument(
-        "--skip-tests", action="store_true", help="Skip running tests"
-    )
+    parser.add_argument("--skip-tests", action="store_true", help="Skip running tests")
     parser.add_argument(
         "--skip-checks", action="store_true", help="Skip code quality checks"
     )

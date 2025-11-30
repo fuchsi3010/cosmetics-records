@@ -256,7 +256,9 @@ class HistoryList(QWidget):
         # Scrollable items list
         self._scroll_area = QScrollArea()
         self._scroll_area.setWidgetResizable(True)
-        self._scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
         self._scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
         self._scroll_area.setProperty("history_section", True)  # CSS class
 
@@ -321,7 +323,9 @@ class HistoryList(QWidget):
         """
         # Find the position before the end label (end label should always be last)
         end_label_index = self._items_layout.indexOf(self._end_label)
-        insert_position = end_label_index if end_label_index >= 0 else self._items_layout.count()
+        insert_position = (
+            end_label_index if end_label_index >= 0 else self._items_layout.count()
+        )
 
         for item_data in items:
             item_id = item_data["id"]
@@ -724,7 +728,9 @@ class ClientDetailView(QWidget):
         Clears existing history and loads fresh data for the current client.
         """
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.controllers.treatment_controller import (
+            TreatmentController,
+        )
         from cosmetics_records.controllers.product_controller import ProductController
 
         if not self._client_id:
@@ -745,13 +751,15 @@ class ClientDetailView(QWidget):
                 # Convert to format expected by HistoryList
                 treatment_items = []
                 for t in treatments:
-                    treatment_items.append({
-                        "id": t.id,
-                        "date": t.treatment_date,
-                        "notes": t.treatment_notes,
-                        "created_at": t.created_at,
-                        "updated_at": t.updated_at,
-                    })
+                    treatment_items.append(
+                        {
+                            "id": t.id,
+                            "date": t.treatment_date,
+                            "notes": t.treatment_notes,
+                            "created_at": t.created_at,
+                            "updated_at": t.updated_at,
+                        }
+                    )
 
                 self._treatment_history.add_items(treatment_items)
                 logger.debug(f"Loaded {len(treatment_items)} treatments")
@@ -765,13 +773,15 @@ class ClientDetailView(QWidget):
                 # Convert to format expected by HistoryList
                 product_items = []
                 for p in products:
-                    product_items.append({
-                        "id": p.id,
-                        "date": p.product_date,
-                        "notes": p.product_text,
-                        "created_at": p.created_at,
-                        "updated_at": p.updated_at,
-                    })
+                    product_items.append(
+                        {
+                            "id": p.id,
+                            "date": p.product_date,
+                            "notes": p.product_text,
+                            "created_at": p.created_at,
+                            "updated_at": p.updated_at,
+                        }
+                    )
 
                 self._product_history.add_items(product_items)
                 logger.debug(f"Loaded {len(product_items)} products")
@@ -922,9 +932,13 @@ class ClientDetailView(QWidget):
         Opens the add treatment dialog and saves the treatment to database.
         If a treatment already exists for today, opens it for editing instead.
         """
-        from cosmetics_records.views.dialogs.add_treatment_dialog import AddTreatmentDialog
+        from cosmetics_records.views.dialogs.add_treatment_dialog import (
+            AddTreatmentDialog,
+        )
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.controllers.treatment_controller import (
+            TreatmentController,
+        )
         from cosmetics_records.models.treatment import TreatmentRecord
 
         if not self._client_id:
@@ -996,9 +1010,13 @@ class ClientDetailView(QWidget):
             treatment_id: Database ID of the treatment to edit
         """
         from PyQt6.QtWidgets import QDialog
-        from cosmetics_records.views.dialogs.edit_treatment_dialog import EditTreatmentDialog
+        from cosmetics_records.views.dialogs.edit_treatment_dialog import (
+            EditTreatmentDialog,
+        )
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.controllers.treatment_controller import (
+            TreatmentController,
+        )
 
         logger.debug(f"Edit treatment clicked: {treatment_id}")
 
@@ -1055,7 +1073,9 @@ class ClientDetailView(QWidget):
         from PyQt6.QtWidgets import QDialog
         from cosmetics_records.views.dialogs.base_dialog import ConfirmDialog
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.treatment_controller import TreatmentController
+        from cosmetics_records.controllers.treatment_controller import (
+            TreatmentController,
+        )
 
         logger.debug(f"Delete treatment clicked: {treatment_id}")
 
@@ -1103,10 +1123,14 @@ class ClientDetailView(QWidget):
         Opens the add product dialog and saves the product record to database.
         If a product record already exists for today, opens it for editing instead.
         """
-        from cosmetics_records.views.dialogs.add_product_record_dialog import AddProductRecordDialog
+        from cosmetics_records.views.dialogs.add_product_record_dialog import (
+            AddProductRecordDialog,
+        )
         from cosmetics_records.database.connection import DatabaseConnection
         from cosmetics_records.controllers.product_controller import ProductController
-        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.controllers.inventory_controller import (
+            InventoryController,
+        )
         from cosmetics_records.models.product import ProductRecord
 
         if not self._client_id:
@@ -1133,7 +1157,9 @@ class ClientDetailView(QWidget):
                 if existing:
                     # Edit existing product record instead of creating new
                     dialog.set_existing_record(existing.id, existing.product_text)
-                    logger.debug(f"Found existing product record for today: {existing.id}")
+                    logger.debug(
+                        f"Found existing product record for today: {existing.id}"
+                    )
 
             if dialog.exec():
                 # Get product data from dialog
@@ -1184,11 +1210,15 @@ class ClientDetailView(QWidget):
             product_id: Database ID of the product record to edit
         """
         from PyQt6.QtWidgets import QDialog
-        from cosmetics_records.views.dialogs.add_product_record_dialog import AddProductRecordDialog
+        from cosmetics_records.views.dialogs.add_product_record_dialog import (
+            AddProductRecordDialog,
+        )
         from cosmetics_records.views.dialogs.base_dialog import ConfirmDialog
         from cosmetics_records.database.connection import DatabaseConnection
         from cosmetics_records.controllers.product_controller import ProductController
-        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.controllers.inventory_controller import (
+            InventoryController,
+        )
 
         logger.debug(f"Edit product clicked: {product_id}")
 
@@ -1206,7 +1236,9 @@ class ClientDetailView(QWidget):
                 inventory_names = inv_controller.get_all_names()
 
             # Show edit dialog (reusing AddProductRecordDialog)
-            dialog = AddProductRecordDialog(self._client_id, inventory_names, parent=self)
+            dialog = AddProductRecordDialog(
+                self._client_id, inventory_names, parent=self
+            )
             dialog.setWindowTitle("Edit Product Sale")
             dialog.set_existing_record(product_id, product.product_text)
 

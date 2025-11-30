@@ -137,7 +137,9 @@ class InventoryController:
 
         # Log creation to audit log
         audit = AuditService(self.db)
-        audit.log_create("inventory_items", item_id, item.display_name(), "InventoryController")
+        audit.log_create(
+            "inventory_items", item_id, item.display_name(), "InventoryController"
+        )
 
         logger.info(f"Created inventory item: {item.display_name()} (ID: {item_id})")
         return item_id
@@ -244,19 +246,41 @@ class InventoryController:
         # Log changes to audit log
         audit = AuditService(self.db)
         if old_item.name != item.name:
-            audit.log_update("inventory_items", item.id, "name",
-                           old_item.name, item.name, "InventoryController")
+            audit.log_update(
+                "inventory_items",
+                item.id,
+                "name",
+                old_item.name,
+                item.name,
+                "InventoryController",
+            )
         if old_item.description != item.description:
-            audit.log_update("inventory_items", item.id, "description",
-                           old_item.description or "", item.description or "",
-                           "InventoryController")
+            audit.log_update(
+                "inventory_items",
+                item.id,
+                "description",
+                old_item.description or "",
+                item.description or "",
+                "InventoryController",
+            )
         if old_item.capacity != item.capacity:
-            audit.log_update("inventory_items", item.id, "capacity",
-                           str(old_item.capacity), str(item.capacity),
-                           "InventoryController")
+            audit.log_update(
+                "inventory_items",
+                item.id,
+                "capacity",
+                str(old_item.capacity),
+                str(item.capacity),
+                "InventoryController",
+            )
         if old_item.unit != item.unit:
-            audit.log_update("inventory_items", item.id, "unit",
-                           old_item.unit, item.unit, "InventoryController")
+            audit.log_update(
+                "inventory_items",
+                item.id,
+                "unit",
+                old_item.unit,
+                item.unit,
+                "InventoryController",
+            )
 
         logger.info(f"Updated inventory item: {item.display_name()} (ID: {item.id})")
         return True

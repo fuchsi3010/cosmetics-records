@@ -377,7 +377,9 @@ class InventoryView(QWidget):
             Updates _has_more flag based on results.
         """
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.controllers.inventory_controller import (
+            InventoryController,
+        )
 
         if self._loading:
             return
@@ -402,9 +404,7 @@ class InventoryView(QWidget):
                 elif self._current_filter != "All":
                     # Filter mode - filter by first letter
                     items = controller.filter_by_letter(
-                        self._current_filter,
-                        limit=self.ITEMS_PER_PAGE,
-                        offset=offset
+                        self._current_filter, limit=self.ITEMS_PER_PAGE, offset=offset
                     )
                     self._has_more = len(items) >= self.ITEMS_PER_PAGE
                 else:
@@ -417,13 +417,15 @@ class InventoryView(QWidget):
             # Convert to dictionaries for display
             item_dicts = []
             for item in items:
-                item_dicts.append({
-                    "id": item.id,
-                    "name": item.name,
-                    "capacity": item.capacity,
-                    "unit": item.unit,
-                    "description": item.description or "",
-                })
+                item_dicts.append(
+                    {
+                        "id": item.id,
+                        "name": item.name,
+                        "capacity": item.capacity,
+                        "unit": item.unit,
+                        "description": item.description or "",
+                    }
+                )
 
             self.add_items(item_dicts)
             logger.debug(f"Loaded {len(items)} items from database")
@@ -480,9 +482,13 @@ class InventoryView(QWidget):
         Args:
             item_id: Database ID of the clicked item
         """
-        from cosmetics_records.views.dialogs.edit_inventory_dialog import EditInventoryDialog
+        from cosmetics_records.views.dialogs.edit_inventory_dialog import (
+            EditInventoryDialog,
+        )
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.controllers.inventory_controller import (
+            InventoryController,
+        )
 
         logger.debug(f"Item clicked: {item_id}")
 
@@ -542,9 +548,13 @@ class InventoryView(QWidget):
 
         Opens the add inventory dialog and saves the new item.
         """
-        from cosmetics_records.views.dialogs.add_inventory_dialog import AddInventoryDialog
+        from cosmetics_records.views.dialogs.add_inventory_dialog import (
+            AddInventoryDialog,
+        )
         from cosmetics_records.database.connection import DatabaseConnection
-        from cosmetics_records.controllers.inventory_controller import InventoryController
+        from cosmetics_records.controllers.inventory_controller import (
+            InventoryController,
+        )
         from cosmetics_records.models.product import InventoryItem
 
         logger.debug("Add item clicked")

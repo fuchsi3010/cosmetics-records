@@ -130,7 +130,9 @@ class TreatmentController:
         # Log creation to audit log
         audit = AuditService(self.db)
         description = f"Treatment on {treatment.treatment_date}"
-        audit.log_create("treatment_records", treatment_id, description, "TreatmentController")
+        audit.log_create(
+            "treatment_records", treatment_id, description, "TreatmentController"
+        )
 
         logger.info(
             f"Created treatment for client {treatment.client_id} "
@@ -240,13 +242,23 @@ class TreatmentController:
         # Log changes to audit log
         audit = AuditService(self.db)
         if str(old_treatment.treatment_date) != str(treatment.treatment_date):
-            audit.log_update("treatment_records", treatment.id, "treatment_date",
-                           str(old_treatment.treatment_date), str(treatment.treatment_date),
-                           "TreatmentController")
+            audit.log_update(
+                "treatment_records",
+                treatment.id,
+                "treatment_date",
+                str(old_treatment.treatment_date),
+                str(treatment.treatment_date),
+                "TreatmentController",
+            )
         if old_treatment.treatment_notes != treatment.treatment_notes:
-            audit.log_update("treatment_records", treatment.id, "treatment_notes",
-                           old_treatment.treatment_notes or "", treatment.treatment_notes or "",
-                           "TreatmentController")
+            audit.log_update(
+                "treatment_records",
+                treatment.id,
+                "treatment_notes",
+                old_treatment.treatment_notes or "",
+                treatment.treatment_notes or "",
+                "TreatmentController",
+            )
 
         logger.info(f"Updated treatment ID {treatment.id}")
         return True
@@ -294,7 +306,9 @@ class TreatmentController:
 
         # Log deletion to audit log
         audit = AuditService(self.db)
-        audit.log_delete("treatment_records", treatment_id, description, "TreatmentController")
+        audit.log_delete(
+            "treatment_records", treatment_id, description, "TreatmentController"
+        )
 
         logger.info(f"Deleted treatment ID {treatment_id}")
         return True
@@ -480,9 +494,7 @@ class TreatmentController:
             return None
 
         treatment = self._row_to_treatment(row)
-        logger.debug(
-            f"Retrieved treatment for client {client_id} on {treatment_date}"
-        )
+        logger.debug(f"Retrieved treatment for client {client_id} on {treatment_date}")
         return treatment
 
     # =========================================================================
