@@ -31,7 +31,7 @@ msgid "Inventory"
 msgstr "Inventar"
 
 msgid "Audit Log"
-msgstr "Änderungsprotokoll"
+msgstr "Verlauf"
 
 msgid "Settings"
 msgstr "Einstellungen"
@@ -316,8 +316,14 @@ msgstr "Aktion"
 msgid "Refresh"
 msgstr "Aktualisieren"
 
+msgid "< Previous"
+msgstr "< Zurück"
+
 msgid "Previous"
 msgstr "Zurück"
+
+msgid "Next >"
+msgstr "Weiter >"
 
 msgid "Next"
 msgstr "Weiter"
@@ -325,14 +331,71 @@ msgstr "Weiter"
 msgid "Page"
 msgstr "Seite"
 
+msgid "Page 1 of 1"
+msgstr "Seite 1 von 1"
+
+msgid "Page %d of %d"
+msgstr "Seite %d von %d"
+
 msgid "of"
 msgstr "von"
 
 msgid "Go"
 msgstr "Los"
 
+msgid "Go to page:"
+msgstr "Gehe zu Seite:"
+
 msgid "No audit entries"
 msgstr "Keine Einträge"
+
+msgid "No audit logs found"
+msgstr "Keine Protokolleinträge gefunden"
+
+msgid "Error loading audit logs: %s"
+msgstr "Fehler beim Laden des Protokolls: %s"
+
+msgid "Unknown time"
+msgstr "Unbekannte Zeit"
+
+msgid "Old"
+msgstr "Alt"
+
+msgid "New"
+msgstr "Neu"
+
+msgid "(empty)"
+msgstr "(leer)"
+
+msgid "Created"
+msgstr "Erstellt"
+
+msgid "Deleted"
+msgstr "Gelöscht"
+
+msgid "Client"
+msgstr "Kunde"
+
+msgid "Treatment record"
+msgstr "Behandlung"
+
+msgid "Product sale record"
+msgstr "Produktverkauf"
+
+msgid "Inventory item"
+msgstr "Inventarartikel"
+
+msgid "created"
+msgstr "erstellt"
+
+msgid "updated"
+msgstr "aktualisiert"
+
+msgid "deleted"
+msgstr "gelöscht"
+
+msgid "changed"
+msgstr "geändert"
 
 # =============================================================================
 # Time (Relative Timestamps)
