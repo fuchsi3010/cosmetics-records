@@ -742,6 +742,10 @@ class ClientController:
         rows (sqlite3.Row objects) to Pydantic Client models. It handles
         all type conversions and data transformations.
 
+        If the data in the database fails validation (e.g., invalid email),
+        this method will sanitize the data to allow the client to load,
+        and log a warning about the issue.
+
         Args:
             row: sqlite3.Row object from a SELECT query
 
@@ -756,21 +760,48 @@ class ClientController:
         # WHY helper method: Client.from_tags_string() handles empty strings correctly
         tags_list = Client.from_tags_string(row["tags"] or "")
 
+        # Get email value
+        email = row["email"]
+
         # Create Client model from row data
-        # WHY **dict: Unpacks the dictionary as keyword arguments
-        # Pydantic handles type conversion (str to datetime, etc.)
-        return Client(
-            id=row["id"],
-            first_name=row["first_name"],
-            last_name=row["last_name"],
-            email=row["email"],
-            phone=row["phone"],
-            address=row["address"],
-            date_of_birth=row["date_of_birth"],
-            allergies=row["allergies"],
-            tags=tags_list,
-            planned_treatment=row["planned_treatment"],
-            notes=row["notes"],
-            created_at=row["created_at"],
-            updated_at=row["updated_at"],
-        )
+        # WHY try/except: Handle invalid data in database gracefully
+        try:
+            return Client(
+                id=row["id"],
+                first_name=row["first_name"],
+                last_name=row["last_name"],
+                email=email,
+                phone=row["phone"],
+                address=row["address"],
+                date_of_birth=row["date_of_birth"],
+                allergies=row["allergies"],
+                tags=tags_list,
+                planned_treatment=row["planned_treatment"],
+                notes=row["notes"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+            )
+        except ValueError as e:
+            # Validation failed - likely due to invalid email in database
+            # Log the error and retry with email set to None
+            logger.warning(
+                f"Client ID {row['id']} has invalid data (likely email: '{email}'). "
+                f"Loading with sanitized data. Error: {e}"
+            )
+
+            # Retry with email set to None to allow the client to load
+            return Client(
+                id=row["id"],
+                first_name=row["first_name"],
+                last_name=row["last_name"],
+                email=None,  # Skip invalid email
+                phone=row["phone"],
+                address=row["address"],
+                date_of_birth=row["date_of_birth"],
+                allergies=row["allergies"],
+                tags=tags_list,
+                planned_treatment=row["planned_treatment"],
+                notes=row["notes"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+            )

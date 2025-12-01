@@ -156,8 +156,8 @@ class AddClientDialog(BaseDialog):
         """
         Accept the dialog after validating input.
 
-        Validates that required fields are filled before accepting.
-        Shows error message if validation fails.
+        Validates that required fields are filled and email format is valid
+        before accepting. Shows error message if validation fails.
         """
         # Validate required fields
         first_name = self._first_name_input.text().strip()
@@ -173,6 +173,15 @@ class AddClientDialog(BaseDialog):
             self._last_name_input.setFocus()
             return
 
+        # Validate email format if provided
+        email = self._email_input.text().strip()
+        if email and not self._is_valid_email(email):
+            self._show_error(
+                "Invalid email format. Please enter a valid email (e.g., user@example.com)."
+            )
+            self._email_input.setFocus()
+            return
+
         # Validation passed
         logger.debug(f"Adding new client: {first_name} {last_name}")
 
@@ -181,6 +190,22 @@ class AddClientDialog(BaseDialog):
 
         # Accept dialog
         super().accept()
+
+    def _is_valid_email(self, email: str) -> bool:
+        """
+        Validate email format.
+
+        Args:
+            email: Email address to validate
+
+        Returns:
+            True if email format is valid, False otherwise
+        """
+        import re
+
+        # Same pattern as in Client model
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        return bool(re.match(email_pattern, email))
 
     def _show_error(self, message: str) -> None:
         """
