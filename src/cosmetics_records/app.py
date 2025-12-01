@@ -736,7 +736,7 @@ def main() -> int:
     # Application metadata
     app.setApplicationName("Cosmetics Records")
     app.setOrganizationName("Cosmetics Records")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("0.9.0-alpha3")
 
     # Set application icon (for app switchers, taskbars, launchers)
     # WHY set on QApplication: Ensures all windows inherit the icon
