@@ -30,6 +30,7 @@ import logging
 from typing import List, Optional
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -184,11 +185,9 @@ class AuditEntryWidget(QFrame):
             QFrame containing the labeled state box
         """
         box = QFrame()
-        box.setFrameShape(QFrame.Shape.StyledPanel)
-        box.setStyleSheet(
-            "QFrame { background-color: rgba(100, 100, 100, 0.1); "
-            "border: 1px solid rgba(100, 100, 100, 0.3); border-radius: 4px; }"
-        )
+        box.setFrameShape(QFrame.Shape.NoFrame)
+        # Simplified styling - transparent background, no border
+        box.setStyleSheet("QFrame { background-color: transparent; border: none; }")
 
         box_layout = QVBoxLayout(box)
         box_layout.setContentsMargins(8, 6, 8, 6)
@@ -460,3 +459,17 @@ class AuditLogView(QWidget):
         """Refresh the audit log view."""
         logger.debug("Refreshing audit log view")
         self._load_audit_logs()
+
+    def showEvent(self, event: Optional[QShowEvent]) -> None:
+        """
+        Handle show events to refresh audit logs.
+
+        This ensures the view always shows the latest data when navigated to.
+
+        Args:
+            event: Show event (can be None)
+        """
+        super().showEvent(event)
+        # Refresh to show latest audit logs when view becomes visible
+        self.refresh()
+        logger.debug("AuditLogView shown, refreshed data")
