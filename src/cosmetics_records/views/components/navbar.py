@@ -405,3 +405,25 @@ class NavBar(QFrame):
         """
         width = self.WIDTH_EXPANDED if self.is_expanded else self.WIDTH_COLLAPSED
         return QSize(width, 600)  # Height is flexible
+
+    def update_icon_colors(self, is_dark_theme: bool) -> None:
+        """
+        Update icon colors based on the current theme.
+
+        Args:
+            is_dark_theme: True for dark theme, False for light theme
+
+        Note:
+            Icons need different colors for visibility:
+            - Dark theme: Light icons (#E0E0E0)
+            - Light theme: Dark icons (#333333)
+        """
+        icon_color = "#E0E0E0" if is_dark_theme else "#333333"
+
+        for button in self._nav_buttons.values():
+            icon_name = button.property("nav_icon")
+            if icon_name:
+                icon = qta.icon(str(icon_name), color=icon_color)
+                button.setIcon(icon)
+
+        logger.debug(f"NavBar icon colors updated for theme: {icon_color}")

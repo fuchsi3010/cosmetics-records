@@ -410,6 +410,10 @@ class MainWindow(QMainWindow):
             if app is not None and isinstance(app, QApplication):
                 app.setStyleSheet(stylesheet)
 
+            # Update navbar icon colors based on theme
+            is_dark = self._is_dark_theme(theme_name)
+            self._navbar.update_icon_colors(is_dark)
+
             logger.info(f"Applied theme: {theme_name} at scale {ui_scale:.0%}")
 
         except Exception as e:
@@ -524,6 +528,25 @@ class MainWindow(QMainWindow):
 
         logger.debug("Returned to client list and refreshed")
 
+    def _is_dark_theme(self, theme_name: str) -> bool:
+        """
+        Determine if the given theme name results in a dark theme.
+
+        Args:
+            theme_name: Theme name ("dark", "light", or "system")
+
+        Returns:
+            True if the theme is dark, False if light
+        """
+        if theme_name == "dark":
+            return True
+        elif theme_name == "light":
+            return False
+        else:  # "system"
+            from cosmetics_records.views.styles import detect_system_theme
+
+            return detect_system_theme() == "dark"
+
     def _on_theme_changed(self, theme: str) -> None:
         """
         Handle theme change from settings.
@@ -548,6 +571,10 @@ class MainWindow(QMainWindow):
             app = QApplication.instance()
             if app is not None and isinstance(app, QApplication):
                 app.setStyleSheet(stylesheet)
+
+            # Update navbar icon colors based on theme
+            is_dark = self._is_dark_theme(theme)
+            self._navbar.update_icon_colors(is_dark)
 
             logger.info(f"Theme applied: {theme} at scale {ui_scale:.0%}")
 

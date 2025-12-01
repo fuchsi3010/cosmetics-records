@@ -452,15 +452,15 @@ QLabel[tag_more="true"] {{
    Tag Input Component (TagInput widget)
    ========================================================================== */
 
-/* Tags container - matches dialog background */
+/* Tags container - slightly darker than dialog background */
 QWidget[chips_container="true"] {{
-    background-color: {DARK_SURFACE};
+    background-color: #2a2a2a;
     border-radius: 4px;
 }}
 
-/* Individual tag chips - darker grey */
+/* Individual tag chips - lighter for better contrast against container */
 QWidget[tag_chip="true"] {{
-    background-color: #444444;
+    background-color: #4a4a4a;
     border-radius: 12px;
 }}
 
@@ -1241,15 +1241,15 @@ QLabel[tag_more="true"] {{
    Tag Input Component (TagInput widget)
    ========================================================================== */
 
-/* Tags container - matches dialog background */
+/* Tags container - slightly darker than dialog background */
 QWidget[chips_container="true"] {{
-    background-color: {LIGHT_SURFACE};
+    background-color: #f0f0f0;
     border-radius: 4px;
 }}
 
-/* Individual tag chips - darker grey */
+/* Individual tag chips - darker for better contrast against container */
 QWidget[tag_chip="true"] {{
-    background-color: #e0e0e0;
+    background-color: #d0d0d0;
     border-radius: 12px;
 }}
 
