@@ -50,7 +50,7 @@ class DatabaseConnection:
 
         Args:
             db_path: Path to the SQLite database file. If None, uses the
-                    default user data directory (~/.local/share/cosmetics_records/)
+                    platform-appropriate user data directory.
 
         Note:
             The database file is NOT created here - only the path is stored.
@@ -58,8 +58,7 @@ class DatabaseConnection:
         """
         # If no path provided, use platform-appropriate user data directory
         if db_path is None:
-            # ~/.local/share on Linux, ~/Library/Application Support on macOS
-            user_data_dir = Path.home() / ".local" / "share" / "cosmetics_records"
+            user_data_dir = self._get_user_data_dir()
             # Ensure the directory exists before we try to create the database
             user_data_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = user_data_dir / "cosmetics_records.db"
@@ -73,6 +72,38 @@ class DatabaseConnection:
         self._context_depth: int = 0
 
         logger.info(f"DatabaseConnection initialized with path: {self.db_path}")
+
+    def _get_user_data_dir(self) -> Path:
+        """
+        Get the platform-appropriate user data directory.
+
+        Returns:
+            Path: The directory where the database should be stored
+
+        Note:
+            This follows platform conventions:
+            - Linux: ~/.local/share/cosmetics_records
+            - Windows: %APPDATA%/cosmetics_records
+            - macOS: ~/Library/Application Support/cosmetics_records
+        """
+        import platform
+
+        system = platform.system()
+
+        if system == "Linux":
+            # XDG Base Directory: ~/.local/share/cosmetics_records
+            base = Path.home() / ".local" / "share"
+        elif system == "Windows":
+            # Windows AppData: %APPDATA%/cosmetics_records
+            base = Path.home() / "AppData" / "Roaming"
+        elif system == "Darwin":  # macOS
+            # macOS: ~/Library/Application Support/cosmetics_records
+            base = Path.home() / "Library" / "Application Support"
+        else:
+            # Fallback for unknown systems
+            base = Path.home() / ".config"
+
+        return base / "cosmetics_records"
 
     def __enter__(self) -> "DatabaseConnection":
         """
