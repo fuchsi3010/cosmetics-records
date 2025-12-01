@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from PyQt6.QtGui import QResizeEvent
 
 import qtawesome as qta
-from PyQt6.QtCore import QPropertyAnimation, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QByteArray, QPropertyAnimation, QSize, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QFrame,
     QPushButton,
@@ -240,7 +240,7 @@ class NavBar(QFrame):
 
         # Create smooth animation
         # WHY QPropertyAnimation: Provides smooth, native-feeling transitions
-        self._animation = QPropertyAnimation(self, b"maximumWidth")
+        self._animation = QPropertyAnimation(self, QByteArray(b"maximumWidth"))
         self._animation.setDuration(200)  # 200ms feels snappy but smooth
         self._animation.setStartValue(self.width())
         self._animation.setEndValue(target_width)
