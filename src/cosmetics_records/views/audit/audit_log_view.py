@@ -45,6 +45,7 @@ from PyQt6.QtWidgets import (
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.audit import AuditAction, AuditLog
 from cosmetics_records.services.audit_service import AuditService
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -61,17 +62,24 @@ class AuditEntryWidget(QFrame):
         audit_log: The AuditLog instance to display
     """
 
-    def __init__(self, audit_log: AuditLog, parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        audit_log: AuditLog,
+        client_name: Optional[str] = None,
+        parent: Optional[QWidget] = None,
+    ):
         """
         Initialize an audit entry widget.
 
         Args:
             audit_log: The AuditLog instance to display
+            client_name: Optional client name for client-related entries
             parent: Optional parent widget
         """
         super().__init__(parent)
 
         self.audit_log = audit_log
+        self.client_name = client_name
 
         # Set frame properties
         self.setFrameShape(QFrame.Shape.StyledPanel)
@@ -91,22 +99,28 @@ class AuditEntryWidget(QFrame):
         layout.setContentsMargins(16, 12, 16, 12)
         layout.setSpacing(8)
 
-        # Header: description with timestamp
+        # Header row: timestamp on left, description on right
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(12)
+
+        # Timestamp (left side)
+        if self.audit_log.created_at:
+            timestamp_str = self.audit_log.created_at.strftime("%Y-%m-%d %H:%M")
+        else:
+            timestamp_str = _("Unknown time")
+
+        timestamp_label = QLabel(timestamp_str)
+        timestamp_label.setStyleSheet("color: gray; font-size: 12px;")
+        header_layout.addWidget(timestamp_label)
+
+        # Description (right side)
         header_text = self._build_header_text()
         header_label = QLabel(header_text)
         header_label.setWordWrap(True)
         header_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        layout.addWidget(header_label)
+        header_layout.addWidget(header_label, stretch=1)
 
-        # Timestamp
-        if self.audit_log.created_at:
-            timestamp_str = self.audit_log.created_at.strftime("%Y-%m-%d %H:%M")
-        else:
-            timestamp_str = "Unknown time"
-
-        timestamp_label = QLabel(timestamp_str)
-        timestamp_label.setStyleSheet("color: gray; font-size: 12px;")
-        layout.addWidget(timestamp_label)
+        layout.addLayout(header_layout)
 
         # Side-by-side old/new state boxes (if applicable)
         if self.audit_log.action == AuditAction.UPDATE:
@@ -116,13 +130,13 @@ class AuditEntryWidget(QFrame):
 
             # Old value box
             old_box = self._create_state_box(
-                "Old", self.audit_log.old_value or "(empty)"
+                _("Old"), self.audit_log.old_value or _("(empty)")
             )
             comparison_layout.addWidget(old_box, stretch=1)
 
             # New value box
             new_box = self._create_state_box(
-                "New", self.audit_log.new_value or "(empty)"
+                _("New"), self.audit_log.new_value or _("(empty)")
             )
             comparison_layout.addWidget(new_box, stretch=1)
 
@@ -131,13 +145,17 @@ class AuditEntryWidget(QFrame):
         elif self.audit_log.action == AuditAction.CREATE:
             # Just show the new value
             if self.audit_log.new_value:
-                value_box = self._create_state_box("Created", self.audit_log.new_value)
+                value_box = self._create_state_box(
+                    _("Created"), self.audit_log.new_value
+                )
                 layout.addWidget(value_box)
 
         elif self.audit_log.action == AuditAction.DELETE:
             # Just show the old (deleted) value
             if self.audit_log.old_value:
-                value_box = self._create_state_box("Deleted", self.audit_log.old_value)
+                value_box = self._create_state_box(
+                    _("Deleted"), self.audit_log.old_value
+                )
                 layout.addWidget(value_box)
 
     def _build_header_text(self) -> str:
@@ -145,33 +163,39 @@ class AuditEntryWidget(QFrame):
         Build the header text describing the change.
 
         Returns:
-            A formatted header string like "Treatment Plan for Jon Doe updated"
+            A formatted header string like "Treatment record for Jon Doe updated"
         """
         # Map table names to human-readable names
         table_names = {
-            "clients": "Client",
-            "treatment_records": "Treatment record",
-            "product_records": "Product sale record",
-            "inventory_items": "Inventory item",
+            "clients": _("Client"),
+            "treatment_records": _("Treatment record"),
+            "product_records": _("Product sale record"),
+            "inventory": _("Inventory item"),
         }
 
         # Map actions to verbs
         action_verbs = {
-            AuditAction.CREATE: "created",
-            AuditAction.UPDATE: "updated",
-            AuditAction.DELETE: "deleted",
+            AuditAction.CREATE: _("created"),
+            AuditAction.UPDATE: _("updated"),
+            AuditAction.DELETE: _("deleted"),
         }
 
         table_name = table_names.get(
             self.audit_log.table_name, self.audit_log.table_name
         )
-        action_verb = action_verbs.get(self.audit_log.action, "changed")
+        action_verb = action_verbs.get(self.audit_log.action, _("changed"))
 
-        # Include field name for updates
+        # Build base description
         if self.audit_log.action == AuditAction.UPDATE and self.audit_log.field_name:
-            return f"{table_name} {self.audit_log.field_name} {action_verb}"
+            description = f"{table_name} {self.audit_log.field_name} {action_verb}"
         else:
-            return f"{table_name} {action_verb}"
+            description = f"{table_name} {action_verb}"
+
+        # Add client name if available (for treatment/product records)
+        if self.client_name:
+            return f"{description} ({self.client_name})"
+
+        return description
 
     def _create_state_box(self, label: str, content: str) -> QFrame:
         """
@@ -259,7 +283,7 @@ class AuditLogView(QWidget):
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(16, 16, 16, 8)
 
-        title_label = QLabel("Audit Log")
+        title_label = QLabel(_("Audit Log"))
         title_label.setStyleSheet(
             "font-size: 20px; font-weight: bold; background: transparent;"
         )
@@ -268,7 +292,7 @@ class AuditLogView(QWidget):
         title_layout.addStretch()
 
         # Refresh button
-        refresh_btn = QPushButton("Refresh")
+        refresh_btn = QPushButton(_("Refresh"))
         refresh_btn.setMinimumWidth(100)
         refresh_btn.clicked.connect(self.refresh)
         title_layout.addWidget(refresh_btn)
@@ -313,19 +337,19 @@ class AuditLogView(QWidget):
         layout.setSpacing(12)
 
         # Previous button
-        self._prev_btn = QPushButton("< Previous")
+        self._prev_btn = QPushButton(_("< Previous"))
         self._prev_btn.setMinimumWidth(100)
         self._prev_btn.clicked.connect(self._on_previous_page)
         layout.addWidget(self._prev_btn)
 
         # Page indicator
-        self._page_label = QLabel("Page 1 of 1")
+        self._page_label = QLabel(_("Page 1 of 1"))
         self._page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._page_label.setMinimumWidth(120)
         layout.addWidget(self._page_label)
 
         # Next button
-        self._next_btn = QPushButton("Next >")
+        self._next_btn = QPushButton(_("Next >"))
         self._next_btn.setMinimumWidth(100)
         self._next_btn.clicked.connect(self._on_next_page)
         layout.addWidget(self._next_btn)
@@ -333,7 +357,7 @@ class AuditLogView(QWidget):
         layout.addStretch()
 
         # Jump to page
-        jump_label = QLabel("Go to page:")
+        jump_label = QLabel(_("Go to page:"))
         layout.addWidget(jump_label)
 
         self._jump_spin = QSpinBox()
@@ -409,7 +433,7 @@ class AuditLogView(QWidget):
         except Exception as e:
             logger.error(f"Failed to load audit logs: {e}")
             self._clear_entries()
-            error_label = QLabel(f"Error loading audit logs: {str(e)}")
+            error_label = QLabel(_("Error loading audit logs: %s") % str(e))
             error_label.setStyleSheet("color: red; padding: 20px;")
             error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._entries_layout.addWidget(error_label)
@@ -421,16 +445,91 @@ class AuditLogView(QWidget):
 
         # If no logs, show message
         if not audit_logs:
-            empty_label = QLabel("No audit logs found")
+            empty_label = QLabel(_("No audit logs found"))
             empty_label.setStyleSheet("color: gray; padding: 20px; font-style: italic;")
             empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._entries_layout.addWidget(empty_label)
             return
 
+        # Fetch client names for client-related audit logs
+        client_names = self._fetch_client_names(audit_logs)
+
         # Create widget for each audit log
         for audit_log in audit_logs:
-            entry_widget = AuditEntryWidget(audit_log)
+            # Get client name if available
+            client_name = client_names.get((audit_log.table_name, audit_log.record_id))
+            entry_widget = AuditEntryWidget(audit_log, client_name=client_name)
             self._entries_layout.addWidget(entry_widget)
+
+    def _fetch_client_names(
+        self, audit_logs: List[AuditLog]
+    ) -> dict[tuple[str, int], str]:
+        """
+        Fetch client names for audit log entries about treatment/product records.
+
+        Args:
+            audit_logs: List of audit logs to fetch client names for
+
+        Returns:
+            Dictionary mapping (table_name, record_id) to client full name
+        """
+        client_names: dict[tuple[str, int], str] = {}
+
+        # Collect record IDs by table
+        treatment_ids = set()
+        product_ids = set()
+
+        for log in audit_logs:
+            if log.table_name == "treatment_records":
+                treatment_ids.add(log.record_id)
+            elif log.table_name == "product_records":
+                product_ids.add(log.record_id)
+
+        if not treatment_ids and not product_ids:
+            return client_names
+
+        try:
+            with DatabaseConnection() as db:
+                # Fetch client names for treatment records
+                if treatment_ids:
+                    placeholders = ",".join("?" * len(treatment_ids))
+                    db.execute(
+                        f"""
+                        SELECT tr.id as record_id,
+                               c.first_name || ' ' || c.last_name as client_name
+                        FROM treatment_records tr
+                        JOIN clients c ON tr.client_id = c.id
+                        WHERE tr.id IN ({placeholders})
+                        """,
+                        tuple(treatment_ids),
+                    )
+                    for row in db.fetchall():
+                        client_names[("treatment_records", row["record_id"])] = row[
+                            "client_name"
+                        ]
+
+                # Fetch client names for product records
+                if product_ids:
+                    placeholders = ",".join("?" * len(product_ids))
+                    db.execute(
+                        f"""
+                        SELECT pr.id as record_id,
+                               c.first_name || ' ' || c.last_name as client_name
+                        FROM product_records pr
+                        JOIN clients c ON pr.client_id = c.id
+                        WHERE pr.id IN ({placeholders})
+                        """,
+                        tuple(product_ids),
+                    )
+                    for row in db.fetchall():
+                        client_names[("product_records", row["record_id"])] = row[
+                            "client_name"
+                        ]
+
+        except Exception as e:
+            logger.error(f"Failed to fetch client names for audit logs: {e}")
+
+        return client_names
 
     def _clear_entries(self) -> None:
         """Remove all audit entry widgets from the UI."""
@@ -443,7 +542,9 @@ class AuditLogView(QWidget):
     def _update_pagination_controls(self) -> None:
         """Update pagination controls based on current state."""
         # Update page label
-        self._page_label.setText(f"Page {self._current_page} of {self._total_pages}")
+        self._page_label.setText(
+            _("Page %d of %d") % (self._current_page, self._total_pages)
+        )
 
         # Update button states
         self._prev_btn.setEnabled(self._current_page > 1)
