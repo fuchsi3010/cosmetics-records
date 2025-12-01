@@ -191,6 +191,14 @@ class AuditService:
             ...     "ClientEditView"
             ... )
         """
+        # Skip logging if values are identical (no actual change occurred)
+        if old_value == new_value:
+            logger.debug(
+                f"Skipping UPDATE log for {table_name}[{record_id}].{field_name}: "
+                f"values unchanged"
+            )
+            return
+
         try:
             # Create an AuditLog model instance for validation
             audit_log = AuditLog(
