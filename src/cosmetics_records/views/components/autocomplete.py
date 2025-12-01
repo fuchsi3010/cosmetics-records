@@ -24,7 +24,9 @@
 # =============================================================================
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
+
+from PyQt6.QtCore import QEvent, QObject
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -127,7 +129,7 @@ class Autocomplete(QWidget):
         self._line_edit.installEventFilter(self)
         self._suggestions_list.installEventFilter(self)
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: Optional[QObject], event: Optional[QEvent]) -> bool:
         """
         Event filter for keyboard navigation.
 
@@ -140,13 +142,20 @@ class Autocomplete(QWidget):
         Returns:
             bool: True if event was handled, False otherwise
         """
-        # Safety check: ensure widgets are initialized
-        if not hasattr(self, "_line_edit") or not hasattr(self, "_suggestions_list"):
+        # Safety check: ensure widgets are initialized and event is valid
+        if (
+            not hasattr(self, "_line_edit")
+            or not hasattr(self, "_suggestions_list")
+            or event is None
+        ):
             return super().eventFilter(obj, event)
 
         # Handle key presses in the line edit
-        if obj == self._line_edit and event.type() == event.Type.KeyPress:
-            key = event.key()
+        if obj == self._line_edit and event.type() == QEvent.Type.KeyPress:
+            from PyQt6.QtGui import QKeyEvent
+
+            key_event = cast(QKeyEvent, event)
+            key = key_event.key()
 
             # Down arrow: move focus to suggestions list
             if key == Qt.Key.Key_Down and self._suggestions_list.isVisible():
@@ -155,8 +164,11 @@ class Autocomplete(QWidget):
                 return True
 
         # Handle key presses in the suggestions list
-        elif obj == self._suggestions_list and event.type() == event.Type.KeyPress:
-            key = event.key()
+        elif obj == self._suggestions_list and event.type() == QEvent.Type.KeyPress:
+            from PyQt6.QtGui import QKeyEvent
+
+            key_event = cast(QKeyEvent, event)
+            key = key_event.key()
 
             # Up arrow on first item: return to input
             if key == Qt.Key.Key_Up and self._suggestions_list.currentRow() == 0:

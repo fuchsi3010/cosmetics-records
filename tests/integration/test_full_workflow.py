@@ -253,7 +253,9 @@ class TestFullWorkflows:
 
         # Filter to just our manually created logs (from ClientEditView/ClientListView)
         manual_logs = [
-            log for log in logs if log.ui_location in ("ClientEditView", "ClientListView")
+            log
+            for log in logs
+            if log.ui_location in ("ClientEditView", "ClientListView")
         ]
         assert len(manual_logs) == 3
 

@@ -27,6 +27,8 @@
 import logging
 from typing import Optional
 
+from PyQt6.QtGui import QResizeEvent, QShowEvent
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QPushButton,
@@ -231,8 +233,10 @@ class AlphabetFilter(QWidget):
 
             # Force style refresh
             # WHY: Qt doesn't automatically refresh styles when properties change
-            button.style().unpolish(button)
-            button.style().polish(button)
+            style = button.style()
+            if style:
+                style.unpolish(button)
+                style.polish(button)
 
     def get_active_filter(self) -> str:
         """
@@ -252,7 +256,7 @@ class AlphabetFilter(QWidget):
         self.set_active("All")
         self.filter_changed.emit("All")
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event: Optional[QResizeEvent]) -> None:
         """
         Handle resize events to update visible letter buttons.
 
@@ -264,7 +268,7 @@ class AlphabetFilter(QWidget):
         super().resizeEvent(event)
         self._update_visible_buttons()
 
-    def showEvent(self, event) -> None:
+    def showEvent(self, event: Optional[QShowEvent]) -> None:
         """
         Handle show events to initialize visible buttons.
 

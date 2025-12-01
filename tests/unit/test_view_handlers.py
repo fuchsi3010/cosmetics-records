@@ -217,7 +217,9 @@ class TestClientDetailHandlers:
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
-        mock_dialog.is_editing_existing.return_value = False  # Creating new, not editing
+        mock_dialog.is_editing_existing.return_value = (
+            False  # Creating new, not editing
+        )
         mock_dialog.get_treatment_data.return_value = {
             "client_id": 1,
             "date": date.today(),
@@ -227,7 +229,9 @@ class TestClientDetailHandlers:
         # Mock controller
         mock_controller = MagicMock()
         mock_controller.create_treatment.return_value = 1
-        mock_controller.get_treatment_for_date.return_value = None  # No existing treatment
+        mock_controller.get_treatment_for_date.return_value = (
+            None  # No existing treatment
+        )
 
         with patch(
             "cosmetics_records.views.dialogs.add_treatment_dialog.AddTreatmentDialog",
@@ -304,7 +308,9 @@ class TestClientDetailHandlers:
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
-        mock_dialog.is_editing_existing.return_value = False  # Creating new, not editing
+        mock_dialog.is_editing_existing.return_value = (
+            False  # Creating new, not editing
+        )
         mock_dialog.get_product_record_data.return_value = {
             "client_id": 1,
             "date": date.today(),
@@ -316,7 +322,9 @@ class TestClientDetailHandlers:
         mock_inv_controller.get_all_names.return_value = ["Product A", "Product B"]
         mock_prod_controller = MagicMock()
         mock_prod_controller.create_product_record.return_value = 1
-        mock_prod_controller.get_product_for_date.return_value = None  # No existing record
+        mock_prod_controller.get_product_for_date.return_value = (
+            None  # No existing record
+        )
 
         with patch(
             ADD_PRODUCT_DLG,
@@ -500,7 +508,8 @@ class TestInventoryViewHandlers:
         view.item_updated = MagicMock()
         view.item_updated.emit = MagicMock()
 
-        # Use real InventoryItem instead of MagicMock (MagicMock has special 'name' attribute)
+        # Use real InventoryItem instead of MagicMock
+        # (MagicMock has special 'name' attribute)
         mock_item = InventoryItem(
             id=1,
             name="Original Name",
@@ -668,7 +677,9 @@ class TestInventoryViewHandlers:
 # =============================================================================
 
 # Skip these tests if qtawesome is not installed (required by MainWindow)
-qtawesome = pytest.importorskip("qtawesome", reason="qtawesome required for MainWindow tests")
+qtawesome = pytest.importorskip(
+    "qtawesome", reason="qtawesome required for MainWindow tests"
+)
 
 
 class TestMainWindowHandlers:
@@ -828,7 +839,9 @@ class TestLoadHistory:
             mock_treatment
         ]
         mock_product_controller = MagicMock()
-        mock_product_controller.get_product_records_for_client.return_value = [mock_product]
+        mock_product_controller.get_product_records_for_client.return_value = [
+            mock_product
+        ]
 
         with patch(
             "cosmetics_records.database.connection.DatabaseConnection"

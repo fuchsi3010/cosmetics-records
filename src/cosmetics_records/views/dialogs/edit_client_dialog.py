@@ -71,7 +71,9 @@ class EditClientDialog(BaseDialog):
         _error_label: QLabel for displaying validation errors
     """
 
-    def __init__(self, client_id: int, client_data: dict, parent: Optional[QWidget] = None):
+    def __init__(
+        self, client_id: int, client_data: dict, parent: Optional[QWidget] = None
+    ):
         """
         Initialize the edit client dialog.
 

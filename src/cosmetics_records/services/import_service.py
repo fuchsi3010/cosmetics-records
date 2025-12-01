@@ -210,7 +210,7 @@ class ImportService:
     # Valid inventory units (must match InventoryItem model)
     VALID_UNITS = {"ml", "g", "Pc."}
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the import service with empty state."""
         self._clients_path: Optional[Path] = None
         self._treatments_path: Optional[Path] = None
@@ -220,6 +220,11 @@ class ImportService:
         self._errors: List[ValidationError] = []
 
         logger.debug("ImportService initialized")
+
+    def _get_parsed_data(self) -> ParsedData:
+        """Get parsed data with assertion that it's not None."""
+        assert self._parsed_data is not None, "ParsedData not initialized"
+        return self._parsed_data
 
     def validate_files(
         self,
@@ -600,7 +605,7 @@ class ImportService:
                     }
 
                     # Add to parsed data
-                    self._parsed_data.clients.append((import_id, client_data))
+                    self._get_parsed_data().clients.append((import_id, client_data))
                     valid_import_ids.add(import_id)
 
         except Exception as e:
@@ -706,16 +711,15 @@ class ImportService:
                     }
 
                     # Add to parsed data
-                    self._parsed_data.treatments.append(
+                    self._get_parsed_data().treatments.append(
                         (client_import_id, treatment_data)
                     )
 
         except Exception as e:
             self._add_error(file_name, None, None, f"Error reading file: {e}")
 
-        logger.debug(
-            f"Parsed {len(self._parsed_data.treatments)} treatments from {file_name}"
-        )
+        parsed_treatments = len(self._get_parsed_data().treatments)
+        logger.debug(f"Parsed {parsed_treatments} treatments from {file_name}")
 
     def _parse_products_csv(self, valid_client_ids: set) -> None:
         """
@@ -812,13 +816,15 @@ class ImportService:
                     }
 
                     # Add to parsed data
-                    self._parsed_data.products.append((client_import_id, product_data))
+                    self._get_parsed_data().products.append(
+                        (client_import_id, product_data)
+                    )
 
         except Exception as e:
             self._add_error(file_name, None, None, f"Error reading file: {e}")
 
         logger.debug(
-            f"Parsed {len(self._parsed_data.products)} products from {file_name}"
+            f"Parsed {len(self._get_parsed_data().products)} products from {file_name}"
         )
 
     def _parse_inventory_csv(self) -> None:
@@ -917,13 +923,13 @@ class ImportService:
                     }
 
                     # Add to parsed data
-                    self._parsed_data.inventory.append(inventory_data)
+                    self._get_parsed_data().inventory.append(inventory_data)
 
         except Exception as e:
             self._add_error(file_name, None, None, f"Error reading file: {e}")
 
         logger.debug(
-            f"Parsed {len(self._parsed_data.inventory)} "
+            f"Parsed {len(self._get_parsed_data().inventory)} "
             f"inventory items from {file_name}"
         )
 

@@ -17,7 +17,8 @@
 #   # Returns: "2 hours ago" or "Jan 15, 2024 14:30" depending on age
 # =============================================================================
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import Union
 
 
 def format_relative_time(dt: datetime) -> str:
@@ -152,7 +153,7 @@ LANGUAGE_DATE_FORMATS = {
 }
 
 
-def format_date_localized(d) -> str:
+def format_date_localized(d: Union[date, datetime]) -> str:
     """
     Format a date according to the user's date format preference.
 

@@ -65,7 +65,10 @@ class AddProductRecordDialog(BaseDialog):
     """
 
     def __init__(
-        self, client_id: int, inventory_items: Optional[List[str]] = None, parent: Optional[QWidget] = None
+        self,
+        client_id: int,
+        inventory_items: Optional[List[str]] = None,
+        parent: Optional[QWidget] = None,
     ):
         """
         Initialize the add product record dialog.

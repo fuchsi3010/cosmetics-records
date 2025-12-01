@@ -23,6 +23,7 @@
 
 import sqlite3
 from pathlib import Path
+from types import ModuleType
 from typing import List, Optional, Tuple
 import logging
 import shutil
@@ -243,7 +244,7 @@ class MigrationManager:
                 f"Aborting for safety. Error: {e}"
             )
 
-    def _load_migration_module(self, version: str, file_path: Path) -> object:
+    def _load_migration_module(self, version: str, file_path: Path) -> ModuleType:
         """
         Dynamically load a migration file as a Python module.
 

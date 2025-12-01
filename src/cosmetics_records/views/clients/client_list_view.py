@@ -35,7 +35,10 @@
 # =============================================================================
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtGui import QMouseEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -195,14 +198,14 @@ class ClientRow(QFrame):
 
         self._tags_widget.setVisible(matches_tag)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: Optional["QMouseEvent"]) -> None:
         """
         Handle mouse press event to emit clicked signal.
 
         Args:
             event: Mouse press event
         """
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event is not None and event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(event)
 

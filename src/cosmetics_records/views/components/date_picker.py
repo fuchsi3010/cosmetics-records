@@ -185,7 +185,12 @@ class DatePicker(QWidget):
         self._date_display.setCursor(Qt.CursorShape.PointingHandCursor)
 
         # Make the entire field clickable
-        self._date_display.mousePressEvent = lambda event: self._show_calendar()
+        # Note: We use setattr to avoid mypy method-assign error
+        setattr(
+            self._date_display,
+            "mousePressEvent",
+            lambda event: self._show_calendar(),
+        )
 
         layout.addWidget(self._date_display, stretch=1)
 

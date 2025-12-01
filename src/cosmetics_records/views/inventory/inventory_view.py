@@ -34,7 +34,10 @@
 # =============================================================================
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtGui import QMouseEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -137,14 +140,14 @@ class InventoryRow(QFrame):
             desc_label.setProperty("inventory_description", True)  # CSS class (gray)
             layout.addWidget(desc_label)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: Optional["QMouseEvent"]) -> None:
         """
         Handle mouse press event to emit clicked signal.
 
         Args:
             event: Mouse press event
         """
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event is not None and event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(event)
 
@@ -397,7 +400,7 @@ class InventoryView(QWidget):
 
                 if self._current_search:
                     # Search mode
-                    items = controller.search_inventory(
+                    items = controller.search_items(
                         self._current_search, limit=self.ITEMS_PER_PAGE
                     )
                     self._has_more = False  # Search returns all matches
@@ -511,6 +514,9 @@ class InventoryView(QWidget):
             }
 
             # Show edit dialog
+            if item.id is None:
+                logger.error("Cannot edit item: ID is None")
+                return
             dialog = EditInventoryDialog(item.id, item_data, self)
             if dialog.exec():
                 if dialog.was_deleted():
@@ -563,7 +569,7 @@ class InventoryView(QWidget):
             dialog = AddInventoryDialog(self)
             if dialog.exec():
                 # Get item data from dialog
-                item_data = dialog.get_item_data()
+                item_data = dialog.get_inventory_data()
 
                 # Create InventoryItem model
                 item = InventoryItem(

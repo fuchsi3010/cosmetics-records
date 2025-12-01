@@ -41,7 +41,11 @@ import logging
 from datetime import datetime, date
 
 from cosmetics_records.utils.time_utils import format_date_localized
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtCore import QEvent
+    from PyQt6.QtGui import QEnterEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
@@ -154,7 +158,7 @@ class HistoryItem(QFrame):
         notes_label.setWordWrap(True)
         layout.addWidget(notes_label)
 
-    def enterEvent(self, event):
+    def enterEvent(self, event: Optional["QEnterEvent"]) -> None:
         """
         Show edit button when mouse enters the widget.
 
@@ -163,11 +167,13 @@ class HistoryItem(QFrame):
         """
         self._edit_btn.setProperty("visible_state", "visible")
         # Refresh stylesheet to apply new property state
-        self._edit_btn.style().unpolish(self._edit_btn)
-        self._edit_btn.style().polish(self._edit_btn)
+        style = self._edit_btn.style()
+        if style:
+            style.unpolish(self._edit_btn)
+            style.polish(self._edit_btn)
         super().enterEvent(event)
 
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: Optional["QEvent"]) -> None:
         """
         Hide edit button when mouse leaves the widget.
 
@@ -176,8 +182,10 @@ class HistoryItem(QFrame):
         """
         self._edit_btn.setProperty("visible_state", "hidden")
         # Refresh stylesheet to apply new property state
-        self._edit_btn.style().unpolish(self._edit_btn)
-        self._edit_btn.style().polish(self._edit_btn)
+        style = self._edit_btn.style()
+        if style:
+            style.unpolish(self._edit_btn)
+            style.polish(self._edit_btn)
         super().leaveEvent(event)
 
 
@@ -956,7 +964,7 @@ class ClientDetailView(QWidget):
                 existing = controller.get_treatment_for_date(
                     self._client_id, date.today()
                 )
-                if existing:
+                if existing and existing.id is not None:
                     # Edit existing treatment instead of creating new
                     dialog.set_existing_treatment(existing.id, existing.treatment_notes)
                     logger.debug(f"Found existing treatment for today: {existing.id}")
@@ -971,6 +979,9 @@ class ClientDetailView(QWidget):
                     if dialog.is_editing_existing():
                         # Update existing treatment
                         existing_id = dialog.get_existing_treatment_id()
+                        if existing_id is None:
+                            logger.error("Cannot update treatment: ID is None")
+                            return
                         treatment = controller.get_treatment(existing_id)
                         if treatment:
                             treatment.treatment_notes = treatment_data["notes"]
@@ -1154,7 +1165,7 @@ class ClientDetailView(QWidget):
                 existing = controller.get_product_for_date(
                     self._client_id, date.today()
                 )
-                if existing:
+                if existing and existing.id is not None:
                     # Edit existing product record instead of creating new
                     dialog.set_existing_record(existing.id, existing.product_text)
                     logger.debug(
@@ -1171,6 +1182,9 @@ class ClientDetailView(QWidget):
                     if dialog.is_editing_existing():
                         # Update existing product record
                         existing_id = dialog.get_existing_record_id()
+                        if existing_id is None:
+                            logger.error("Cannot update product record: ID is None")
+                            return
                         product = controller.get_product_record(existing_id)
                         if product:
                             product.product_text = product_data["product_text"]
@@ -1236,6 +1250,9 @@ class ClientDetailView(QWidget):
                 inventory_names = inv_controller.get_all_names()
 
             # Show edit dialog (reusing AddProductRecordDialog)
+            if self._client_id is None:
+                logger.error("Cannot edit product record: client_id is None")
+                return
             dialog = AddProductRecordDialog(
                 self._client_id, inventory_names, parent=self
             )

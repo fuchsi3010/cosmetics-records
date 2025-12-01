@@ -41,7 +41,10 @@
 # =============================================================================
 
 import logging
-from typing import Optional
+from typing import Callable, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cosmetics_records.services.import_service import ImportPreview, ImportResult
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -172,7 +175,9 @@ class ImportDialog(BaseDialog):
         )
         layout.addLayout(inventory_row)
 
-    def _create_file_row(self, label_text: str, browse_callback) -> tuple:
+    def _create_file_row(
+        self, label_text: str, browse_callback: Callable[[], None]
+    ) -> Tuple[QHBoxLayout, QLineEdit]:
         """
         Create a single file selection row.
 
@@ -379,7 +384,8 @@ class ImportDialog(BaseDialog):
         else:
             # Show preview
             preview = self._import_service.get_preview()
-            self._update_status_preview(preview)
+            if preview is not None:
+                self._update_status_preview(preview)
             self._validated = True
             self._import_btn.setEnabled(True)
             logger.info("Validation passed")
@@ -456,7 +462,7 @@ class ImportDialog(BaseDialog):
             error_label.setStyleSheet("color: #ff6666;")
             self._status_layout.addWidget(error_label)
 
-    def _update_status_preview(self, preview) -> None:
+    def _update_status_preview(self, preview: "ImportPreview") -> None:
         """
         Show import preview.
 
@@ -496,7 +502,7 @@ class ImportDialog(BaseDialog):
         warning.setStyleSheet("color: #ffcc00; margin-top: 8px;")
         self._status_layout.addWidget(warning)
 
-    def _update_status_success(self, result) -> None:
+    def _update_status_success(self, result: "ImportResult") -> None:
         """
         Show import success message.
 

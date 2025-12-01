@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
 
         # Dictionary to store view references
         # WHY store references: Allows us to access views later for updates
-        self.views = {}
+        self.views: dict[str, QWidget] = {}
 
         # Create clients list view
         try:
@@ -407,12 +407,16 @@ class MainWindow(QMainWindow):
             ui_scale = self.config.ui_scale
 
             # Get stylesheet with scale applied
-            stylesheet = get_theme(theme_name, ui_scale)
+            stylesheet = get_theme(
+                cast(Literal["dark", "light", "system"], theme_name), ui_scale
+            )
 
             # Apply to application
             # WHY apply to QApplication not MainWindow: Ensures all windows
             # and dialogs use the same theme
-            QApplication.instance().setStyleSheet(stylesheet)
+            app = QApplication.instance()
+            if app is not None and isinstance(app, QApplication):
+                app.setStyleSheet(stylesheet)
 
             logger.info(f"Applied theme: {theme_name} at scale {ui_scale:.0%}")
 
@@ -439,7 +443,13 @@ class MainWindow(QMainWindow):
         # Update client_detail view with the client data
         if "client_detail" in self.views:
             try:
-                self.views["client_detail"].load_client(client_id)
+                from cosmetics_records.views.clients.client_detail_view import (
+                    ClientDetailView,
+                )
+
+                view = self.views["client_detail"]
+                if isinstance(view, ClientDetailView):
+                    view.load_client(client_id)
 
                 # Get client name for nav label
                 with DatabaseConnection() as db:
@@ -497,7 +507,9 @@ class MainWindow(QMainWindow):
 
                 # Refresh the list to show the new client
                 if "clients" in self.views:
-                    self.views["clients"].refresh()
+                    view = self.views["clients"]
+                    if hasattr(view, "refresh"):
+                        view.refresh()
 
                 logger.info(f"Client added successfully: {client.full_name()}")
         except Exception as e:
@@ -514,7 +526,9 @@ class MainWindow(QMainWindow):
 
         # Refresh the list to reflect any changes (e.g., deleted client)
         if "clients" in self.views:
-            self.views["clients"].refresh()
+            view = self.views["clients"]
+            if hasattr(view, "refresh"):
+                view.refresh()
 
         logger.debug("Returned to client list and refreshed")
 
@@ -534,10 +548,14 @@ class MainWindow(QMainWindow):
             ui_scale = self.config.ui_scale
 
             # Get stylesheet for new theme with scale
-            stylesheet = get_theme(cast(Literal["dark", "light", "system"], theme), ui_scale)
+            stylesheet = get_theme(
+                cast(Literal["dark", "light", "system"], theme), ui_scale
+            )
 
             # Apply to application
-            QApplication.instance().setStyleSheet(stylesheet)
+            app = QApplication.instance()
+            if app is not None and isinstance(app, QApplication):
+                app.setStyleSheet(stylesheet)
 
             logger.info(f"Theme applied: {theme} at scale {ui_scale:.0%}")
 
@@ -561,10 +579,14 @@ class MainWindow(QMainWindow):
             theme_name = self.config.theme
 
             # Get stylesheet with new scale applied
-            stylesheet = get_theme(theme_name, scale)
+            stylesheet = get_theme(
+                cast(Literal["dark", "light", "system"], theme_name), scale
+            )
 
             # Apply to application
-            QApplication.instance().setStyleSheet(stylesheet)
+            app = QApplication.instance()
+            if app is not None and isinstance(app, QApplication):
+                app.setStyleSheet(stylesheet)
 
             logger.info(f"Scale applied: {scale:.0%} with theme {theme_name}")
 
@@ -598,7 +620,8 @@ class MainWindow(QMainWindow):
             while self.stacked_widget.count():
                 widget = self.stacked_widget.widget(0)
                 self.stacked_widget.removeWidget(widget)
-                widget.deleteLater()
+                if widget is not None:
+                    widget.deleteLater()
             self.views.clear()
 
             # Recreate all views with new language
@@ -611,8 +634,10 @@ class MainWindow(QMainWindow):
 
             # Replace old navbar in layout
             central_widget = self.centralWidget()
-            main_layout = central_widget.layout()
-            main_layout.replaceWidget(old_navbar, self.navbar)
+            if central_widget is not None:
+                main_layout = central_widget.layout()
+                if main_layout is not None:
+                    main_layout.replaceWidget(old_navbar, self.navbar)
             old_navbar.deleteLater()
 
             # Navigate to the previously selected view (or default to clients)

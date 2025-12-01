@@ -19,7 +19,7 @@
 import csv
 import tempfile
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from cosmetics_records.models.audit import AuditAction
@@ -308,20 +308,22 @@ class TestBackupService:
             service = BackupService(db_path=temp_db, backup_dir=backup_dir)
 
             # No backups exist and no last backup time, should need auto-backup
-            assert service.should_auto_backup(
-                interval_minutes=60,
-                last_backup_time=None
-            ) is True
+            assert (
+                service.should_auto_backup(interval_minutes=60, last_backup_time=None)
+                is True
+            )
 
             # Create a backup
             service.create_backup()
 
             # Just created a backup, with current time as last backup
             # Should NOT need another one immediately
-            assert service.should_auto_backup(
-                interval_minutes=60,
-                last_backup_time=datetime.now()
-            ) is False
+            assert (
+                service.should_auto_backup(
+                    interval_minutes=60, last_backup_time=datetime.now()
+                )
+                is False
+            )
 
 
 # =============================================================================

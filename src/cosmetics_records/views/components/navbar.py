@@ -25,7 +25,10 @@
 # =============================================================================
 
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtGui import QResizeEvent
 
 import qtawesome as qta
 from PyQt6.QtCore import QPropertyAnimation, QSize, Qt, pyqtSignal
@@ -293,8 +296,10 @@ class NavBar(QFrame):
             # Force style refresh
             # WHY this is needed: Qt doesn't automatically refresh styles when
             # properties change, so we need to manually trigger a re-polish
-            button.style().unpolish(button)
-            button.style().polish(button)
+            style = button.style()
+            if style:
+                style.unpolish(button)
+                style.polish(button)
 
         self.active_item = item_id
         logger.debug(f"Active nav item set to: {item_id}")
@@ -380,7 +385,7 @@ class NavBar(QFrame):
 
         self._toggle_btn.move(x, y)
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event: Optional["QResizeEvent"]) -> None:
         """
         Handle resize events to reposition the toggle button.
 

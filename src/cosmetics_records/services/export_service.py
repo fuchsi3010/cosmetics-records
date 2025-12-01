@@ -300,7 +300,7 @@ class ExportService:
                     WHERE t.client_id = ?
                     ORDER BY t.treatment_date DESC, t.id DESC
                 """
-                parameters = (client_id,)
+                parameters: tuple[int, ...] = (client_id,)
             else:
                 query = """
                     SELECT
@@ -510,7 +510,7 @@ class ExportService:
                     WHERE created_at >= ?
                     ORDER BY created_at DESC, id DESC
                 """
-                parameters = (cutoff_str,)
+                parameters: tuple[str, ...] = (cutoff_str,)
             else:
                 # Export all audit logs
                 query = """

@@ -29,7 +29,10 @@
 # =============================================================================
 
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtGui import QKeyEvent
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -241,7 +244,7 @@ class BaseDialog(QDialog):
 
         return button_layout
 
-    def keyPressEvent(self, event) -> None:
+    def keyPressEvent(self, event: Optional["QKeyEvent"]) -> None:
         """
         Handle key press events.
 
@@ -251,7 +254,7 @@ class BaseDialog(QDialog):
             event: The key press event
         """
         # Escape key closes dialog
-        if event.key() == Qt.Key.Key_Escape:
+        if event is not None and event.key() == Qt.Key.Key_Escape:
             self.reject()
         else:
             # Pass to base class for default handling

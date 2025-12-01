@@ -20,7 +20,8 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Any, Optional, Tuple, List
+from types import TracebackType
+from typing import Any, Optional, Tuple, List, Type
 import logging
 
 # Configure module logger for debugging database operations
@@ -123,7 +124,12 @@ class DatabaseConnection:
             # Re-raise the exception so caller knows connection failed
             raise
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         """
         Exit the context manager - closes the database connection.
 
@@ -356,7 +362,8 @@ class DatabaseConnection:
                 "Use 'with DatabaseConnection() as db:' syntax."
             )
 
-        return self.cursor.fetchone()
+        result: Optional[sqlite3.Row] = self.cursor.fetchone()
+        return result
 
     def fetchall(self) -> List[sqlite3.Row]:
         """
@@ -417,4 +424,9 @@ class DatabaseConnection:
                 "Use 'with DatabaseConnection() as db:' syntax."
             )
 
-        return self.cursor.lastrowid
+        # lastrowid can be None if no INSERT was performed, but that would be
+        # a usage error. We assert it's not None for type safety.
+        rowid = self.cursor.lastrowid
+        if rowid is None:
+            raise RuntimeError("No row was inserted - lastrowid is None")
+        return rowid

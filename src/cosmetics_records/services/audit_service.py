@@ -27,7 +27,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.audit import AuditAction, AuditLog
@@ -372,8 +372,8 @@ class AuditService:
             """
 
             # Build WHERE clause if filters are provided
-            where_clauses = []
-            parameters = []
+            where_clauses: List[str] = []
+            parameters: List[Union[str, int]] = []
 
             if table_filter:
                 where_clauses.append("table_name = ?")

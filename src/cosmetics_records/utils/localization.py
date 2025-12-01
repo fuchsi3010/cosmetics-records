@@ -46,7 +46,7 @@ Technical Notes:
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from babel.support import NullTranslations, Translations
 
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # WHY globals: Simple singleton pattern for application-wide locale state
 # This is safe because PyQt6 applications run in a single thread
-_translations: Optional[Translations] = None
+_translations: Optional[Union[Translations, NullTranslations]] = None
 _current_locale: str = "en"  # Default to English
 
 # Path to locales directory

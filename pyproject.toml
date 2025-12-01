@@ -123,6 +123,15 @@ warn_unused_configs = true
 disallow_untyped_defs = true        # Require type hints on all functions
 ignore_missing_imports = true        # Don't error on untyped libraries
 
+# PyQt6 returns Optional for many methods that practically never return None
+# (like widget.style(), widget.layout(), etc.). Disable union-attr checking
+# for view files to avoid excessive null checks.
+[[tool.mypy.overrides]]
+module = [
+    "cosmetics_records.views.*",
+]
+disable_error_code = ["union-attr"]
+
 # Setuptools configuration for package discovery
 [tool.setuptools.packages.find]
 where = ["src"]                      # Look for packages in src/

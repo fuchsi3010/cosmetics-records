@@ -49,6 +49,7 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QMessageBox,
     QPushButton,
     QRadioButton,
@@ -129,7 +130,7 @@ class SettingsSection(QFrame):
         """Add a widget to the section."""
         self._layout.addWidget(widget)
 
-    def add_layout(self, layout) -> None:
+    def add_layout(self, layout: QLayout) -> None:
         """Add a layout to the section."""
         self._layout.addLayout(layout)
 
@@ -932,7 +933,8 @@ class SettingsView(QWidget):
 
             system = platform.system()
             if system == "Windows":
-                os.startfile(backup_dir)
+                # os.startfile is Windows-only; ignore type error on other platforms
+                os.startfile(backup_dir)  # type: ignore[attr-defined]
             elif system == "Darwin":  # macOS
                 subprocess.run(["open", str(backup_dir)])
             else:  # Linux
