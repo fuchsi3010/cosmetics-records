@@ -142,17 +142,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Cosmetics Records v1.0")
         self.setMinimumSize(1200, 800)
 
-        # Try to load application icon
-        # WHY try/except: Icon file might not exist yet, don't crash if missing
-        try:
-            icon_path = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
-            if icon_path.exists():
-                self.setWindowIcon(QIcon(str(icon_path)))
-                logger.debug(f"Application icon loaded from {icon_path}")
-            else:
-                logger.warning(f"Application icon not found at {icon_path}")
-        except Exception as e:
-            logger.warning(f"Failed to load application icon: {e}")
+        # Note: Application icon is set on QApplication in main() for proper
+        # desktop integration (app switchers, taskbars, launchers). All windows
+        # inherit that icon automatically.
 
         # Central widget
         central_widget = QWidget()
@@ -718,6 +710,18 @@ def main() -> int:
     app.setApplicationName("Cosmetics Records")
     app.setOrganizationName("Cosmetics Records")
     app.setApplicationVersion("1.0.0")
+
+    # Set application icon (for app switchers, taskbars, launchers)
+    # WHY set on QApplication: Ensures all windows inherit the icon
+    try:
+        icon_path = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
+        if icon_path.exists():
+            app.setWindowIcon(QIcon(str(icon_path)))
+            logger.debug(f"Application icon set from {icon_path}")
+        else:
+            logger.warning(f"Application icon not found at {icon_path}")
+    except Exception as e:
+        logger.warning(f"Failed to set application icon: {e}")
 
     # Initialize translations before creating any UI
     # Load language from config (defaults to English)
