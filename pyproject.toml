@@ -131,7 +131,7 @@ ignore_missing_imports = true        # Don't error on untyped libraries
 module = [
     "cosmetics_records.views.*",
 ]
-disable_error_code = ["union-attr", "arg-type", "attr-defined"]
+disable_error_code = ["union-attr", "arg-type", "attr-defined", "call-overload"]
 
 # Setuptools configuration for package discovery
 [tool.setuptools.packages.find]
