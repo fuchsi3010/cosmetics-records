@@ -14,7 +14,7 @@
 # =============================================================================
 
 # Package version - keep in sync with pyproject.toml
-__version__ = "0.9.0a1"
+__version__ = "0.9.0-alpha2"
 
 # Package metadata
 __author__ = "Daniel"
