@@ -670,15 +670,15 @@ class SettingsView(QWidget):
             elif delta.total_seconds() < 3600:
                 minutes = int(delta.total_seconds() / 60)
                 if minutes == 1:
-                    time_str = _("minute ago")
+                    time_str = _("1 minute ago")
                 else:
-                    time_str = _("minutes ago") % minutes
+                    time_str = f"{minutes} " + _("minutes ago")
             elif delta.total_seconds() < 86400:
                 hours = int(delta.total_seconds() / 3600)
                 if hours == 1:
-                    time_str = _("hour ago")
+                    time_str = _("1 hour ago")
                 else:
-                    time_str = _("hours ago") % hours
+                    time_str = f"{hours} " + _("hours ago")
             else:
                 time_str = last_backup.strftime("%Y-%m-%d %H:%M")
 
