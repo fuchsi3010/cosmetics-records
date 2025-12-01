@@ -412,7 +412,7 @@ class MainWindow(QMainWindow):
 
             # Update navbar icon colors based on theme
             is_dark = self._is_dark_theme(theme_name)
-            self._navbar.update_icon_colors(is_dark)
+            self.navbar.update_icon_colors(is_dark)
 
             logger.info(f"Applied theme: {theme_name} at scale {ui_scale:.0%}")
 
@@ -574,7 +574,7 @@ class MainWindow(QMainWindow):
 
             # Update navbar icon colors based on theme
             is_dark = self._is_dark_theme(theme)
-            self._navbar.update_icon_colors(is_dark)
+            self.navbar.update_icon_colors(is_dark)
 
             logger.info(f"Theme applied: {theme} at scale {ui_scale:.0%}")
 
