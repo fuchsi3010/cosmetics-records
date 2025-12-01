@@ -8,7 +8,8 @@
 # GUI Framework
 # PyQt6 is a modern Python binding for Qt6, providing native-looking
 # cross-platform GUI components
-PyQt6>=6.4.0
+# Note: Pinned to <6.5.0 to support macOS 10.14+ (6.5+ requires macOS 11+)
+PyQt6>=6.4.0,<6.5.0
 
 # Data Validation
 # Pydantic provides runtime data validation using Python type hints.
