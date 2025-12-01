@@ -26,7 +26,8 @@
 import logging
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QObject
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
@@ -151,18 +152,53 @@ class TagInput(QWidget):
         # WHY QWidget instead of QHBoxLayout: We'll manually manage chip positioning
         # for better wrapping behavior
         self._chips_container = QWidget()
+        self._chips_container.setProperty("chips_container", True)  # CSS class
         self._chips_layout = QHBoxLayout(self._chips_container)
-        self._chips_layout.setContentsMargins(0, 0, 0, 0)
+        self._chips_layout.setContentsMargins(4, 4, 4, 4)
         self._chips_layout.setSpacing(4)
         self._chips_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self._chips_container)
 
         # Input field for adding new tags
         self._line_edit = QLineEdit()
-        self._line_edit.setPlaceholderText("Type tag and press Enter or comma...")
+        self._line_edit.setPlaceholderText("Type tag and press Enter, Tab, or comma...")
         self._line_edit.returnPressed.connect(self._add_tag_from_input)
         self._line_edit.textChanged.connect(self._on_text_changed)
+        # Install event filter to intercept Tab key
+        self._line_edit.installEventFilter(self)
         layout.addWidget(self._line_edit)
+
+    def eventFilter(
+        self, obj: Optional[QObject], event: Optional[QEvent]
+    ) -> bool:
+        """
+        Event filter to intercept Tab key in the line edit.
+
+        When Tab is pressed with text in the input, add it as a tag instead
+        of navigating to the next widget.
+
+        Args:
+            obj: The object that triggered the event
+            event: The event
+
+        Returns:
+            bool: True if event was handled, False otherwise
+        """
+        # Only filter key press events on the line edit
+        if (
+            obj == self._line_edit
+            and event is not None
+            and event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+        ):
+            if event.key() == Qt.Key.Key_Tab:
+                # If there's text, add it as a tag
+                if self._line_edit.text().strip():
+                    self._add_tag_from_input()
+                    return True  # Consume the event
+
+        # Let other events pass through
+        return super().eventFilter(obj, event)
 
     def _on_text_changed(self, text: str) -> None:
         """

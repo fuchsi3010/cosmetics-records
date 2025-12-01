@@ -449,6 +449,45 @@ QLabel[tag_more="true"] {{
 }}
 
 /* ==========================================================================
+   Tag Input Component (TagInput widget)
+   ========================================================================== */
+
+/* Tags container - matches dialog background */
+QWidget[chips_container="true"] {{
+    background-color: {DARK_SURFACE};
+    border-radius: 4px;
+}}
+
+/* Individual tag chips - darker grey */
+QWidget[tag_chip="true"] {{
+    background-color: #444444;
+    border-radius: 12px;
+}}
+
+/* Tag label text */
+QPushButton[tag_label="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT};
+    border: none;
+    font-size: {sizes["secondary"]};
+}}
+
+/* Tag remove button */
+QPushButton[tag_remove="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT_SECONDARY};
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+}}
+
+QPushButton[tag_remove="true"]:hover {{
+    color: {DARK_TEXT};
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}}
+
+/* ==========================================================================
    Client Detail Header
    ========================================================================== */
 
@@ -1196,6 +1235,45 @@ QLabel[tag_chip_small="true"] {{
 QLabel[tag_more="true"] {{
     color: {LIGHT_TEXT_SECONDARY};
     font-size: {sizes["secondary"]};
+}}
+
+/* ==========================================================================
+   Tag Input Component (TagInput widget)
+   ========================================================================== */
+
+/* Tags container - matches dialog background */
+QWidget[chips_container="true"] {{
+    background-color: {LIGHT_SURFACE};
+    border-radius: 4px;
+}}
+
+/* Individual tag chips - darker grey */
+QWidget[tag_chip="true"] {{
+    background-color: #e0e0e0;
+    border-radius: 12px;
+}}
+
+/* Tag label text */
+QPushButton[tag_label="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT};
+    border: none;
+    font-size: {sizes["secondary"]};
+}}
+
+/* Tag remove button */
+QPushButton[tag_remove="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT_SECONDARY};
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+}}
+
+QPushButton[tag_remove="true"]:hover {{
+    color: {LIGHT_TEXT};
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
 }}
 
 /* ==========================================================================
