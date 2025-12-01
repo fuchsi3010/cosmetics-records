@@ -10,14 +10,33 @@ on:
         default: ''
 
 jobs:
-  # First job: determine the version to use
-  get-version:
+  # First job: verify CI passed and determine version
+  check-ci:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Check CI status for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking CI status for commit ${{ github.sha }}..."
+
+          # Get the CI workflow run status for this commit
+          CI_STATUS=$(gh run list --commit ${{ github.sha }} --workflow ci.yml --json conclusion --jq '.[0].conclusion // "not_found"')
+
+          echo "CI status: $CI_STATUS"
+
+          if [ "$CI_STATUS" != "success" ]; then
+            echo "::error::CI has not passed for this commit. Please ensure CI passes before releasing."
+            echo "CI status was: $CI_STATUS"
+            exit 1
+          fi
+
+          echo "CI passed for this commit."
 
       - name: Get version from pyproject.toml or input
         id: get_version
@@ -36,7 +55,7 @@ jobs:
           echo "Using version: $VERSION"
 
   build:
-    needs: get-version
+    needs: check-ci
     strategy:
       matrix:
         include:
@@ -101,7 +120,7 @@ jobs:
           path: dist/CosmeticsRecords-macOS.zip
 
   release:
-    needs: [get-version, build]
+    needs: [check-ci, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -135,16 +154,16 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.get-version.outputs.version }}
-          name: Release ${{ needs.get-version.outputs.version }}
+          tag_name: ${{ needs.check-ci.outputs.version }}
+          name: Release ${{ needs.check-ci.outputs.version }}
           draft: false
-          prerelease: ${{ contains(needs.get-version.outputs.version, 'alpha') || contains(needs.get-version.outputs.version, 'beta') || contains(needs.get-version.outputs.version, 'rc') }}
+          prerelease: ${{ contains(needs.check-ci.outputs.version, 'alpha') || contains(needs.check-ci.outputs.version, 'beta') || contains(needs.check-ci.outputs.version, 'rc') }}
           files: |
             release/CosmeticsRecords-Linux
             release/CosmeticsRecords-Windows.exe
             release/CosmeticsRecords-macOS.zip
           body: |
-            ## Cosmetics Records ${{ needs.get-version.outputs.version }}
+            ## Cosmetics Records ${{ needs.check-ci.outputs.version }}
 
             ### Downloads
             - **Linux**: `CosmeticsRecords-Linux` (make executable with `chmod +x`)
