@@ -41,6 +41,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+# Import package version
+from cosmetics_records import __version__
+
 # Import configuration
 from cosmetics_records.config import Config
 
@@ -736,7 +739,7 @@ def main() -> int:
     # Application metadata
     app.setApplicationName("Cosmetics Records")
     app.setOrganizationName("Cosmetics Records")
-    app.setApplicationVersion("0.9.0-alpha3")
+    app.setApplicationVersion(__version__)
 
     # Set application icon (for app switchers, taskbars, launchers)
     # WHY set on QApplication: Ensures all windows inherit the icon

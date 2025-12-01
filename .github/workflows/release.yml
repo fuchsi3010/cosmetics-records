@@ -4,12 +4,39 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag (e.g., v1.0.0)'
-        required: true
+        description: 'Version tag (leave empty to use version from pyproject.toml)'
+        required: false
         type: string
+        default: ''
 
 jobs:
+  # First job: determine the version to use
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from pyproject.toml or input
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            # Use provided version (add 'v' prefix if not present)
+            VERSION="${{ github.event.inputs.version }}"
+            if [[ ! "$VERSION" =~ ^v ]]; then
+              VERSION="v$VERSION"
+            fi
+          else
+            # Extract version from pyproject.toml
+            VERSION="v$(grep -m1 'version = ' pyproject.toml | cut -d'"' -f2)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
   build:
+    needs: get-version
     strategy:
       matrix:
         include:
@@ -74,7 +101,7 @@ jobs:
           path: dist/CosmeticsRecords-macOS.zip
 
   release:
-    needs: build
+    needs: [get-version, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -108,16 +135,16 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          name: Release ${{ github.event.inputs.version }}
+          tag_name: ${{ needs.get-version.outputs.version }}
+          name: Release ${{ needs.get-version.outputs.version }}
           draft: false
-          prerelease: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') || contains(github.event.inputs.version, 'rc') }}
+          prerelease: ${{ contains(needs.get-version.outputs.version, 'alpha') || contains(needs.get-version.outputs.version, 'beta') || contains(needs.get-version.outputs.version, 'rc') }}
           files: |
             release/CosmeticsRecords-Linux
             release/CosmeticsRecords-Windows.exe
             release/CosmeticsRecords-macOS.zip
           body: |
-            ## Cosmetics Records ${{ github.event.inputs.version }}
+            ## Cosmetics Records ${{ needs.get-version.outputs.version }}
 
             ### Downloads
             - **Linux**: `CosmeticsRecords-Linux` (make executable with `chmod +x`)
