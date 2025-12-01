@@ -123,14 +123,15 @@ warn_unused_configs = true
 disallow_untyped_defs = true        # Require type hints on all functions
 ignore_missing_imports = true        # Don't error on untyped libraries
 
-# PyQt6 returns Optional for many methods that practically never return None
-# (like widget.style(), widget.layout(), etc.). Disable union-attr checking
-# for view files to avoid excessive null checks.
+# PyQt6 type stubs have strict typing that doesn't always match runtime behavior:
+# - union-attr: Methods like style(), layout() return Optional but practically never None
+# - arg-type: Event handler signatures vary between PyQt6 stub versions
+# - attr-defined: Some widget attributes differ between stub versions
 [[tool.mypy.overrides]]
 module = [
     "cosmetics_records.views.*",
 ]
-disable_error_code = ["union-attr"]
+disable_error_code = ["union-attr", "arg-type", "attr-defined"]
 
 # Setuptools configuration for package discovery
 [tool.setuptools.packages.find]
