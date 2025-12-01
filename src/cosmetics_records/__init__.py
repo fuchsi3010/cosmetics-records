@@ -41,7 +41,7 @@ def _get_version() -> str:
         if not pyproject_path.exists():
             # When running from installed package or PyInstaller bundle,
             # pyproject.toml won't be available - use fallback
-            return "0.9.0-alpha3"
+            return "0.9.0-alpha4"
 
         if tomllib is not None:
             # Python 3.11+ - use tomllib
