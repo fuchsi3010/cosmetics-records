@@ -168,9 +168,7 @@ class TagInput(QWidget):
         self._line_edit.installEventFilter(self)
         layout.addWidget(self._line_edit)
 
-    def eventFilter(
-        self, obj: Optional[QObject], event: Optional[QEvent]
-    ) -> bool:
+    def eventFilter(self, obj: Optional[QObject], event: Optional[QEvent]) -> bool:
         """
         Event filter to intercept Tab key in the line edit.
 

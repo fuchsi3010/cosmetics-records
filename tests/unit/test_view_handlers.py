@@ -440,7 +440,7 @@ class TestInventoryViewHandlers:
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
-        mock_dialog.get_item_data.return_value = {
+        mock_dialog.get_inventory_data.return_value = {
             "name": "New Test Item",
             "description": "Test description",
             "capacity": 50.0,
@@ -648,7 +648,7 @@ class TestInventoryViewHandlers:
 
         # Mock controller
         mock_controller = MagicMock()
-        mock_controller.search_inventory.return_value = mock_items
+        mock_controller.search_items.return_value = mock_items
 
         with patch(
             "cosmetics_records.database.connection.DatabaseConnection"
@@ -663,8 +663,8 @@ class TestInventoryViewHandlers:
             ):
                 view._load_more_items()
 
-        # Verify search_inventory was called
-        mock_controller.search_inventory.assert_called_once_with("Serum", limit=20)
+        # Verify search_items was called
+        mock_controller.search_items.assert_called_once_with("Serum", limit=20)
 
         # Verify items were returned
         view.add_items.assert_called_once()
@@ -760,9 +760,12 @@ class TestMainWindowHandlers:
     def test_show_client_detail_loads_client(self):
         """Test that show_client_detail loads the client and navigates."""
         from cosmetics_records.app import MainWindow
+        from cosmetics_records.views.clients.client_detail_view import ClientDetailView
 
         window = MainWindow.__new__(MainWindow)
-        window.views = {"client_detail": MagicMock()}
+        # Create a mock that passes isinstance check
+        mock_detail_view = MagicMock(spec=ClientDetailView)
+        window.views = {"client_detail": mock_detail_view}
         window.navbar = MagicMock()
         window._navigate_to = MagicMock()
 
@@ -788,7 +791,7 @@ class TestMainWindowHandlers:
                 window.show_client_detail(1)
 
         # Verify client was loaded
-        window.views["client_detail"].load_client.assert_called_once_with(1)
+        mock_detail_view.load_client.assert_called_once_with(1)
 
         # Verify navbar was updated with client name
         window.navbar.set_item_label.assert_called_once_with(

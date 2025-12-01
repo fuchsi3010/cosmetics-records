@@ -177,7 +177,8 @@ class AddClientDialog(BaseDialog):
         email = self._email_input.text().strip()
         if email and not self._is_valid_email(email):
             self._show_error(
-                "Invalid email format. Please enter a valid email (e.g., user@example.com)."
+                "Invalid email format. Please enter a valid email "
+                "(e.g., user@example.com)."
             )
             self._email_input.setFocus()
             return
