@@ -144,3 +144,4 @@ Desktop.ini
 tmp/
 temp/
 *.tmp
+shell.nix
