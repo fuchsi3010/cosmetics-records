@@ -65,7 +65,7 @@ jobs:
           - os: windows-latest
             artifact_name: CosmeticsRecords-Windows
             asset_path: dist/CosmeticsRecords.exe
-          - os: macos-latest
+          - os: macos-13
             artifact_name: CosmeticsRecords-macOS
             asset_path: dist/CosmeticsRecords.app
 
