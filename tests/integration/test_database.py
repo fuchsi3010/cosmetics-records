@@ -77,7 +77,7 @@ class TestDatabaseIntegration:
             expected_tables = [
                 "audit_log",
                 "clients",
-                "inventory_items",
+                "inventory",
                 "product_records",
                 "schema_migrations",
                 "treatment_records",

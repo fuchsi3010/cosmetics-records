@@ -20,6 +20,8 @@
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 
 # Module path constants for patching (to keep lines under 88 chars)
 _CTRL_BASE = "cosmetics_records.controllers"
@@ -215,6 +217,7 @@ class TestClientDetailHandlers:
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
+        mock_dialog.is_editing_existing.return_value = False  # Creating new, not editing
         mock_dialog.get_treatment_data.return_value = {
             "client_id": 1,
             "date": date.today(),
@@ -224,6 +227,7 @@ class TestClientDetailHandlers:
         # Mock controller
         mock_controller = MagicMock()
         mock_controller.create_treatment.return_value = 1
+        mock_controller.get_treatment_for_date.return_value = None  # No existing treatment
 
         with patch(
             "cosmetics_records.views.dialogs.add_treatment_dialog.AddTreatmentDialog",
@@ -300,6 +304,7 @@ class TestClientDetailHandlers:
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
+        mock_dialog.is_editing_existing.return_value = False  # Creating new, not editing
         mock_dialog.get_product_record_data.return_value = {
             "client_id": 1,
             "date": date.today(),
@@ -310,7 +315,8 @@ class TestClientDetailHandlers:
         mock_inv_controller = MagicMock()
         mock_inv_controller.get_all_names.return_value = ["Product A", "Product B"]
         mock_prod_controller = MagicMock()
-        mock_prod_controller.create_product.return_value = 1
+        mock_prod_controller.create_product_record.return_value = 1
+        mock_prod_controller.get_product_for_date.return_value = None  # No existing record
 
         with patch(
             ADD_PRODUCT_DLG,
@@ -334,8 +340,8 @@ class TestClientDetailHandlers:
                         view._on_add_product()
 
         # Verify product was created
-        mock_prod_controller.create_product.assert_called_once()
-        product_arg = mock_prod_controller.create_product.call_args[0][0]
+        mock_prod_controller.create_product_record.assert_called_once()
+        product_arg = mock_prod_controller.create_product_record.call_args[0][0]
         assert product_arg.client_id == 1
         assert product_arg.product_text == "Test product text"
 
@@ -487,20 +493,27 @@ class TestInventoryViewHandlers:
     def test_on_item_clicked_updates_item(self):
         """Test that clicking an item and editing updates the database."""
         from cosmetics_records.views.inventory.inventory_view import InventoryView
+        from cosmetics_records.models.product import InventoryItem
 
         view = InventoryView.__new__(InventoryView)
         view.refresh = MagicMock()
         view.item_updated = MagicMock()
         view.item_updated.emit = MagicMock()
 
-        # Mock existing item
-        mock_item = MagicMock()
-        mock_item.id = 1
+        # Use real InventoryItem instead of MagicMock (MagicMock has special 'name' attribute)
+        mock_item = InventoryItem(
+            id=1,
+            name="Original Name",
+            description="Original description",
+            capacity=50.0,
+            unit="ml",
+        )
 
         # Mock dialog
         mock_dialog = MagicMock()
         mock_dialog.exec.return_value = True
-        mock_dialog.get_item_data.return_value = {
+        mock_dialog.was_deleted.return_value = False
+        mock_dialog.get_inventory_data.return_value = {
             "name": "Updated Item Name",
             "description": "Updated description",
             "capacity": 100.0,
@@ -528,7 +541,7 @@ class TestInventoryViewHandlers:
                 ):
                     view._on_item_clicked(1)
 
-        # Verify item was updated
+        # Verify item was updated with new values
         assert mock_item.name == "Updated Item Name"
         assert mock_item.capacity == 100.0
         assert mock_item.unit == "g"
@@ -653,6 +666,9 @@ class TestInventoryViewHandlers:
 # =============================================================================
 # Main Window Handler Tests
 # =============================================================================
+
+# Skip these tests if qtawesome is not installed (required by MainWindow)
+qtawesome = pytest.importorskip("qtawesome", reason="qtawesome required for MainWindow tests")
 
 
 class TestMainWindowHandlers:
@@ -812,7 +828,7 @@ class TestLoadHistory:
             mock_treatment
         ]
         mock_product_controller = MagicMock()
-        mock_product_controller.get_products_for_client.return_value = [mock_product]
+        mock_product_controller.get_product_records_for_client.return_value = [mock_product]
 
         with patch(
             "cosmetics_records.database.connection.DatabaseConnection"

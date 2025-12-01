@@ -18,6 +18,7 @@
 
 import csv
 import tempfile
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -164,46 +165,33 @@ class TestAuditService:
         """
         Test cleaning up old audit logs.
 
-        This verifies that logs older than the retention period are deleted.
+        This verifies that logs beyond the retention count are deleted,
+        keeping only the most recent N logs.
         """
         service = AuditService(db_connection)
 
-        # We need to manually insert old logs since we can't control created_at
-        # through the service methods (they use CURRENT_TIMESTAMP)
-        old_date = datetime.now() - timedelta(days=100)
+        # Create multiple logs
+        for i in range(5):
+            service.log_create(
+                table_name="clients",
+                record_id=i + 1,
+                new_value=f"Client {i + 1}",
+                ui_location="ClientEditView",
+            )
 
-        # Insert an old log directly into the database
-        db_connection.execute(
-            """
-            INSERT INTO audit_log
-            (table_name, record_id, action, ui_location, created_at)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            ("clients", 1, "CREATE", "ClientEditView", old_date),
-        )
-        db_connection.commit()
-
-        # Insert a recent log
-        service.log_create(
-            table_name="clients",
-            record_id=2,
-            new_value="Recent client",
-            ui_location="ClientEditView",
-        )
-
-        # Verify we have 2 logs
+        # Verify we have 5 logs
         all_logs = service.get_audit_logs(limit=10)
-        assert len(all_logs) == 2
+        assert len(all_logs) == 5
 
-        # Clean up logs older than 90 days
-        deleted_count = service.cleanup_old_logs(retention_days=90)
+        # Clean up, keeping only 2 most recent logs
+        deleted_count = service.cleanup_old_logs(retention_count=2)
 
-        # Should have deleted 1 log (the old one)
-        assert deleted_count == 1
+        # Should have deleted 3 logs (keeping 2)
+        assert deleted_count == 3
 
-        # Verify only the recent log remains
+        # Verify only 2 logs remain
         remaining_logs = service.get_audit_logs(limit=10)
-        assert len(remaining_logs) == 1
+        assert len(remaining_logs) == 2
 
 
 # =============================================================================
@@ -250,8 +238,9 @@ class TestBackupService:
         with tempfile.TemporaryDirectory() as backup_dir:
             service = BackupService(db_path=temp_db, backup_dir=backup_dir)
 
-            # Create multiple backups
+            # Create multiple backups (with delay to ensure unique timestamps)
             service.create_backup()
+            time.sleep(1.1)  # Ensure unique timestamp (backup uses seconds)
             service.create_backup()
 
             # Get list of backups
@@ -264,7 +253,7 @@ class TestBackupService:
             for backup in backups:
                 assert "path" in backup
                 assert "size" in backup
-                assert "created_at" in backup
+                assert "created" in backup
 
     def test_get_backups_empty(self, temp_db):
         """
@@ -288,9 +277,11 @@ class TestBackupService:
         with tempfile.TemporaryDirectory() as backup_dir:
             service = BackupService(db_path=temp_db, backup_dir=backup_dir)
 
-            # Create 5 backups
-            for _ in range(5):
+            # Create 5 backups (with delays to ensure unique timestamps)
+            for i in range(5):
                 service.create_backup()
+                if i < 4:  # No need to sleep after the last one
+                    time.sleep(1.1)
 
             # Verify we have 5 backups
             backups = service.get_backups()
