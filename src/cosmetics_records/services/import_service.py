@@ -383,6 +383,18 @@ class ImportService:
         logger.info("Starting import...")
 
         try:
+            # Ensure database migrations are applied before importing
+            # This handles edge cases where the database schema is outdated
+            from cosmetics_records.database.migrations import (
+                migration_manager,
+            )
+
+            with DatabaseConnection() as db:
+                mgr = migration_manager.MigrationManager(db)
+                applied = mgr.apply_migrations()
+                if applied > 0:
+                    logger.info(f"Applied {applied} pending migrations")
+
             # Use database connection with transaction
             with DatabaseConnection() as db:
                 # Dictionary to map import_id -> actual database ID
