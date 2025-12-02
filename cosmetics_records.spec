@@ -25,9 +25,20 @@
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+
 # Get the project root directory (where this spec file is located)
 project_root = Path(SPECPATH)
 src_dir = project_root / "src"
+
+# =============================================================================
+# PyQt6 Data Collection
+# =============================================================================
+# PyQt6 requires Qt plugins (platforms, styles, imageformats) to be bundled.
+# On Windows, missing plugins cause "DLL load failed" errors.
+
+pyqt6_datas = collect_data_files("PyQt6", include_py_files=False)
+pyqt6_hiddenimports = collect_submodules("PyQt6")
 
 # =============================================================================
 # Analysis - Collect all Python files and dependencies
@@ -50,7 +61,7 @@ a = Analysis(
 
         # Include resource files (icons, images, etc.)
         (str(src_dir / "cosmetics_records" / "resources"), "cosmetics_records/resources"),
-    ],
+    ] + pyqt6_datas,  # Include PyQt6 plugins (platforms, styles, etc.)
 
     # Hidden imports - modules that PyInstaller might not detect automatically
     # These are typically imported dynamically (e.g., via importlib)
@@ -75,17 +86,12 @@ a = Analysis(
         # darkdetect for system theme detection
         "darkdetect",
 
-        # PyQt6 modules that might not be auto-detected
-        "PyQt6.QtCore",
-        "PyQt6.QtGui",
-        "PyQt6.QtWidgets",
-
         # SQLite3 (built-in but sometimes needs explicit inclusion)
         "sqlite3",
 
         # JSON logging
         "pythonjsonlogger",
-    ],
+    ] + pyqt6_hiddenimports,  # Include all PyQt6 submodules
 
     # Hook files directory (custom PyInstaller hooks)
     hookspath=[],
@@ -94,7 +100,9 @@ a = Analysis(
     hooksconfig={},
 
     # Runtime hooks (code to run before the app starts)
-    runtime_hooks=[],
+    runtime_hooks=[
+        str(project_root / "scripts" / "pyinstaller_hooks" / "hook-pyqt6-runtime.py"),
+    ],
 
     # Modules to exclude (to reduce bundle size)
     excludes=[
