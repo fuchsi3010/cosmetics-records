@@ -14,7 +14,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Basic project metadata
 name = "cosmetics-records"
-version = "0.9.0-alpha5"
+version = "0.9.0-alpha6"
 description = "A desktop application for cosmetics salon client management"
 readme = "README.md"
 license = {text = "MIT"}
@@ -45,6 +45,7 @@ classifiers = [
 # Runtime dependencies - these are required to run the application
 dependencies = [
     "PyQt6>=6.4.0,<6.5.0",    # Pin <6.5.0 for macOS 10.14+ support
+    "PyQt6-Qt6>=6.4.0,<6.5.0",  # Must match PyQt6 version to avoid DLL errors
     "pydantic>=2.0",          # Data validation and settings management
     "thefuzz>=0.22.0",        # Fuzzy string matching for search
     "python-Levenshtein>=0.25.0",  # Fast string matching (thefuzz speedup)

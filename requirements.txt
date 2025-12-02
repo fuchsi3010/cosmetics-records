@@ -9,7 +9,9 @@
 # PyQt6 is a modern Python binding for Qt6, providing native-looking
 # cross-platform GUI components
 # Note: Pinned to <6.5.0 to support macOS 10.14+ (6.5+ requires macOS 11+)
+# IMPORTANT: PyQt6 and PyQt6-Qt6 versions must match to avoid DLL errors
 PyQt6>=6.4.0,<6.5.0
+PyQt6-Qt6>=6.4.0,<6.5.0
 
 # Data Validation
 # Pydantic provides runtime data validation using Python type hints.
