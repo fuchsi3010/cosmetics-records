@@ -4,7 +4,8 @@
 # This hook runs before the application starts and ensures Qt can find its
 # plugins on Windows. Without this, you may see:
 #   "DLL load failed while importing QtCore"
-#   "This application failed to start because no Qt platform plugin could be initialized"
+#   "This application failed to start because no Qt platform plugin could be
+#    initialized"
 # =============================================================================
 
 import os
