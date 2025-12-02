@@ -114,7 +114,7 @@ Two options are available for each architecture:
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/fuchsi3010/cosmetics-records.git
 cd cosmetics-records
 
 # Create and activate virtual environment
@@ -125,6 +125,9 @@ venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements-dev.txt
+
+# Install package in development mode (required for imports to work)
+pip install -e .
 
 # Run the application
 python src/cosmetics_records/app.py
