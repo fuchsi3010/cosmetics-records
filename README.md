@@ -80,19 +80,35 @@ The Linux binary is a standalone PyInstaller executable (not an AppImage).
 
 #### Windows
 
-Download `CosmeticsRecords-Windows.exe` and run it directly. No installation required.
+Two options are available:
+
+1. **Installer (Recommended):** Download `CosmeticsRecords-Windows-Setup.exe`
+   - Installs to Program Files with Start Menu shortcuts
+   - Includes uninstaller (Add/Remove Programs)
+   - Automatically upgrades previous versions
+
+2. **Portable:** Download `CosmeticsRecords-Windows-Portable.exe`
+   - Run directly without installation
+   - Good for USB drives or restricted environments
 
 **Note:** If you see a "DLL load failed" error, install the [Microsoft Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe) (2015-2022, x64).
 
 #### macOS
 
-1. Download the appropriate zip file:
+Two options are available for each architecture:
+
+1. **DMG Installer (Recommended):**
+   - `CosmeticsRecords-macOS-AppleSilicon-Setup.dmg` for M1/M2/M3 Macs
+   - `CosmeticsRecords-macOS-Intel-Setup.dmg` for Intel Macs
+   - Open the DMG and drag the app to Applications
+   - To upgrade: just replace the app in Applications
+
+2. **ZIP Archive:**
    - `CosmeticsRecords-macOS-AppleSilicon.zip` for M1/M2/M3 Macs
    - `CosmeticsRecords-macOS-Intel.zip` for Intel Macs
+   - Extract and move to Applications
 
-2. Extract the zip file and move `CosmeticsRecords.app` to your Applications folder.
-
-3. **First run:** Right-click the app and select "Open" to bypass Gatekeeper (the app is not signed).
+**First run:** Right-click the app and select "Open" to bypass Gatekeeper (the app is not signed).
 
 ### Development Setup
 

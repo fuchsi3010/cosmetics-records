@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
+      version_number: ${{ steps.get_version.outputs.version_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,9 +52,13 @@ jobs:
             # Extract version from pyproject.toml
             VERSION="v$(grep -m1 'version = ' pyproject.toml | cut -d'"' -f2)"
           fi
+          # Version without 'v' prefix for installers
+          VERSION_NUMBER="${VERSION#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
+          echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION (number: $VERSION_NUMBER)"
 
+  # Build for all platforms
   build:
     needs: check-ci
     strategy:
@@ -61,18 +66,16 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: CosmeticsRecords-Linux
-            asset_path: dist/CosmeticsRecords
           - os: windows-latest
             artifact_name: CosmeticsRecords-Windows
-            asset_path: dist/CosmeticsRecords.exe
           - os: macos-13
             artifact_name: CosmeticsRecords-macOS-Intel
-            asset_path: dist/CosmeticsRecords.app
           - os: macos-latest
             artifact_name: CosmeticsRecords-macOS-AppleSilicon
-            asset_path: dist/CosmeticsRecords.app
 
     runs-on: ${{ matrix.os }}
+    env:
+      APP_VERSION: ${{ needs.check-ci.outputs.version_number }}
 
     steps:
       - name: Checkout code
@@ -92,36 +95,93 @@ jobs:
       - name: Compile translations
         run: python scripts/compile_translations.py
 
+      # macOS: Create .icns icon file
+      - name: Create macOS icon
+        if: startsWith(matrix.os, 'macos')
+        run: ./scripts/create-icns.sh
+
       - name: Build with PyInstaller
         run: pyinstaller cosmetics_records.spec
 
-      - name: Compress macOS app bundle
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          cd dist
-          zip -r ${{ matrix.artifact_name }}.zip CosmeticsRecords.app
-
+      # =========================================================================
+      # Linux: Upload standalone binary
+      # =========================================================================
       - name: Upload artifact (Linux)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.asset_path }}
+          path: dist/CosmeticsRecords
 
-      - name: Upload artifact (Windows)
+      # =========================================================================
+      # Windows: Build installer with Inno Setup
+      # =========================================================================
+      - name: Build Windows installer
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Download and install Inno Setup
+          choco install innosetup -y
+
+          # Build installer
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAPP_VERSION="${{ needs.check-ci.outputs.version_number }}" installer\windows\installer.iss
+        shell: pwsh
+
+      - name: Upload artifact (Windows Installer)
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.asset_path }}
+          name: ${{ matrix.artifact_name }}-Setup
+          path: dist/CosmeticsRecords-Windows-Setup.exe
 
-      - name: Upload artifact (macOS)
+      - name: Upload artifact (Windows Portable)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-Portable
+          path: dist/CosmeticsRecords.exe
+
+      # =========================================================================
+      # macOS: Build DMG installer
+      # =========================================================================
+      - name: Install create-dmg
+        if: startsWith(matrix.os, 'macos')
+        run: brew install create-dmg
+
+      - name: Build macOS DMG
+        if: startsWith(matrix.os, 'macos')
+        run: ./installer/macos/create-dmg.sh "${{ needs.check-ci.outputs.version_number }}"
+
+      - name: Rename DMG for architecture
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            mv dist/CosmeticsRecords-macOS-AppleSilicon-Setup.dmg dist/${{ matrix.artifact_name }}-Setup.dmg
+          else
+            mv dist/CosmeticsRecords-macOS-Intel-Setup.dmg dist/${{ matrix.artifact_name }}-Setup.dmg
+          fi
+
+      - name: Upload artifact (macOS DMG)
         if: startsWith(matrix.os, 'macos')
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.artifact_name }}-Setup
+          path: dist/${{ matrix.artifact_name }}-Setup.dmg
+
+      # Also upload zip for users who prefer it
+      - name: Create macOS zip
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          cd dist
+          zip -r ${{ matrix.artifact_name }}.zip CosmeticsRecords.app
+
+      - name: Upload artifact (macOS zip)
+        if: startsWith(matrix.os, 'macos')
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-Portable
           path: dist/${{ matrix.artifact_name }}.zip
 
+  # Create GitHub release with all artifacts
   release:
     needs: [check-ci, build]
     runs-on: ubuntu-latest
@@ -129,37 +189,31 @@ jobs:
       contents: write
 
     steps:
-      - name: Download Linux artifact
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: CosmeticsRecords-Linux
-          path: artifacts/linux
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: CosmeticsRecords-Windows
-          path: artifacts/windows
-
-      - name: Download macOS Intel artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: CosmeticsRecords-macOS-Intel
-          path: artifacts/macos-intel
-
-      - name: Download macOS Apple Silicon artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: CosmeticsRecords-macOS-AppleSilicon
-          path: artifacts/macos-arm
+          path: artifacts
 
       - name: Prepare release assets
         run: |
           mkdir -p release
-          cp artifacts/linux/CosmeticsRecords release/CosmeticsRecords-Linux
-          cp artifacts/windows/CosmeticsRecords.exe release/CosmeticsRecords-Windows.exe
-          cp artifacts/macos-intel/CosmeticsRecords-macOS-Intel.zip release/CosmeticsRecords-macOS-Intel.zip
-          cp artifacts/macos-arm/CosmeticsRecords-macOS-AppleSilicon.zip release/CosmeticsRecords-macOS-AppleSilicon.zip
+
+          # Linux
+          cp artifacts/CosmeticsRecords-Linux/CosmeticsRecords release/CosmeticsRecords-Linux
+
+          # Windows
+          cp artifacts/CosmeticsRecords-Windows-Setup/CosmeticsRecords-Windows-Setup.exe release/
+          cp artifacts/CosmeticsRecords-Windows-Portable/CosmeticsRecords.exe release/CosmeticsRecords-Windows-Portable.exe
+
+          # macOS Intel
+          cp artifacts/CosmeticsRecords-macOS-Intel-Setup/CosmeticsRecords-macOS-Intel-Setup.dmg release/
+          cp artifacts/CosmeticsRecords-macOS-Intel-Portable/CosmeticsRecords-macOS-Intel.zip release/
+
+          # macOS Apple Silicon
+          cp artifacts/CosmeticsRecords-macOS-AppleSilicon-Setup/CosmeticsRecords-macOS-AppleSilicon-Setup.dmg release/
+          cp artifacts/CosmeticsRecords-macOS-AppleSilicon-Portable/CosmeticsRecords-macOS-AppleSilicon.zip release/
+
+          ls -la release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -170,16 +224,33 @@ jobs:
           prerelease: ${{ contains(needs.check-ci.outputs.version, 'alpha') || contains(needs.check-ci.outputs.version, 'beta') || contains(needs.check-ci.outputs.version, 'rc') }}
           files: |
             release/CosmeticsRecords-Linux
-            release/CosmeticsRecords-Windows.exe
+            release/CosmeticsRecords-Windows-Setup.exe
+            release/CosmeticsRecords-Windows-Portable.exe
+            release/CosmeticsRecords-macOS-Intel-Setup.dmg
             release/CosmeticsRecords-macOS-Intel.zip
+            release/CosmeticsRecords-macOS-AppleSilicon-Setup.dmg
             release/CosmeticsRecords-macOS-AppleSilicon.zip
           body: |
             ## Cosmetics Records ${{ needs.check-ci.outputs.version }}
 
             ### Downloads
-            - **Linux**: `CosmeticsRecords-Linux` (make executable with `chmod +x`)
-            - **Windows**: `CosmeticsRecords-Windows.exe`
-            - **macOS (Intel)**: `CosmeticsRecords-macOS-Intel.zip` (for Intel Macs, macOS 10.14+)
-            - **macOS (Apple Silicon)**: `CosmeticsRecords-macOS-AppleSilicon.zip` (for M1/M2/M3 Macs)
 
-            > Note: macOS binaries are not signed. You may need to right-click and select "Open" to bypass Gatekeeper.
+            #### Windows
+            - **[Installer (Recommended)](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-Windows-Setup.exe)** - Full installer with Start Menu integration and uninstaller
+            - **[Portable](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-Windows-Portable.exe)** - Standalone executable, no installation needed
+
+            #### macOS
+            - **Intel Macs (x86_64)**:
+              - [DMG Installer](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-macOS-Intel-Setup.dmg) - Drag to Applications
+              - [ZIP Archive](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-macOS-Intel.zip)
+            - **Apple Silicon (M1/M2/M3)**:
+              - [DMG Installer](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-macOS-AppleSilicon-Setup.dmg) - Drag to Applications
+              - [ZIP Archive](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-macOS-AppleSilicon.zip)
+
+            #### Linux
+            - **[Standalone Binary](https://github.com/fuchsi3010/cosmetics-records/releases/download/${{ needs.check-ci.outputs.version }}/CosmeticsRecords-Linux)** - Make executable with `chmod +x`
+
+            ### Notes
+            - **Windows**: If you see a "DLL load failed" error, install the [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe)
+            - **macOS**: The app is not signed. Right-click and select "Open" to bypass Gatekeeper on first run
+            - **Upgrades**: Windows installer automatically upgrades previous versions. On macOS, just replace the app in Applications
