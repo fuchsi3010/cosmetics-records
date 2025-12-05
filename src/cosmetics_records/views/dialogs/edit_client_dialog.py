@@ -44,6 +44,7 @@ from PyQt6.QtWidgets import (
 from .base_dialog import BaseDialog, ConfirmDialog
 from ..components.date_picker import DatePicker
 from ..components.tag_input import TagInput
+from ..constants import DialogSize, ComponentHeight
 from cosmetics_records.utils.validators import is_valid_email
 
 # Configure module logger
@@ -96,7 +97,13 @@ class EditClientDialog(BaseDialog):
         self._deleted = False
 
         # Initialize base dialog
-        super().__init__("Edit Client", parent, width=600, height=750)
+        # WHY LARGE + extra height: Same as add dialog but with delete button row
+        super().__init__(
+            "Edit Client",
+            parent,
+            width=DialogSize.LARGE_WIDTH,
+            height=DialogSize.LARGE_HEIGHT + 50,  # Extra space for delete button
+        )
 
         # Populate fields with existing data
         self._populate_fields()
@@ -144,7 +151,7 @@ class EditClientDialog(BaseDialog):
         # Address (optional)
         self._address_input = QTextEdit()
         self._address_input.setPlaceholderText("Enter address...")
-        self._address_input.setFixedHeight(60)
+        self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
         form_layout.addRow("Address:", self._address_input)
 
         # Date of Birth (optional)
@@ -154,7 +161,7 @@ class EditClientDialog(BaseDialog):
         # Allergies (optional)
         self._allergies_input = QTextEdit()
         self._allergies_input.setPlaceholderText("Enter any allergies...")
-        self._allergies_input.setFixedHeight(60)
+        self._allergies_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
         form_layout.addRow("Allergies:", self._allergies_input)
 
         # Tags (optional)

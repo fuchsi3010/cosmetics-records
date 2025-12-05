@@ -40,6 +40,7 @@ from PyQt6.QtWidgets import (
 from .base_dialog import BaseDialog
 from ..components.date_picker import DatePicker
 from ..components.tag_input import TagInput
+from ..constants import DialogSize, ComponentHeight
 from cosmetics_records.utils.validators import is_valid_email
 
 # Configure module logger
@@ -73,8 +74,13 @@ class AddClientDialog(BaseDialog):
             parent: Optional parent widget
         """
         # Initialize base dialog with appropriate size
-        # WHY 600x700: Tall enough for all fields without scrolling
-        super().__init__("Add New Client", parent, width=600, height=700)
+        # WHY LARGE: Tall enough for all client fields without scrolling
+        super().__init__(
+            "Add New Client",
+            parent,
+            width=DialogSize.LARGE_WIDTH,
+            height=DialogSize.LARGE_HEIGHT,
+        )
 
         logger.debug("AddClientDialog initialized")
 
@@ -119,7 +125,7 @@ class AddClientDialog(BaseDialog):
         # Address (optional)
         self._address_input = QTextEdit()
         self._address_input.setPlaceholderText("Enter address...")
-        self._address_input.setFixedHeight(60)
+        self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
         form_layout.addRow("Address:", self._address_input)
 
         # Date of Birth (optional)
@@ -129,7 +135,7 @@ class AddClientDialog(BaseDialog):
         # Allergies (optional)
         self._allergies_input = QTextEdit()
         self._allergies_input.setPlaceholderText("Enter any allergies...")
-        self._allergies_input.setFixedHeight(60)
+        self._allergies_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
         form_layout.addRow("Allergies:", self._allergies_input)
 
         # Tags (optional)
