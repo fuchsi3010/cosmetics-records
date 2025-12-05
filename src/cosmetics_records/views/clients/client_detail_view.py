@@ -1007,9 +1007,52 @@ class ClientDetailView(QWidget):
     def _on_load_more_treatments(self) -> None:
         """
         Handle load more treatments button click.
+
+        Loads the next page of treatments from the database and appends
+        them to the treatment history list.
         """
-        logger.debug("Load more treatments clicked")
-        # PLACEHOLDER: Controller method will be called here
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.treatment_controller import (
+            TreatmentController,
+        )
+
+        if not self._client_id:
+            return
+
+        # Calculate offset based on already loaded items
+        offset = len(self._treatment_history._items)
+        logger.debug(f"Loading more treatments (offset: {offset})")
+
+        try:
+            with DatabaseConnection() as db:
+                controller = TreatmentController(db)
+                treatments = controller.get_treatments_for_client(
+                    self._client_id,
+                    limit=HistoryList.ITEMS_PER_PAGE,
+                    offset=offset,
+                )
+
+                # Convert to format expected by HistoryList
+                treatment_items = []
+                for t in treatments:
+                    treatment_items.append(
+                        {
+                            "id": t.id,
+                            "date": t.treatment_date,
+                            "notes": t.treatment_notes,
+                            "created_at": t.created_at,
+                            "updated_at": t.updated_at,
+                        }
+                    )
+
+                # Add items to list (this will update _has_more and _loading)
+                self._treatment_history.add_items(treatment_items)
+                logger.debug(f"Loaded {len(treatment_items)} more treatments")
+
+        except Exception as e:
+            logger.error(f"Failed to load more treatments: {e}")
+            # Reset loading state on error so user can retry
+            self._treatment_history._loading = False
 
     def _on_edit_treatment(self, treatment_id: int) -> None:
         """
@@ -1210,9 +1253,50 @@ class ClientDetailView(QWidget):
     def _on_load_more_products(self) -> None:
         """
         Handle load more products button click.
+
+        Loads the next page of product records from the database and appends
+        them to the product history list.
         """
-        logger.debug("Load more products clicked")
-        # PLACEHOLDER: Controller method will be called here
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.controllers.product_controller import ProductController
+
+        if not self._client_id:
+            return
+
+        # Calculate offset based on already loaded items
+        offset = len(self._product_history._items)
+        logger.debug(f"Loading more products (offset: {offset})")
+
+        try:
+            with DatabaseConnection() as db:
+                controller = ProductController(db)
+                products = controller.get_product_records_for_client(
+                    self._client_id,
+                    limit=HistoryList.ITEMS_PER_PAGE,
+                    offset=offset,
+                )
+
+                # Convert to format expected by HistoryList
+                product_items = []
+                for p in products:
+                    product_items.append(
+                        {
+                            "id": p.id,
+                            "date": p.product_date,
+                            "notes": p.product_text,
+                            "created_at": p.created_at,
+                            "updated_at": p.updated_at,
+                        }
+                    )
+
+                # Add items to list (this will update _has_more and _loading)
+                self._product_history.add_items(product_items)
+                logger.debug(f"Loaded {len(product_items)} more products")
+
+        except Exception as e:
+            logger.error(f"Failed to load more products: {e}")
+            # Reset loading state on error so user can retry
+            self._product_history._loading = False
 
     def _on_edit_product(self, product_id: int) -> None:
         """
