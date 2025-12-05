@@ -305,6 +305,18 @@ class ClientListView(QWidget):
         self._client_layout.setSpacing(8)  # Gap between list entries
         self._client_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        # Empty state message - shown when no clients match search/filter
+        # WHY separate label: Provides clear user feedback and suggests actions
+        self._empty_state_label = QLabel()
+        self._empty_state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_state_label.setWordWrap(True)
+        self._empty_state_label.setProperty("empty_state", True)  # CSS styling
+        self._empty_state_label.setStyleSheet(
+            "color: #888; font-size: 14px; padding: 40px 20px;"
+        )
+        self._empty_state_label.setVisible(False)
+        self._client_layout.addWidget(self._empty_state_label)
+
         self._scroll_area.setWidget(self._client_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
 
@@ -527,6 +539,27 @@ class ClientListView(QWidget):
         Note:
             This method updates _has_more based on whether a full page was loaded.
         """
+        # Handle empty state - show message when no clients found
+        if not clients and not self._loaded_clients:
+            # Determine the appropriate empty state message based on context
+            if self._current_search:
+                message = _("No clients found matching '{query}'").format(
+                    query=self._current_search
+                )
+            elif self._current_filter != "All":
+                message = _(
+                    "No clients with last name starting with '{letter}'"
+                ).format(letter=self._current_filter)
+            else:
+                message = _(
+                    "No clients yet.\n\nClick '+ Add Client' to add your first client."
+                )
+            self._empty_state_label.setText(message)
+            self._empty_state_label.setVisible(True)
+        else:
+            # Hide empty state when we have clients
+            self._empty_state_label.setVisible(False)
+
         for client_data in clients:
             client_id = client_data["id"]
 

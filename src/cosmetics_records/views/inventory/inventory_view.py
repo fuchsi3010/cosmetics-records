@@ -52,6 +52,7 @@ from PyQt6.QtWidgets import (
 
 from ..components.alphabet_filter import AlphabetFilter
 from ..components.search_bar import SearchBar
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -241,6 +242,18 @@ class InventoryView(QWidget):
         self._item_layout.setContentsMargins(8, 8, 8, 8)
         self._item_layout.setSpacing(8)  # Gap between list entries
         self._item_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        # Empty state message - shown when no items match search/filter
+        # WHY separate label: Provides clear user feedback and suggests actions
+        self._empty_state_label = QLabel()
+        self._empty_state_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_state_label.setWordWrap(True)
+        self._empty_state_label.setProperty("empty_state", True)  # CSS styling
+        self._empty_state_label.setStyleSheet(
+            "color: #888; font-size: 14px; padding: 40px 20px;"
+        )
+        self._empty_state_label.setVisible(False)
+        self._item_layout.addWidget(self._empty_state_label)
 
         self._scroll_area.setWidget(self._item_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
@@ -456,6 +469,28 @@ class InventoryView(QWidget):
         Note:
             This method updates _has_more based on whether a full page was loaded.
         """
+        # Handle empty state - show message when no items found
+        if not items and not self._loaded_items:
+            # Determine the appropriate empty state message based on context
+            if self._current_search:
+                message = _("No items found matching '{query}'").format(
+                    query=self._current_search
+                )
+            elif self._current_filter != "All":
+                message = _("No items with name starting with '{letter}'").format(
+                    letter=self._current_filter
+                )
+            else:
+                message = _(
+                    "No inventory items yet.\n\n"
+                    "Click '+ Add Item' to add your first product."
+                )
+            self._empty_state_label.setText(message)
+            self._empty_state_label.setVisible(True)
+        else:
+            # Hide empty state when we have items
+            self._empty_state_label.setVisible(False)
+
         for item_data in items:
             item_id = item_data["id"]
 
