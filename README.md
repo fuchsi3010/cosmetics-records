@@ -178,6 +178,166 @@ The application follows the MVC (Model-View-Controller) pattern:
 - **Services** (`src/cosmetics_records/services/`): Cross-cutting concerns (audit, backup, export)
 - **Database** (`src/cosmetics_records/database/`): SQLite with migrations
 
+## Configuration
+
+The application stores its configuration in a `config.json` file:
+
+| OS | Location |
+|----|----------|
+| Linux | `~/.config/cosmetics_records/config.json` |
+| macOS | `~/Library/Application Support/cosmetics_records/config.json` |
+| Windows | `%APPDATA%\cosmetics_records\config.json` |
+
+### Available Settings
+
+| Setting | Values | Default | Description |
+|---------|--------|---------|-------------|
+| `theme` | `"dark"`, `"light"`, `"system"` | `"system"` | UI color theme |
+| `language` | `"en"`, `"de"` | `"en"` | Interface language |
+| `date_format` | `"language"`, `"iso8601"`, `"us"`, `"de"` | `"language"` | Date display format |
+| `ui_scale` | `0.8` - `2.0` | `1.0` | UI scaling factor |
+| `auto_backup` | `true`, `false` | `true` | Enable automatic backups |
+| `backup_interval_minutes` | Any positive integer | `60` | Minutes between auto-backups |
+| `backup_retention_count` | Any positive integer | `5` | Number of backups to keep |
+
+### Example Configuration
+
+```json
+{
+  "theme": "dark",
+  "language": "en",
+  "date_format": "iso8601",
+  "ui_scale": 1.2,
+  "auto_backup": true,
+  "backup_interval_minutes": 30,
+  "backup_retention_count": 10
+}
+```
+
+## Database Schema
+
+The application uses SQLite with the following tables:
+
+### Tables Overview
+
+```
+┌─────────────────┐     ┌────────────────────┐
+│     clients     │──┬──│  treatment_records │
+│                 │  │  │                    │
+│ id (PK)         │  │  │ id (PK)            │
+│ first_name      │  │  │ client_id (FK)     │
+│ last_name       │  │  │ treatment_date     │
+│ email           │  │  │ treatment_notes    │
+│ phone           │  │  │ created_at         │
+│ address         │  │  │ updated_at         │
+│ date_of_birth   │  │  └────────────────────┘
+│ allergies       │  │
+│ tags            │  │  ┌────────────────────┐
+│ planned_treatment│ └──│   product_records  │
+│ notes           │     │                    │
+│ created_at      │     │ id (PK)            │
+│ updated_at      │     │ client_id (FK)     │
+└─────────────────┘     │ product_date       │
+                        │ product_text       │
+┌─────────────────┐     │ created_at         │
+│    inventory    │     │ updated_at         │
+│                 │     └────────────────────┘
+│ id (PK)         │
+│ name            │     ┌────────────────────┐
+│ description     │     │     audit_log      │
+│ capacity        │     │                    │
+│ unit            │     │ id (PK)            │
+│ created_at      │     │ table_name         │
+│ updated_at      │     │ record_id          │
+└─────────────────┘     │ action             │
+                        │ field_name         │
+                        │ old_value          │
+                        │ new_value          │
+                        │ ui_location        │
+                        │ created_at         │
+                        └────────────────────┘
+```
+
+### Key Relationships
+
+- `treatment_records.client_id` → `clients.id` (CASCADE DELETE)
+- `product_records.client_id` → `clients.id` (CASCADE DELETE)
+
+### Data Storage Location
+
+| OS | Database Location |
+|----|-------------------|
+| Linux | `~/.local/share/cosmetics_records/cosmetics_records.db` |
+| macOS | `~/Library/Application Support/cosmetics_records/cosmetics_records.db` |
+| Windows | `%APPDATA%\cosmetics_records\cosmetics_records.db` |
+
+## Troubleshooting
+
+### Windows: "DLL load failed" Error
+
+**Symptom:** Application fails to start with an error about missing DLLs.
+
+**Solution:** Install the [Microsoft Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe) (2015-2022, x64 version).
+
+### macOS: "App is damaged" or Gatekeeper Warning
+
+**Symptom:** macOS refuses to open the application.
+
+**Solution:** Right-click the app and select "Open", then click "Open" in the dialog. You only need to do this once. Alternatively, run:
+```bash
+xattr -cr /Applications/Cosmetics\ Records.app
+```
+
+### Database Locked Error
+
+**Symptom:** Error message about database being locked.
+
+**Causes & Solutions:**
+1. **Another instance running:** Close other Cosmetics Records windows
+2. **Cloud sync conflict:** Move the database out of synced folders (Dropbox, OneDrive, iCloud)
+3. **Crashed process:** Restart your computer to release locks
+
+### Backup Restoration
+
+**To restore from backup:**
+1. Open Settings → Backup Management
+2. Select a backup from the list
+3. Click "Restore" and confirm
+
+**Manual restoration:**
+1. Close the application
+2. Navigate to the data folder (see "Data Storage Location" above)
+3. Find backups in the `backups/` subfolder
+4. Replace `cosmetics_records.db` with your backup file
+
+### Import/Export Issues
+
+**CSV Import fails:**
+- Ensure the CSV uses UTF-8 encoding
+- Check that required columns exist (first_name, last_name for clients)
+- Date columns should use ISO format (YYYY-MM-DD)
+
+**Export is empty:**
+- Select clients using the checkboxes before exporting
+- Use "Select All" if exporting entire database
+
+### Application Crashes on Start
+
+**Possible causes:**
+1. **Corrupted config:** Delete `config.json` (see location above) and restart
+2. **Database corruption:** Restore from backup or delete the database to start fresh
+3. **Graphics driver issues:** Try running with software rendering:
+   ```bash
+   QT_QUICK_BACKEND=software ./CosmeticsRecords-Linux
+   ```
+
+### Translation/Language Issues
+
+**Missing translations:**
+- Check Settings → Language is set correctly
+- Restart the application after changing language
+- Some system strings may remain in English (Qt library strings)
+
 ## License
 
 MIT License
