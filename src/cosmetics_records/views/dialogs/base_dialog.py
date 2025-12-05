@@ -184,6 +184,63 @@ class BaseDialog(QDialog):
         """
         raise NotImplementedError("Subclasses must implement _create_content() method")
 
+    def create_error_label(self, layout: QVBoxLayout) -> QLabel:
+        """
+        Create a standard error label for form validation.
+
+        This creates a hidden error label with consistent styling that can
+        be shown when validation fails. The label is added to the provided layout.
+
+        Args:
+            layout: Layout to add the error label to
+
+        Returns:
+            QLabel: The created error label (stored as self._error_label)
+
+        Example:
+            def _create_content(self, layout):
+                # Create error label at the top
+                self._error_label = self.create_error_label(layout)
+
+                # Add other content...
+        """
+        # Create error label with consistent styling
+        self._error_label = QLabel()
+        self._error_label.setProperty("error_message", True)  # CSS class
+        self._error_label.setVisible(False)
+        self._error_label.setWordWrap(True)
+        layout.addWidget(self._error_label)
+        return self._error_label
+
+    def show_error(self, message: str) -> None:
+        """
+        Show an error message in the dialog's error label.
+
+        This method sets the error text and makes the label visible.
+        If no error label has been created, this method does nothing.
+
+        Args:
+            message: Error message to display
+
+        Example:
+            if not first_name:
+                self.show_error("First name is required.")
+                return
+        """
+        if hasattr(self, "_error_label") and self._error_label is not None:
+            self._error_label.setText(message)
+            self._error_label.setVisible(True)
+
+    def hide_error(self) -> None:
+        """
+        Hide the error label.
+
+        This should be called when validation passes or the dialog is
+        about to be accepted.
+        """
+        if hasattr(self, "_error_label") and self._error_label is not None:
+            self._error_label.setVisible(False)
+
     def create_button_row(
         self,
         ok_text: Optional[str] = None,

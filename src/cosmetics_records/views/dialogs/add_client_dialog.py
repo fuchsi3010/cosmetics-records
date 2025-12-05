@@ -88,11 +88,8 @@ class AddClientDialog(BaseDialog):
             layout: Layout to add content to
         """
         # Error message label (initially hidden)
-        self._error_label = QLabel()
-        self._error_label.setProperty("error_message", True)  # CSS class (red)
-        self._error_label.setVisible(False)
-        self._error_label.setWordWrap(True)
-        layout.addWidget(self._error_label)
+        # WHY use BaseDialog method: Ensures consistent styling across all dialogs
+        self.create_error_label(layout)
 
         # Form layout for fields
         form_layout = QFormLayout()
@@ -165,12 +162,12 @@ class AddClientDialog(BaseDialog):
         last_name = self._last_name_input.text().strip()
 
         if not first_name:
-            self._show_error("First name is required.")
+            self.show_error("First name is required.")
             self._first_name_input.setFocus()
             return
 
         if not last_name:
-            self._show_error("Last name is required.")
+            self.show_error("Last name is required.")
             self._last_name_input.setFocus()
             return
 
@@ -178,7 +175,7 @@ class AddClientDialog(BaseDialog):
         # WHY shared validator: Ensures consistent validation across model and UI
         email = self._email_input.text().strip()
         if email and not is_valid_email(email):
-            self._show_error(
+            self.show_error(
                 "Invalid email format. Please enter a valid email "
                 "(e.g., user@example.com)."
             )
@@ -189,20 +186,10 @@ class AddClientDialog(BaseDialog):
         logger.debug(f"Adding new client: {first_name} {last_name}")
 
         # Hide error if it was showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         # Accept dialog
         super().accept()
-
-    def _show_error(self, message: str) -> None:
-        """
-        Show an error message to the user.
-
-        Args:
-            message: Error message to display
-        """
-        self._error_label.setText(message)
-        self._error_label.setVisible(True)
 
     def get_client_data(self) -> dict:
         """
