@@ -220,8 +220,10 @@ class InventoryView(QWidget):
 
         # Content area: item list + filter sidebar
         content_layout = QHBoxLayout()
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(0)
+        content_layout.setContentsMargins(
+            0, 0, 12, 0
+        )  # Right margin for alphabet filter
+        content_layout.setSpacing(8)
 
         # Item list (scrollable) - takes most of the space
         self._scroll_area = QScrollArea()
@@ -258,10 +260,9 @@ class InventoryView(QWidget):
         self._scroll_area.setWidget(self._item_container)
         content_layout.addWidget(self._scroll_area, stretch=1)
 
-        # Right sidebar: alphabet filter (including #) with horizontal padding
+        # Right sidebar: alphabet filter
         self._alphabet_filter = AlphabetFilter()
         self._alphabet_filter.filter_changed.connect(self._on_filter_changed)
-        self._alphabet_filter.setContentsMargins(8, 0, 8, 0)  # Horizontal padding
         content_layout.addWidget(self._alphabet_filter)
 
         main_layout.addLayout(content_layout)
