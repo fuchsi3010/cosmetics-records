@@ -110,11 +110,8 @@ class EditProductRecordDialog(BaseDialog):
             layout: Layout to add content to
         """
         # Error message label (initially hidden)
-        self._error_label = QLabel()
-        self._error_label.setProperty("error_message", True)  # CSS class (red)
-        self._error_label.setVisible(False)
-        self._error_label.setWordWrap(True)
-        layout.addWidget(self._error_label)
+        # WHY use BaseDialog method: Ensures consistent styling across all dialogs
+        self.create_error_label(layout)
 
         # Form layout for fields
         form_layout = QFormLayout()
@@ -203,13 +200,13 @@ class EditProductRecordDialog(BaseDialog):
         # Validate date
         record_date = self._date_picker.get_date()
         if not record_date:
-            self._show_error("Date is required.")
+            self.show_error("Date is required.")
             return
 
         # Validate product text
         product_text = self._product_input.get_text().strip()
         if not product_text:
-            self._show_error("Product is required.")
+            self.show_error("Product is required.")
             self._product_input.set_focus()
             return
 
@@ -217,7 +214,7 @@ class EditProductRecordDialog(BaseDialog):
         logger.debug(f"Saving changes to product record {self._record_id}")
 
         # Hide error if it was showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         # Accept dialog
         super().accept()
@@ -257,16 +254,6 @@ class EditProductRecordDialog(BaseDialog):
 
             # Close this dialog with Accepted status
             super().accept()
-
-    def _show_error(self, message: str) -> None:
-        """
-        Show an error message to the user.
-
-        Args:
-            message: Error message to display
-        """
-        self._error_label.setText(message)
-        self._error_label.setVisible(True)
 
     def was_deleted(self) -> bool:
         """

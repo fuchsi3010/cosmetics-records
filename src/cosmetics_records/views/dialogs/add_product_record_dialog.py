@@ -102,11 +102,8 @@ class AddProductRecordDialog(BaseDialog):
             layout: Layout to add content to
         """
         # Error message label (initially hidden)
-        self._error_label = QLabel()
-        self._error_label.setProperty("error_message", True)  # CSS class (red)
-        self._error_label.setVisible(False)
-        self._error_label.setWordWrap(True)
-        layout.addWidget(self._error_label)
+        # WHY use BaseDialog method: Ensures consistent styling across all dialogs
+        self.create_error_label(layout)
 
         # Date display (read-only, always today)
         today_str = format_date_localized(date.today())
@@ -165,7 +162,7 @@ class AddProductRecordDialog(BaseDialog):
         """
         product_name = self._product_input.get_text().strip()
         if not product_name:
-            self._show_error("Please enter a product name.")
+            self.show_error("Please enter a product name.")
             self._product_input.set_focus()
             return
 
@@ -187,7 +184,7 @@ class AddProductRecordDialog(BaseDialog):
         self._product_input.set_focus()
 
         # Hide error if showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         logger.debug(f"Added product: {new_line}")
 
@@ -208,7 +205,7 @@ class AddProductRecordDialog(BaseDialog):
             products_text = self._products_text.toPlainText().strip()
 
         if not products_text:
-            self._show_error("Please add at least one product.")
+            self.show_error("Please add at least one product.")
             self._product_input.set_focus()
             return
 
@@ -218,20 +215,10 @@ class AddProductRecordDialog(BaseDialog):
         )
 
         # Hide error if it was showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         # Accept dialog
         super().accept()
-
-    def _show_error(self, message: str) -> None:
-        """
-        Show an error message to the user.
-
-        Args:
-            message: Error message to display
-        """
-        self._error_label.setText(message)
-        self._error_label.setVisible(True)
 
     def set_existing_record(self, record_id: int, product_text: str) -> None:
         """

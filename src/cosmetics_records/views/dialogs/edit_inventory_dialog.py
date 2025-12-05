@@ -106,11 +106,8 @@ class EditInventoryDialog(BaseDialog):
             layout: Layout to add content to
         """
         # Error message label (initially hidden)
-        self._error_label = QLabel()
-        self._error_label.setProperty("error_message", True)  # CSS class (red)
-        self._error_label.setVisible(False)
-        self._error_label.setWordWrap(True)
-        layout.addWidget(self._error_label)
+        # WHY use BaseDialog method: Ensures consistent styling across all dialogs
+        self.create_error_label(layout)
 
         # Form layout for fields
         form_layout = QFormLayout()
@@ -222,14 +219,14 @@ class EditInventoryDialog(BaseDialog):
         # Validate name
         name = self._name_input.text().strip()
         if not name:
-            self._show_error("Name is required.")
+            self.show_error("Name is required.")
             self._name_input.setFocus()
             return
 
         # Validate capacity
         capacity = self._capacity_input.value()
         if capacity <= 0:
-            self._show_error("Capacity must be greater than 0.")
+            self.show_error("Capacity must be greater than 0.")
             self._capacity_input.setFocus()
             return
 
@@ -237,7 +234,7 @@ class EditInventoryDialog(BaseDialog):
         logger.debug(f"Saving changes to inventory item {self._item_id}")
 
         # Hide error if it was showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         # Accept dialog
         super().accept()
@@ -270,16 +267,6 @@ class EditInventoryDialog(BaseDialog):
 
             # Close this dialog with Accepted status
             super().accept()
-
-    def _show_error(self, message: str) -> None:
-        """
-        Show an error message to the user.
-
-        Args:
-            message: Error message to display
-        """
-        self._error_label.setText(message)
-        self._error_label.setVisible(True)
 
     def was_deleted(self) -> bool:
         """

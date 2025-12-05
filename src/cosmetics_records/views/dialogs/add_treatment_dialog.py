@@ -81,11 +81,8 @@ class AddTreatmentDialog(BaseDialog):
             layout: Layout to add content to
         """
         # Error message label (initially hidden)
-        self._error_label = QLabel()
-        self._error_label.setProperty("error_message", True)  # CSS class (red)
-        self._error_label.setVisible(False)
-        self._error_label.setWordWrap(True)
-        layout.addWidget(self._error_label)
+        # WHY use BaseDialog method: Ensures consistent styling across all dialogs
+        self.create_error_label(layout)
 
         # Date display (read-only, always today)
         today_str = format_date_localized(date.today())
@@ -118,7 +115,7 @@ class AddTreatmentDialog(BaseDialog):
         # Validate notes
         notes = self._notes_input.toPlainText().strip()
         if not notes:
-            self._show_error("Notes are required.")
+            self.show_error("Notes are required.")
             self._notes_input.setFocus()
             return
 
@@ -126,7 +123,7 @@ class AddTreatmentDialog(BaseDialog):
         logger.debug(f"Adding treatment for client {self._client_id} on {date.today()}")
 
         # Hide error if it was showing
-        self._error_label.setVisible(False)
+        self.hide_error()
 
         # Accept dialog
         super().accept()
@@ -163,16 +160,6 @@ class AddTreatmentDialog(BaseDialog):
             Optional[int]: Treatment ID if editing, None if creating new
         """
         return self._existing_treatment_id
-
-    def _show_error(self, message: str) -> None:
-        """
-        Show an error message to the user.
-
-        Args:
-            message: Error message to display
-        """
-        self._error_label.setText(message)
-        self._error_label.setVisible(True)
 
     def get_treatment_data(self) -> dict:
         """
