@@ -40,6 +40,7 @@ from PyQt6.QtWidgets import (
 from .base_dialog import BaseDialog
 from ..components.date_picker import DatePicker
 from ..components.tag_input import TagInput
+from cosmetics_records.utils.validators import is_valid_email
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -174,8 +175,9 @@ class AddClientDialog(BaseDialog):
             return
 
         # Validate email format if provided
+        # WHY shared validator: Ensures consistent validation across model and UI
         email = self._email_input.text().strip()
-        if email and not self._is_valid_email(email):
+        if email and not is_valid_email(email):
             self._show_error(
                 "Invalid email format. Please enter a valid email "
                 "(e.g., user@example.com)."
@@ -191,22 +193,6 @@ class AddClientDialog(BaseDialog):
 
         # Accept dialog
         super().accept()
-
-    def _is_valid_email(self, email: str) -> bool:
-        """
-        Validate email format.
-
-        Args:
-            email: Email address to validate
-
-        Returns:
-            True if email format is valid, False otherwise
-        """
-        import re
-
-        # Same pattern as in Client model
-        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        return bool(re.match(email_pattern, email))
 
     def _show_error(self, message: str) -> None:
         """

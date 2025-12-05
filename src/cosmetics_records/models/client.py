@@ -13,11 +13,12 @@
 #   - Full name formatting
 # =============================================================================
 
-import re
 from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+from cosmetics_records.utils.validators import is_valid_email
 
 
 class Client(BaseModel):
@@ -149,12 +150,9 @@ class Client(BaseModel):
         if not stripped:
             return None
 
-        # Basic email validation pattern
-        # Matches: username@domain.tld
-        # Simple but covers most valid email addresses
-        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-
-        if not re.match(email_pattern, stripped):
+        # Validate email format using shared validator
+        # WHY shared: Ensures consistent validation across model and UI
+        if not is_valid_email(stripped):
             raise ValueError(f"Invalid email format: {stripped}")
 
         return stripped
