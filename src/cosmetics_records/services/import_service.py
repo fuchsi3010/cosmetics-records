@@ -222,8 +222,22 @@ class ImportService:
         logger.debug("ImportService initialized")
 
     def _get_parsed_data(self) -> ParsedData:
-        """Get parsed data with assertion that it's not None."""
-        assert self._parsed_data is not None, "ParsedData not initialized"
+        """
+        Get parsed data, ensuring it has been initialized.
+
+        Returns:
+            ParsedData: The parsed import data.
+
+        Raises:
+            RuntimeError: If validate_files() has not been called first.
+        """
+        # NOTE: Using explicit check instead of assert because assert statements
+        # are stripped when Python runs with -O optimization flag, which would
+        # cause silent failures in production environments.
+        if self._parsed_data is None:
+            raise RuntimeError(
+                "ParsedData not initialized - validate_files() must be called first"
+            )
         return self._parsed_data
 
     def validate_files(

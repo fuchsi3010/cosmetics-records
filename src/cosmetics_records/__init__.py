@@ -41,7 +41,8 @@ def _get_version() -> str:
         if not pyproject_path.exists():
             # When running from installed package or PyInstaller bundle,
             # pyproject.toml won't be available - use fallback
-            return "0.9.0-alpha4"
+            # NOTE: Update this fallback when releasing a new version
+            return "0.9.0-alpha6"
 
         if tomllib is not None:
             # Python 3.11+ - use tomllib
@@ -53,7 +54,7 @@ def _get_version() -> str:
             with open(pyproject_path, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip().startswith("version"):
-                        # Parse: version = "0.9.0-alpha3"
+                        # Parse: version = "x.y.z" from pyproject.toml
                         parts = line.split("=", 1)
                         if len(parts) == 2:
                             return parts[1].strip().strip('"').strip("'")
@@ -61,7 +62,8 @@ def _get_version() -> str:
 
     except Exception:
         # Any error reading version - return fallback
-        return "0.9.0-alpha3"
+        # NOTE: Update this fallback when releasing a new version
+        return "0.9.0-alpha6"
 
 
 # Package version - read from pyproject.toml
