@@ -45,7 +45,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PyQt6.QtCore import QEvent
-    from PyQt6.QtGui import QEnterEvent
+    from PyQt6.QtGui import QEnterEvent, QResizeEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
@@ -401,15 +401,19 @@ class HistoryList(QWidget):
 
 class AutoSaveTextEdit(QTextEdit):
     """
-    Text edit widget with auto-save functionality.
+    Text edit widget with auto-save functionality and visual feedback.
 
-    Saves changes after 1 second of inactivity.
+    Saves changes after 1 second of inactivity and shows status indicators
+    to let users know their content is being saved.
 
     Signals:
         content_saved(str): Emitted when content is auto-saved (passes text)
 
     Attributes:
         _save_timer: QTimer for debouncing saves
+        _status_timer: QTimer for hiding the "Saved" indicator
+        _status_label: QLabel showing save status
+        _has_changes: Whether there are unsaved changes
     """
 
     # Signal emitted when content is saved
@@ -420,6 +424,9 @@ class AutoSaveTextEdit(QTextEdit):
     # short enough to feel automatic
     AUTOSAVE_DELAY = 1000
 
+    # How long to show "Saved" indicator (milliseconds)
+    SAVED_INDICATOR_DURATION = 2000
+
     def __init__(self, parent: Optional[QWidget] = None):
         """
         Initialize an auto-save text edit.
@@ -429,13 +436,49 @@ class AutoSaveTextEdit(QTextEdit):
         """
         super().__init__(parent)
 
+        # Track if there are pending changes
+        self._has_changes = False
+        self._initial_content: str = ""
+
         # Create save timer
         self._save_timer = QTimer()
         self._save_timer.setSingleShot(True)
         self._save_timer.timeout.connect(self._save_content)
 
+        # Create status indicator timer (to hide "Saved" after a delay)
+        self._status_timer = QTimer()
+        self._status_timer.setSingleShot(True)
+        self._status_timer.timeout.connect(self._hide_status)
+
+        # Create status label overlay
+        # WHY overlay: Shows status without taking extra layout space
+        self._status_label = QLabel(self)
+        self._status_label.setStyleSheet(
+            "QLabel { "
+            "  background-color: rgba(0, 0, 0, 0.6); "
+            "  color: #aaa; "
+            "  padding: 2px 8px; "
+            "  border-radius: 3px; "
+            "  font-size: 11px; "
+            "}"
+        )
+        self._status_label.hide()
+
         # Connect text change to timer
         self.textChanged.connect(self._on_text_changed)
+
+    def setPlainText(self, text: Optional[str]) -> None:
+        """
+        Set text and track it as the initial content.
+
+        Overrides parent to track initial content for change detection.
+
+        Args:
+            text: Text to set (None is treated as empty string)
+        """
+        self._initial_content = text or ""
+        self._has_changes = False
+        super().setPlainText(text)
 
     def _on_text_changed(self) -> None:
         """
@@ -444,8 +487,14 @@ class AutoSaveTextEdit(QTextEdit):
         The timer restarts on each change, so saving only happens
         after the user stops typing for 1 second.
         """
-        self._save_timer.stop()
-        self._save_timer.start(self.AUTOSAVE_DELAY)
+        # Check if content actually changed from initial/saved state
+        current_text = self.toPlainText()
+        self._has_changes = current_text != self._initial_content
+
+        if self._has_changes:
+            self._save_timer.stop()
+            self._save_timer.start(self.AUTOSAVE_DELAY)
+            self._show_status("Saving...")
 
     def _save_content(self) -> None:
         """
@@ -454,8 +503,47 @@ class AutoSaveTextEdit(QTextEdit):
         Emits the content_saved signal with the current text.
         """
         text = self.toPlainText()
+        self._initial_content = text  # Update initial content after save
+        self._has_changes = False
         self.content_saved.emit(text)
+        self._show_status("Saved ✓")
+        # Hide the saved indicator after a delay
+        self._status_timer.start(self.SAVED_INDICATOR_DURATION)
         logger.debug("Auto-save triggered")
+
+    def _show_status(self, text: str) -> None:
+        """
+        Show status indicator in the corner of the text edit.
+
+        Args:
+            text: Status text to display (e.g., "Saving...", "Saved ✓")
+        """
+        self._status_label.setText(text)
+        self._status_label.adjustSize()
+        # Position in bottom-right corner with padding
+        x = self.width() - self._status_label.width() - 8
+        y = self.height() - self._status_label.height() - 8
+        self._status_label.move(x, y)
+        self._status_label.show()
+        self._status_label.raise_()  # Ensure it's on top
+
+    def _hide_status(self) -> None:
+        """Hide the status indicator."""
+        self._status_label.hide()
+
+    def resizeEvent(self, event: Optional["QResizeEvent"]) -> None:
+        """
+        Handle resize to reposition status label.
+
+        Args:
+            event: Resize event
+        """
+        super().resizeEvent(event)
+        # Reposition status label if visible
+        if self._status_label.isVisible():
+            x = self.width() - self._status_label.width() - 8
+            y = self.height() - self._status_label.height() - 8
+            self._status_label.move(x, y)
 
 
 class ClientDetailView(QWidget):
