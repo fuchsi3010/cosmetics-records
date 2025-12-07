@@ -909,3 +909,60 @@ msgstr "Datenbank-Speicherort geändert"
 
 msgid "The database location has been changed to:"
 msgstr "Der Datenbank-Speicherort wurde geändert zu:"
+
+# =============================================================================
+# Date Picker / Duplicate Entry Prevention
+# =============================================================================
+
+msgid "A treatment entry already exists for this date."
+msgstr "Für dieses Datum existiert bereits ein Behandlungseintrag."
+
+msgid "A product record already exists for this date."
+msgstr "Für dieses Datum existiert bereits ein Produkteintrag."
+
+# =============================================================================
+# Product Record Dialog
+# =============================================================================
+
+msgid "Type product name..."
+msgstr "Produktname eingeben..."
+
+msgid "Add"
+msgstr "Hinzufügen"
+
+msgid "Type to search inventory, or enter custom product name"
+msgstr "Suche im Inventar oder gib einen eigenen Produktnamen ein"
+
+msgid "Products:"
+msgstr "Produkte:"
+
+msgid "Added products will appear here..."
+msgstr "Hinzugefügte Produkte erscheinen hier..."
+
+msgid "Please enter a product name."
+msgstr "Bitte gib einen Produktnamen ein."
+
+msgid "Please add at least one product."
+msgstr "Bitte füge mindestens ein Produkt hinzu."
+
+# =============================================================================
+# Database Move
+# =============================================================================
+
+msgid "Move Database"
+msgstr "Datenbank verschieben"
+
+msgid "Do you want to move the existing database to the new location?"
+msgstr "Möchten Sie die bestehende Datenbank an den neuen Speicherort verschieben?"
+
+msgid "Current location:"
+msgstr "Aktueller Speicherort:"
+
+msgid "New location:"
+msgstr "Neuer Speicherort:"
+
+msgid "Move Failed"
+msgstr "Verschieben fehlgeschlagen"
+
+msgid "Failed to move database:"
+msgstr "Datenbank konnte nicht verschoben werden:"

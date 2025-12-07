@@ -45,6 +45,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -307,34 +308,40 @@ class SettingsView(QWidget):
         """
         Create the language settings section.
 
-        Includes language selector with note about restart requirement.
+        Includes language dropdown with flags and note about restart requirement.
 
         Returns:
             QWidget containing language settings
         """
         section = SettingsSection(_("Language"))
 
-        # Language selector
-        lang_label = QLabel(_("Language") + ":")
-        section.add_widget(lang_label)
-
+        # Language selector row
         lang_row = QHBoxLayout()
         lang_row.setSpacing(12)
 
-        # Radio buttons for language
-        # WHY flag emojis: Visual identification of language
-        self._lang_en = QRadioButton(_("English"))
-        self._lang_de = QRadioButton(_("Deutsch"))
+        lang_label = QLabel(_("Language") + ":")
+        lang_row.addWidget(lang_label)
 
-        # Connect signals
-        self._lang_en.toggled.connect(lambda: self._on_language_changed("en"))
-        self._lang_de.toggled.connect(lambda: self._on_language_changed("de"))
+        # Dropdown with flag emojis
+        # WHY flags: Visual identification of language at a glance
+        self._lang_combo = QComboBox()
+        self._lang_combo.addItem("🇺🇸 English", "en")
+        self._lang_combo.addItem("🇩🇪 Deutsch", "de")
+        self._lang_combo.setMinimumWidth(150)
+        self._lang_combo.currentIndexChanged.connect(self._on_language_combo_changed)
 
-        lang_row.addWidget(self._lang_en)
-        lang_row.addWidget(self._lang_de)
+        lang_row.addWidget(self._lang_combo)
         lang_row.addStretch()
 
         section.add_layout(lang_row)
+
+        # Note about restart
+        note_label = QLabel(_("Note: Restart required for full effect"))
+        note_label.setProperty("class", "secondary")
+        note_label.setStyleSheet(
+            "color: gray; font-size: 11px; background: transparent;"
+        )
+        section.add_widget(note_label)
 
         return section
 
@@ -635,12 +642,12 @@ class SettingsView(QWidget):
         self._scale_slider.setValue(scale_percent)
         self._scale_label.setText(f"{scale_percent}%")
 
-        # Language
+        # Language - find index by data value
         language = self.config.language
-        if language == "en":
-            self._lang_en.setChecked(True)
-        else:
-            self._lang_de.setChecked(True)
+        for i in range(self._lang_combo.count()):
+            if self._lang_combo.itemData(i) == language:
+                self._lang_combo.setCurrentIndex(i)
+                break
 
         # Date format
         date_format = self.config.date_format
@@ -794,16 +801,15 @@ class SettingsView(QWidget):
         self.settings_changed.emit()
         self.scale_changed.emit(scale_float)
 
-    def _on_language_changed(self, language: str) -> None:
+    def _on_language_combo_changed(self, index: int) -> None:
         """
-        Handle language selection change.
+        Handle language dropdown selection change.
 
         Args:
-            language: Selected language code ("en" or "de")
+            index: Selected index in the combo box
         """
-        # Only process if actually toggled on (not off)
-        sender = self.sender()
-        if not sender.isChecked():
+        language = self._lang_combo.itemData(index)
+        if not language:
             return
 
         logger.info(f"Language changed to: {language}")
@@ -1102,8 +1108,11 @@ class SettingsView(QWidget):
         """
         Handle change database location button click.
 
-        Shows file dialog to select new database location and updates config.
+        Shows file dialog to select new database location and offers to move
+        the existing database to the new location.
         """
+        import shutil
+
         # Show file dialog to select new database location
         selected_path, _filter = QFileDialog.getSaveFileName(
             self,
@@ -1120,6 +1129,42 @@ class SettingsView(QWidget):
         # Ensure the file has .db extension
         if not new_path.suffix:
             new_path = new_path.with_suffix(".db")
+
+        # Get current database path
+        current_path = self.config.get_database_path()
+
+        # Ask if user wants to move the existing database
+        if current_path.exists() and current_path != new_path:
+            reply = QMessageBox.question(
+                self,
+                _("Move Database"),
+                _("Do you want to move the existing database to the new location?")
+                + "\n\n"
+                + _("Current location:")
+                + f"\n{current_path}\n\n"
+                + _("New location:")
+                + f"\n{new_path}",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                try:
+                    # Ensure parent directory exists
+                    new_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Move the database file
+                    shutil.move(str(current_path), str(new_path))
+                    logger.info(f"Database moved from {current_path} to {new_path}")
+
+                except Exception as e:
+                    logger.error(f"Failed to move database: {e}")
+                    QMessageBox.critical(
+                        self,
+                        _("Move Failed"),
+                        _("Failed to move database:") + f"\n{str(e)}",
+                    )
+                    return
 
         # Update the config with new path
         self.config.database_path = new_path

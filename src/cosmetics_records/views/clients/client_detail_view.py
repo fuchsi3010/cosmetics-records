@@ -54,6 +54,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -157,6 +158,12 @@ class HistoryItem(QFrame):
         notes_label = QLabel(notes)
         notes_label.setProperty("history_notes", True)  # CSS class
         notes_label.setWordWrap(True)
+        # WHY MinimumExpanding: Ensures label expands vertically to fit wrapped
+        # text at higher zoom levels (e.g. 120%) without cutting off content
+        notes_label.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.MinimumExpanding,
+        )
         layout.addWidget(notes_label)
 
     def enterEvent(self, event: Optional["QEnterEvent"]) -> None:
@@ -1027,7 +1034,6 @@ class ClientDetailView(QWidget):
         Handle add treatment button click.
 
         Opens the add treatment dialog and saves the treatment to database.
-        If a treatment already exists for today, opens it for editing instead.
         """
         from cosmetics_records.views.dialogs.add_treatment_dialog import (
             AddTreatmentDialog,
@@ -1045,18 +1051,16 @@ class ClientDetailView(QWidget):
         logger.debug("Add treatment clicked")
 
         try:
-            dialog = AddTreatmentDialog(self._client_id, self)
+            # Create callback to check if treatment exists for a given date
+            def check_treatment_exists(check_date: date) -> bool:
+                with DatabaseConnection() as db:
+                    controller = TreatmentController(db)
+                    existing = controller.get_treatment_for_date(
+                        self._client_id, check_date
+                    )
+                    return existing is not None
 
-            # Check if treatment exists for today
-            with DatabaseConnection() as db:
-                controller = TreatmentController(db)
-                existing = controller.get_treatment_for_date(
-                    self._client_id, date.today()
-                )
-                if existing and existing.id is not None:
-                    # Edit existing treatment instead of creating new
-                    dialog.set_existing_treatment(existing.id, existing.treatment_notes)
-                    logger.debug(f"Found existing treatment for today: {existing.id}")
+            dialog = AddTreatmentDialog(self._client_id, check_treatment_exists, self)
 
             if dialog.exec():
                 # Get treatment data from dialog
@@ -1065,26 +1069,14 @@ class ClientDetailView(QWidget):
                 with DatabaseConnection() as db:
                     controller = TreatmentController(db)
 
-                    if dialog.is_editing_existing():
-                        # Update existing treatment
-                        existing_id = dialog.get_existing_treatment_id()
-                        if existing_id is None:
-                            logger.error("Cannot update treatment: ID is None")
-                            return
-                        treatment = controller.get_treatment(existing_id)
-                        if treatment:
-                            treatment.treatment_notes = treatment_data["notes"]
-                            controller.update_treatment(treatment)
-                            logger.info(f"Treatment {existing_id} updated")
-                    else:
-                        # Create new treatment
-                        treatment = TreatmentRecord(
-                            client_id=treatment_data["client_id"],
-                            treatment_date=treatment_data["date"],
-                            treatment_notes=treatment_data["notes"],
-                        )
-                        treatment_id = controller.create_treatment(treatment)
-                        logger.info(f"Treatment created with ID: {treatment_id}")
+                    # Create new treatment
+                    treatment = TreatmentRecord(
+                        client_id=treatment_data["client_id"],
+                        treatment_date=treatment_data["date"],
+                        treatment_notes=treatment_data["notes"],
+                    )
+                    treatment_id = controller.create_treatment(treatment)
+                    logger.info(f"Treatment created with ID: {treatment_id}")
 
                 # Reload history to show changes
                 self._load_history()
@@ -1264,7 +1256,6 @@ class ClientDetailView(QWidget):
         Handle add product button click.
 
         Opens the add product dialog and saves the product record to database.
-        If a product record already exists for today, opens it for editing instead.
         """
         from cosmetics_records.views.dialogs.add_product_record_dialog import (
             AddProductRecordDialog,
@@ -1289,20 +1280,18 @@ class ClientDetailView(QWidget):
                 inv_controller = InventoryController(db)
                 inventory_names = inv_controller.get_all_names()
 
-            dialog = AddProductRecordDialog(self._client_id, inventory_names, self)
-
-            # Check if product record exists for today
-            with DatabaseConnection() as db:
-                controller = ProductController(db)
-                existing = controller.get_product_for_date(
-                    self._client_id, date.today()
-                )
-                if existing and existing.id is not None:
-                    # Edit existing product record instead of creating new
-                    dialog.set_existing_record(existing.id, existing.product_text)
-                    logger.debug(
-                        f"Found existing product record for today: {existing.id}"
+            # Create callback to check if product record exists for a given date
+            def check_product_exists(check_date: date) -> bool:
+                with DatabaseConnection() as db:
+                    controller = ProductController(db)
+                    existing = controller.get_product_for_date(
+                        self._client_id, check_date
                     )
+                    return existing is not None
+
+            dialog = AddProductRecordDialog(
+                self._client_id, inventory_names, check_product_exists, self
+            )
 
             if dialog.exec():
                 # Get product data from dialog
@@ -1311,26 +1300,14 @@ class ClientDetailView(QWidget):
                 with DatabaseConnection() as db:
                     controller = ProductController(db)
 
-                    if dialog.is_editing_existing():
-                        # Update existing product record
-                        existing_id = dialog.get_existing_record_id()
-                        if existing_id is None:
-                            logger.error("Cannot update product record: ID is None")
-                            return
-                        product = controller.get_product_record(existing_id)
-                        if product:
-                            product.product_text = product_data["product_text"]
-                            controller.update_product_record(product)
-                            logger.info(f"Product record {existing_id} updated")
-                    else:
-                        # Create new product record
-                        product = ProductRecord(
-                            client_id=product_data["client_id"],
-                            product_date=product_data["date"],
-                            product_text=product_data["product_text"],
-                        )
-                        product_id = controller.create_product_record(product)
-                        logger.info(f"Product record created with ID: {product_id}")
+                    # Create new product record
+                    product = ProductRecord(
+                        client_id=product_data["client_id"],
+                        product_date=product_data["date"],
+                        product_text=product_data["product_text"],
+                    )
+                    product_id = controller.create_product_record(product)
+                    logger.info(f"Product record created with ID: {product_id}")
 
                 # Reload history to show changes
                 self._load_history()
@@ -1427,10 +1404,11 @@ class ClientDetailView(QWidget):
                 logger.error("Cannot edit product record: client_id is None")
                 return
             dialog = AddProductRecordDialog(
-                self._client_id, inventory_names, parent=self
+                self._client_id, inventory_names, None, self
             )
-            dialog.setWindowTitle("Edit Product Sale")
-            dialog.set_existing_record(product_id, product.product_text)
+            dialog.set_existing_record(
+                product_id, product.product_date, product.product_text
+            )
 
             result = dialog.exec()
 
@@ -1454,6 +1432,7 @@ class ClientDetailView(QWidget):
                             logger.info(f"Product record {product_id} deleted")
                     else:
                         # Update the product record
+                        product.product_date = product_data["date"]
                         product.product_text = product_data["product_text"]
                         controller.update_product_record(product)
                         logger.info(f"Product record {product_id} updated")
