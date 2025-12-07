@@ -503,3 +503,409 @@ msgstr "Die Skalierung wurde geändert. Bitte starten Sie die Anwendung neu, dam
 
 msgid "All data exported successfully"
 msgstr "Alle Daten erfolgreich exportiert"
+
+# =============================================================================
+# Dialog Titles
+# =============================================================================
+
+msgid "Add New Client"
+msgstr "Neuen Kunden hinzufügen"
+
+msgid "Edit Client"
+msgstr "Kunde bearbeiten"
+
+msgid "Delete Client"
+msgstr "Kunde löschen"
+
+msgid "Edit Treatment"
+msgstr "Behandlung bearbeiten"
+
+msgid "Add Product Record"
+msgstr "Produktverkauf hinzufügen"
+
+msgid "Edit Product Record"
+msgstr "Produktverkauf bearbeiten"
+
+msgid "Add Inventory Item"
+msgstr "Inventarartikel hinzufügen"
+
+msgid "Edit Inventory Item"
+msgstr "Inventarartikel bearbeiten"
+
+msgid "Delete Treatment"
+msgstr "Behandlung löschen"
+
+msgid "Delete Product Sale"
+msgstr "Produktverkauf löschen"
+
+msgid "Edit Product Sale"
+msgstr "Produktverkauf bearbeiten"
+
+# =============================================================================
+# Form Labels and Placeholders
+# =============================================================================
+
+msgid "First Name: *"
+msgstr "Vorname: *"
+
+msgid "Last Name: *"
+msgstr "Nachname: *"
+
+msgid "Email:"
+msgstr "E-Mail:"
+
+msgid "Phone:"
+msgstr "Telefon:"
+
+msgid "Address:"
+msgstr "Adresse:"
+
+msgid "Date of Birth:"
+msgstr "Geburtsdatum:"
+
+msgid "Allergies:"
+msgstr "Allergien:"
+
+msgid "Tags:"
+msgstr "Tags:"
+
+msgid "Notes: *"
+msgstr "Notizen: *"
+
+msgid "Enter first name..."
+msgstr "Vorname eingeben..."
+
+msgid "Enter last name..."
+msgstr "Nachname eingeben..."
+
+msgid "Enter email address..."
+msgstr "E-Mail-Adresse eingeben..."
+
+msgid "Enter phone number..."
+msgstr "Telefonnummer eingeben..."
+
+msgid "Enter address..."
+msgstr "Adresse eingeben..."
+
+msgid "Enter any allergies..."
+msgstr "Allergien eingeben..."
+
+msgid "Enter treatment notes..."
+msgstr "Behandlungsnotizen eingeben..."
+
+msgid "Enter planned treatment details..."
+msgstr "Geplante Behandlungsdetails eingeben..."
+
+msgid "Enter personal notes..."
+msgstr "Persönliche Notizen eingeben..."
+
+msgid "* Required fields"
+msgstr "* Pflichtfelder"
+
+# =============================================================================
+# Validation Messages
+# =============================================================================
+
+msgid "First name is required."
+msgstr "Vorname ist erforderlich."
+
+msgid "Last name is required."
+msgstr "Nachname ist erforderlich."
+
+msgid "Notes are required."
+msgstr "Notizen sind erforderlich."
+
+msgid "Invalid email format. Please enter a valid email (e.g., user@example.com)."
+msgstr "Ungültiges E-Mail-Format. Bitte geben Sie eine gültige E-Mail ein (z.B. benutzer@beispiel.de)."
+
+# =============================================================================
+# Client Detail View
+# =============================================================================
+
+msgid "+ Add"
+msgstr "+ Hinzufügen"
+
+msgid "Saving..."
+msgstr "Speichern..."
+
+msgid "Saved"
+msgstr "Gespeichert"
+
+msgid "No more treatments"
+msgstr "Keine weiteren Behandlungen"
+
+msgid "No more products"
+msgstr "Keine weiteren Produkte"
+
+msgid "No more items"
+msgstr "Keine weiteren Einträge"
+
+# =============================================================================
+# Inventory View
+# =============================================================================
+
+msgid "Search inventory by name..."
+msgstr "Inventar nach Name durchsuchen..."
+
+msgid "+ Add Item"
+msgstr "+ Artikel hinzufügen"
+
+msgid "No items found matching '{query}'"
+msgstr "Keine Artikel gefunden für '{query}'"
+
+msgid "No items with name starting with '{letter}'"
+msgstr "Keine Artikel mit Namen beginnend mit '{letter}'"
+
+# =============================================================================
+# Delete Confirmations
+# =============================================================================
+
+msgid "Are you sure you want to delete {client_name}?"
+msgstr "Sind Sie sicher, dass Sie {client_name} löschen möchten?"
+
+msgid "This will also delete all associated treatment and product history."
+msgstr "Dies wird auch den gesamten Behandlungs- und Produktverlauf löschen."
+
+msgid "This action cannot be undone."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden."
+
+msgid "The product text is empty. Delete this record?"
+msgstr "Der Produkttext ist leer. Diesen Eintrag löschen?"
+
+# =============================================================================
+# Import Dialog
+# =============================================================================
+
+msgid "Import Data from CSV"
+msgstr "Daten aus CSV importieren"
+
+msgid "Select CSV files to import:"
+msgstr "CSV-Dateien zum Importieren auswählen:"
+
+msgid "Clients (required):"
+msgstr "Kunden (erforderlich):"
+
+msgid "Treatments:"
+msgstr "Behandlungen:"
+
+msgid "Product Sales:"
+msgstr "Produktverkäufe:"
+
+msgid "Inventory:"
+msgstr "Inventar:"
+
+msgid "No file selected"
+msgstr "Keine Datei ausgewählt"
+
+msgid "Browse"
+msgstr "Durchsuchen"
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Validate"
+msgstr "Validieren"
+
+msgid "Import"
+msgstr "Importieren"
+
+msgid "Select Clients CSV"
+msgstr "Kunden-CSV auswählen"
+
+msgid "Select Treatments CSV"
+msgstr "Behandlungen-CSV auswählen"
+
+msgid "Select Product Sales CSV"
+msgstr "Produktverkäufe-CSV auswählen"
+
+msgid "Select Inventory CSV"
+msgstr "Inventar-CSV auswählen"
+
+msgid "Please select a clients CSV file (required)"
+msgstr "Bitte wählen Sie eine Kunden-CSV-Datei (erforderlich)"
+
+msgid "Import failed"
+msgstr "Import fehlgeschlagen"
+
+msgid "Select files and click 'Validate' to check them."
+msgstr "Dateien auswählen und auf 'Validieren' klicken, um sie zu prüfen."
+
+msgid "Validation failed ({count} errors):"
+msgstr "Validierung fehlgeschlagen ({count} Fehler):"
+
+msgid "Validation passed! Ready to import:"
+msgstr "Validierung erfolgreich! Bereit zum Importieren:"
+
+msgid "clients"
+msgstr "Kunden"
+
+msgid "treatments"
+msgstr "Behandlungen"
+
+msgid "product sales"
+msgstr "Produktverkäufe"
+
+msgid "inventory items"
+msgstr "Inventarartikel"
+
+msgid "Warning: This will add data to your database."
+msgstr "Warnung: Dies wird Daten zu Ihrer Datenbank hinzufügen."
+
+msgid "Import completed successfully!"
+msgstr "Import erfolgreich abgeschlossen!"
+
+msgid "Imported {total} records total:"
+msgstr "Insgesamt {total} Datensätze importiert:"
+
+# =============================================================================
+# Backup Management Dialog
+# =============================================================================
+
+msgid "Manage Backups"
+msgstr "Sicherungen verwalten"
+
+msgid "Filename"
+msgstr "Dateiname"
+
+msgid "No backup selected"
+msgstr "Keine Sicherung ausgewählt"
+
+msgid "Verify"
+msgstr "Überprüfen"
+
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "Selected:"
+msgstr "Ausgewählt:"
+
+msgid "Valid"
+msgstr "Gültig"
+
+msgid "Confirm Restore"
+msgstr "Wiederherstellung bestätigen"
+
+msgid "Are you sure you want to restore from this backup?"
+msgstr "Sind Sie sicher, dass Sie diese Sicherung wiederherstellen möchten?"
+
+msgid "Restore Complete"
+msgstr "Wiederherstellung abgeschlossen"
+
+msgid "Database restored successfully."
+msgstr "Datenbank erfolgreich wiederhergestellt."
+
+msgid "Please restart the application for changes to take effect."
+msgstr "Bitte starten Sie die Anwendung neu, damit die Änderungen wirksam werden."
+
+msgid "Restore Failed"
+msgstr "Wiederherstellung fehlgeschlagen"
+
+msgid "Failed to restore database from backup."
+msgstr "Datenbank konnte nicht aus Sicherung wiederhergestellt werden."
+
+msgid "Are you sure you want to delete this backup?"
+msgstr "Sind Sie sicher, dass Sie diese Sicherung löschen möchten?"
+
+msgid "Backup deleted"
+msgstr "Sicherung gelöscht"
+
+msgid "Delete Failed"
+msgstr "Löschen fehlgeschlagen"
+
+msgid "Failed to delete backup."
+msgstr "Sicherung konnte nicht gelöscht werden."
+
+# =============================================================================
+# Settings - Date Format
+# =============================================================================
+
+msgid "Date Format"
+msgstr "Datumsformat"
+
+msgid "Date format"
+msgstr "Datumsformat"
+
+msgid "Language default"
+msgstr "Sprachstandard"
+
+msgid "Language default uses MM/DD/YYYY for English and DD.MM.YYYY for German"
+msgstr "Sprachstandard verwendet MM/TT/JJJJ für Englisch und TT.MM.JJJJ für Deutsch"
+
+# =============================================================================
+# Settings - Import / Export
+# =============================================================================
+
+msgid "Import / Export"
+msgstr "Import / Export"
+
+# =============================================================================
+# Time
+# =============================================================================
+
+msgid "1 minute ago"
+msgstr "vor 1 Minute"
+
+msgid "1 hour ago"
+msgstr "vor 1 Stunde"
+
+# =============================================================================
+# Database size errors
+# =============================================================================
+
+msgid "Database not found"
+msgstr "Datenbank nicht gefunden"
+
+msgid "Error calculating"
+msgstr "Fehler bei der Berechnung"
+
+# =============================================================================
+# GitHub
+# =============================================================================
+
+msgid "GitHub"
+msgstr "GitHub"
+
+msgid "Are you sure you want to delete the treatment from {date}?"
+msgstr "Sind Sie sicher, dass Sie die Behandlung vom {date} löschen möchten?"
+
+msgid "Date is required."
+msgstr "Datum ist erforderlich."
+
+msgid "Date: *"
+msgstr "Datum: *"
+
+msgid "Enter item name..."
+msgstr "Artikelname eingeben..."
+
+msgid "Enter description..."
+msgstr "Beschreibung eingeben..."
+
+msgid "Name is required."
+msgstr "Name ist erforderlich."
+
+msgid "Capacity must be greater than 0."
+msgstr "Kapazität muss größer als 0 sein."
+
+msgid "Delete Inventory Item"
+msgstr "Inventarartikel löschen"
+
+msgid "Are you sure you want to delete '{name}'?"
+msgstr "Sind Sie sicher, dass Sie '{name}' löschen möchten?"
+
+msgid "Are you sure you want to delete {client_name}?"
+msgstr "Sind Sie sicher, dass Sie {client_name} löschen möchten?"
+
+msgid "Change Database Location"
+msgstr "Datenbank-Speicherort ändern"
+
+msgid "Select Database Location"
+msgstr "Datenbank-Speicherort auswählen"
+
+msgid "Database Location Changed"
+msgstr "Datenbank-Speicherort geändert"
+
+msgid "The database location has been changed to:"
+msgstr "Der Datenbank-Speicherort wurde geändert zu:"

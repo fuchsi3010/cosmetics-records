@@ -149,7 +149,13 @@ class ClientController:
 
         # Log creation to audit log
         audit = AuditService(self.db)
-        audit.log_create("clients", client_id, client.full_name(), "ClientController")
+        audit.log_create(
+            "clients",
+            client_id,
+            client.full_name(),
+            "ClientController",
+            client_id=client_id,
+        )
 
         logger.info(f"Created client: {client.full_name()} (ID: {client_id})")
         return client_id
@@ -277,6 +283,7 @@ class ClientController:
                 old_client.first_name,
                 client.first_name,
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.last_name != client.last_name:
             audit.log_update(
@@ -286,6 +293,7 @@ class ClientController:
                 old_client.last_name,
                 client.last_name,
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.email != client.email:
             audit.log_update(
@@ -295,6 +303,7 @@ class ClientController:
                 old_client.email or "",
                 client.email or "",
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.phone != client.phone:
             audit.log_update(
@@ -304,6 +313,7 @@ class ClientController:
                 old_client.phone or "",
                 client.phone or "",
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.address != client.address:
             audit.log_update(
@@ -313,6 +323,7 @@ class ClientController:
                 old_client.address or "",
                 client.address or "",
                 "ClientController",
+                client_id=client.id,
             )
         if str(old_client.date_of_birth) != str(client.date_of_birth):
             audit.log_update(
@@ -322,6 +333,7 @@ class ClientController:
                 str(old_client.date_of_birth) if old_client.date_of_birth else "",
                 str(client.date_of_birth) if client.date_of_birth else "",
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.allergies != client.allergies:
             audit.log_update(
@@ -331,6 +343,7 @@ class ClientController:
                 old_client.allergies or "",
                 client.allergies or "",
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.tags_string() != client.tags_string():
             audit.log_update(
@@ -340,6 +353,7 @@ class ClientController:
                 old_client.tags_string(),
                 client.tags_string(),
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.planned_treatment != client.planned_treatment:
             audit.log_update(
@@ -349,6 +363,7 @@ class ClientController:
                 old_client.planned_treatment or "",
                 client.planned_treatment or "",
                 "ClientController",
+                client_id=client.id,
             )
         if old_client.notes != client.notes:
             audit.log_update(
@@ -358,6 +373,7 @@ class ClientController:
                 old_client.notes or "",
                 client.notes or "",
                 "ClientController",
+                client_id=client.id,
             )
 
         logger.info(f"Updated client: {client.full_name()} (ID: {client.id})")
@@ -410,7 +426,13 @@ class ClientController:
 
         # Log deletion to audit log
         audit = AuditService(self.db)
-        audit.log_delete("clients", client_id, client_name, "ClientController")
+        audit.log_delete(
+            "clients",
+            client_id,
+            client_name,
+            "ClientController",
+            client_id=client_id,
+        )
 
         logger.info(
             f"Deleted client ID {client_id} ({client_name}) and all associated records"

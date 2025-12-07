@@ -514,7 +514,7 @@ class SettingsView(QWidget):
         """
         Create the database information section.
 
-        Displays database path and size (read-only).
+        Displays database path and size with option to change location.
 
         Returns:
             QWidget containing database information
@@ -525,8 +525,7 @@ class SettingsView(QWidget):
         path_label = QLabel(_("Database path") + ":")
         section.add_widget(path_label)
 
-        config_dir = self.config.get_config_dir()
-        db_path = config_dir / "cosmetics_records.db"
+        db_path = self.config.get_database_path()
 
         self._db_path_label = QLabel(str(db_path))
         self._db_path_label.setProperty("class", "monospace")
@@ -540,6 +539,12 @@ class SettingsView(QWidget):
         self._db_size_label = QLabel(_("Size") + ": " + _("Calculating..."))
         self._db_size_label.setProperty("class", "secondary")
         section.add_widget(self._db_size_label)
+
+        # Change database location button
+        change_path_btn = QPushButton(_("Change Database Location"))
+        change_path_btn.setMinimumWidth(200)
+        change_path_btn.clicked.connect(self._on_change_database_path)
+        section.add_widget(change_path_btn)
 
         # Update database size
         self._update_database_size()
@@ -587,7 +592,7 @@ class SettingsView(QWidget):
         """
         Create the about section.
 
-        Displays version and copyright information.
+        Displays version and GitHub link.
 
         Returns:
             QWidget containing about information
@@ -599,11 +604,14 @@ class SettingsView(QWidget):
         version_label.setStyleSheet("font-weight: bold; background: transparent;")
         section.add_widget(version_label)
 
-        # Copyright
-        copyright_label = QLabel(_("Copyright 2024"))
-        copyright_label.setProperty("class", "secondary")
-        copyright_label.setStyleSheet("color: gray; background: transparent;")
-        section.add_widget(copyright_label)
+        # GitHub link
+        github_label = QLabel(
+            '<a href="https://github.com/cosmetics-records/cosmetics-records" '
+            'style="color: #4dabf7;">GitHub</a>'
+        )
+        github_label.setOpenExternalLinks(True)
+        github_label.setStyleSheet("background: transparent;")
+        section.add_widget(github_label)
 
         return section
 
@@ -1089,6 +1097,47 @@ class SettingsView(QWidget):
                 _("Export Failed"),
                 f"Failed to export data:\n{str(e)}",
             )
+
+    def _on_change_database_path(self) -> None:
+        """
+        Handle change database location button click.
+
+        Shows file dialog to select new database location and updates config.
+        """
+        # Show file dialog to select new database location
+        selected_path, _filter = QFileDialog.getSaveFileName(
+            self,
+            _("Select Database Location"),
+            str(Path.home()),
+            "SQLite Database (*.db)",
+        )
+
+        if not selected_path:
+            return  # User cancelled
+
+        new_path = Path(selected_path)
+
+        # Ensure the file has .db extension
+        if not new_path.suffix:
+            new_path = new_path.with_suffix(".db")
+
+        # Update the config with new path
+        self.config.database_path = new_path
+        self.config.save()
+
+        # Update the UI to show new path
+        self._db_path_label.setText(str(new_path))
+
+        # Show restart message
+        QMessageBox.information(
+            self,
+            _("Database Location Changed"),
+            _("The database location has been changed to:")
+            + f"\n{new_path}\n\n"
+            + _("Please restart the application for changes to take effect."),
+        )
+
+        logger.info(f"Database path changed to: {new_path}")
 
     def _on_audit_cleanup(self) -> None:
         """

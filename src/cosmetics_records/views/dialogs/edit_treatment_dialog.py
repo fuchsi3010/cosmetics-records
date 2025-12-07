@@ -44,6 +44,7 @@ from PyQt6.QtWidgets import (
 
 from .base_dialog import BaseDialog, ConfirmDialog
 from ..components.date_picker import DatePicker
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ class EditTreatmentDialog(BaseDialog):
         self._deleted = False
 
         # Initialize base dialog
-        super().__init__("Edit Treatment", parent, width=500, height=450)
+        super().__init__(_("Edit Treatment"), parent, width=500, height=450)
 
         # Populate fields with existing data
         self._populate_fields()
@@ -110,13 +111,13 @@ class EditTreatmentDialog(BaseDialog):
 
         # Date (required)
         self._date_picker = DatePicker()
-        form_layout.addRow("Date: *", self._date_picker)
+        form_layout.addRow(_("Date") + ": *", self._date_picker)
 
         # Notes (required)
         self._notes_input = QTextEdit()
-        self._notes_input.setPlaceholderText("Enter treatment notes...")
+        self._notes_input.setPlaceholderText(_("Enter treatment notes..."))
         self._notes_input.setMinimumHeight(150)
-        form_layout.addRow("Notes: *", self._notes_input)
+        form_layout.addRow(_("Notes: *"), self._notes_input)
 
         layout.addLayout(form_layout)
 
@@ -124,7 +125,7 @@ class EditTreatmentDialog(BaseDialog):
         layout.addStretch()
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
@@ -133,7 +134,7 @@ class EditTreatmentDialog(BaseDialog):
         button_row.setSpacing(8)
 
         # Delete button (left side)
-        delete_btn = QPushButton("Delete")
+        delete_btn = QPushButton(_("Delete"))
         delete_btn.setProperty("class", "danger")  # Danger button styling
         delete_btn.setMinimumWidth(100)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -144,7 +145,7 @@ class EditTreatmentDialog(BaseDialog):
         button_row.addStretch()
 
         # Cancel button
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setProperty("class", "secondary")
         cancel_btn.setMinimumWidth(100)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -152,7 +153,7 @@ class EditTreatmentDialog(BaseDialog):
         button_row.addWidget(cancel_btn)
 
         # Save button
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(_("Save"))
         save_btn.setMinimumWidth(100)
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self.accept)
@@ -185,13 +186,13 @@ class EditTreatmentDialog(BaseDialog):
         # Validate date
         treatment_date = self._date_picker.get_date()
         if not treatment_date:
-            self.show_error("Date is required.")
+            self.show_error(_("Date is required."))
             return
 
         # Validate notes
         notes = self._notes_input.toPlainText().strip()
         if not notes:
-            self.show_error("Notes are required.")
+            self.show_error(_("Notes are required."))
             self._notes_input.setFocus()
             return
 
@@ -219,11 +220,14 @@ class EditTreatmentDialog(BaseDialog):
 
         # Show confirmation dialog
         confirm = ConfirmDialog(
-            "Delete Treatment",
-            f"Are you sure you want to delete the treatment from {date_str}?\n\n"
-            f"This action cannot be undone.",
-            ok_text="Delete",
-            cancel_text="Cancel",
+            _("Delete Treatment"),
+            _("Are you sure you want to delete the treatment from {date}?").format(
+                date=date_str
+            )
+            + "\n\n"
+            + _("This action cannot be undone."),
+            ok_text=_("Delete"),
+            cancel_text=_("Cancel"),
             parent=self,
             width=450,
             height=200,

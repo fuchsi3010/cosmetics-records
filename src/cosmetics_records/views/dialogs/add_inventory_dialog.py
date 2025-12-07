@@ -40,6 +40,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ class AddInventoryDialog(BaseDialog):
             parent: Optional parent widget
         """
         # Initialize base dialog
-        super().__init__("Add Inventory Item", parent, width=500, height=500)
+        super().__init__(_("Add Inventory Item"), parent, width=500, height=500)
 
         logger.debug("AddInventoryDialog initialized")
 
@@ -95,14 +96,14 @@ class AddInventoryDialog(BaseDialog):
 
         # Name (required)
         self._name_input = QLineEdit()
-        self._name_input.setPlaceholderText("Enter item name...")
-        form_layout.addRow("Name: *", self._name_input)
+        self._name_input.setPlaceholderText(_("Enter item name..."))
+        form_layout.addRow(_("Name") + ": *", self._name_input)
 
         # Description (optional)
         self._description_input = QTextEdit()
-        self._description_input.setPlaceholderText("Enter description...")
+        self._description_input.setPlaceholderText(_("Enter description..."))
         self._description_input.setFixedHeight(80)
-        form_layout.addRow("Description:", self._description_input)
+        form_layout.addRow(_("Description") + ":", self._description_input)
 
         # Capacity and Unit on same row: [Capacity input] [Unit dropdown]
         capacity_row = QHBoxLayout()
@@ -124,7 +125,7 @@ class AddInventoryDialog(BaseDialog):
         self._unit_input.setFixedWidth(80)
         capacity_row.addWidget(self._unit_input)
 
-        form_layout.addRow("Capacity: *", capacity_row)
+        form_layout.addRow(_("Capacity") + ": *", capacity_row)
 
         layout.addLayout(form_layout)
 
@@ -132,7 +133,7 @@ class AddInventoryDialog(BaseDialog):
         layout.addStretch()
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
@@ -150,14 +151,14 @@ class AddInventoryDialog(BaseDialog):
         # Validate name
         name = self._name_input.text().strip()
         if not name:
-            self.show_error("Name is required.")
+            self.show_error(_("Name is required."))
             self._name_input.setFocus()
             return
 
         # Validate capacity
         capacity = self._capacity_input.value()
         if capacity <= 0:
-            self.show_error("Capacity must be greater than 0.")
+            self.show_error(_("Capacity must be greater than 0."))
             self._capacity_input.setFocus()
             return
 

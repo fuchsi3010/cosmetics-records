@@ -284,12 +284,12 @@ class InventoryView(QWidget):
 
         # Search bar
         self._search_bar = SearchBar()
-        self._search_bar.set_placeholder("Search inventory by name...")
+        self._search_bar.set_placeholder(_("Search inventory by name..."))
         self._search_bar.search_changed.connect(self._on_search_changed)
         layout.addWidget(self._search_bar, stretch=1)
 
         # Add item button
-        add_btn = QPushButton("+ Add Item")
+        add_btn = QPushButton(_("+ Add Item"))
         add_btn.setProperty("class", "primary")  # Primary button styling
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_btn.clicked.connect(self._on_add_item)

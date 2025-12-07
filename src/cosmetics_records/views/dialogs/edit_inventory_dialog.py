@@ -45,6 +45,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -89,7 +90,7 @@ class EditInventoryDialog(BaseDialog):
         self._deleted = False
 
         # Initialize base dialog
-        super().__init__("Edit Inventory Item", parent, width=500, height=550)
+        super().__init__(_("Edit Inventory Item"), parent, width=500, height=550)
 
         # Populate fields with existing data
         self._populate_fields()
@@ -116,14 +117,14 @@ class EditInventoryDialog(BaseDialog):
 
         # Name (required)
         self._name_input = QLineEdit()
-        self._name_input.setPlaceholderText("Enter item name...")
-        form_layout.addRow("Name: *", self._name_input)
+        self._name_input.setPlaceholderText(_("Enter item name..."))
+        form_layout.addRow(_("Name") + ": *", self._name_input)
 
         # Description (optional)
         self._description_input = QTextEdit()
-        self._description_input.setPlaceholderText("Enter description...")
+        self._description_input.setPlaceholderText(_("Enter description..."))
         self._description_input.setFixedHeight(80)
-        form_layout.addRow("Description:", self._description_input)
+        form_layout.addRow(_("Description") + ":", self._description_input)
 
         # Capacity and Unit on same row: [Capacity input] [Unit dropdown]
         capacity_row = QHBoxLayout()
@@ -142,7 +143,7 @@ class EditInventoryDialog(BaseDialog):
         self._unit_input.setFixedWidth(80)
         capacity_row.addWidget(self._unit_input)
 
-        form_layout.addRow("Capacity: *", capacity_row)
+        form_layout.addRow(_("Capacity") + ": *", capacity_row)
 
         layout.addLayout(form_layout)
 
@@ -150,7 +151,7 @@ class EditInventoryDialog(BaseDialog):
         layout.addStretch()
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
@@ -159,7 +160,7 @@ class EditInventoryDialog(BaseDialog):
         button_row.setSpacing(8)
 
         # Delete button (left side)
-        delete_btn = QPushButton("Delete")
+        delete_btn = QPushButton(_("Delete"))
         delete_btn.setProperty("class", "danger")  # Danger button styling
         delete_btn.setMinimumWidth(100)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -170,7 +171,7 @@ class EditInventoryDialog(BaseDialog):
         button_row.addStretch()
 
         # Cancel button
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setProperty("class", "secondary")
         cancel_btn.setMinimumWidth(100)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -178,7 +179,7 @@ class EditInventoryDialog(BaseDialog):
         button_row.addWidget(cancel_btn)
 
         # Save button
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(_("Save"))
         save_btn.setMinimumWidth(100)
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self.accept)
@@ -219,14 +220,14 @@ class EditInventoryDialog(BaseDialog):
         # Validate name
         name = self._name_input.text().strip()
         if not name:
-            self.show_error("Name is required.")
+            self.show_error(_("Name is required."))
             self._name_input.setFocus()
             return
 
         # Validate capacity
         capacity = self._capacity_input.value()
         if capacity <= 0:
-            self.show_error("Capacity must be greater than 0.")
+            self.show_error(_("Capacity must be greater than 0."))
             self._capacity_input.setFocus()
             return
 
@@ -250,11 +251,12 @@ class EditInventoryDialog(BaseDialog):
 
         # Show confirmation dialog
         confirm = ConfirmDialog(
-            "Delete Inventory Item",
-            f"Are you sure you want to delete '{item_name}'?\n\n"
-            f"This action cannot be undone.",
-            ok_text="Delete",
-            cancel_text="Cancel",
+            _("Delete Inventory Item"),
+            _("Are you sure you want to delete '{name}'?").format(name=item_name)
+            + "\n\n"
+            + _("This action cannot be undone."),
+            ok_text=_("Delete"),
+            cancel_text=_("Cancel"),
             parent=self,
             width=450,
             height=200,

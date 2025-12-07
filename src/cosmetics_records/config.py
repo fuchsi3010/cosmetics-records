@@ -195,6 +195,8 @@ class Config:
             "backup_interval_minutes": 60,  # Backup every hour
             "backup_retention_count": 5,  # Keep last 5 backups
             "last_backup_time": None,  # ISO format datetime string
+            # Database Settings
+            "database_path": None,  # Custom database path (None = default)
         }
 
     def _ensure_config_exists(self) -> None:
@@ -474,3 +476,41 @@ class Config:
             (logs, backups, etc.) in the same location.
         """
         return self._config_dir
+
+    @property
+    def database_path(self) -> Optional[Path]:
+        """
+        Get the custom database path.
+
+        Returns:
+            Optional[Path]: Custom database path, or None if using default
+        """
+        value = self._settings.get("database_path")
+        if value is None:
+            return None
+        return Path(value)
+
+    @database_path.setter
+    def database_path(self, value: Optional[Path]) -> None:
+        """
+        Set the custom database path.
+
+        Args:
+            value: Path to database file, or None to use default
+        """
+        if value is None:
+            self._settings["database_path"] = None
+        else:
+            self._settings["database_path"] = str(value)
+
+    def get_database_path(self) -> Path:
+        """
+        Get the effective database path.
+
+        Returns:
+            Path: The database path to use (custom or default)
+        """
+        custom_path = self.database_path
+        if custom_path is not None:
+            return custom_path
+        return self._config_dir / "cosmetics_records.db"

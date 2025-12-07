@@ -46,6 +46,7 @@ from ..components.date_picker import DatePicker
 from ..components.tag_input import TagInput
 from ..constants import DialogSize, ComponentHeight
 from cosmetics_records.utils.validators import is_valid_email
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ class EditClientDialog(BaseDialog):
         # Initialize base dialog
         # WHY LARGE + extra height: Same as add dialog but with delete button row
         super().__init__(
-            "Edit Client",
+            _("Edit Client"),
             parent,
             width=DialogSize.LARGE_WIDTH,
             height=DialogSize.LARGE_HEIGHT + 50,  # Extra space for delete button
@@ -130,43 +131,43 @@ class EditClientDialog(BaseDialog):
 
         # First Name (required)
         self._first_name_input = QLineEdit()
-        self._first_name_input.setPlaceholderText("Enter first name...")
-        form_layout.addRow("First Name: *", self._first_name_input)
+        self._first_name_input.setPlaceholderText(_("Enter first name..."))
+        form_layout.addRow(_("First Name") + ": *", self._first_name_input)
 
         # Last Name (required)
         self._last_name_input = QLineEdit()
-        self._last_name_input.setPlaceholderText("Enter last name...")
-        form_layout.addRow("Last Name: *", self._last_name_input)
+        self._last_name_input.setPlaceholderText(_("Enter last name..."))
+        form_layout.addRow(_("Last Name") + ": *", self._last_name_input)
 
         # Email (optional)
         self._email_input = QLineEdit()
-        self._email_input.setPlaceholderText("Enter email address...")
-        form_layout.addRow("Email:", self._email_input)
+        self._email_input.setPlaceholderText(_("Enter email address..."))
+        form_layout.addRow(_("Email") + ":", self._email_input)
 
         # Phone (optional)
         self._phone_input = QLineEdit()
-        self._phone_input.setPlaceholderText("Enter phone number...")
-        form_layout.addRow("Phone:", self._phone_input)
+        self._phone_input.setPlaceholderText(_("Enter phone number..."))
+        form_layout.addRow(_("Phone") + ":", self._phone_input)
 
         # Address (optional)
         self._address_input = QTextEdit()
-        self._address_input.setPlaceholderText("Enter address...")
+        self._address_input.setPlaceholderText(_("Enter address..."))
         self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
-        form_layout.addRow("Address:", self._address_input)
+        form_layout.addRow(_("Address") + ":", self._address_input)
 
         # Date of Birth (optional)
         self._dob_picker = DatePicker()
-        form_layout.addRow("Date of Birth:", self._dob_picker)
+        form_layout.addRow(_("Date of Birth") + ":", self._dob_picker)
 
         # Allergies (optional)
         self._allergies_input = QTextEdit()
-        self._allergies_input.setPlaceholderText("Enter any allergies...")
+        self._allergies_input.setPlaceholderText(_("Enter any allergies..."))
         self._allergies_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
-        form_layout.addRow("Allergies:", self._allergies_input)
+        form_layout.addRow(_("Allergies") + ":", self._allergies_input)
 
         # Tags (optional)
         self._tag_input = TagInput()
-        form_layout.addRow("Tags:", self._tag_input)
+        form_layout.addRow(_("Tags") + ":", self._tag_input)
 
         layout.addLayout(form_layout)
 
@@ -174,7 +175,7 @@ class EditClientDialog(BaseDialog):
         layout.addStretch()
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
@@ -183,7 +184,7 @@ class EditClientDialog(BaseDialog):
         button_row.setSpacing(8)
 
         # Delete button (left side)
-        delete_btn = QPushButton("Delete")
+        delete_btn = QPushButton(_("Delete"))
         delete_btn.setProperty("class", "danger")  # Danger button styling
         delete_btn.setMinimumWidth(100)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -194,7 +195,7 @@ class EditClientDialog(BaseDialog):
         button_row.addStretch()
 
         # Cancel button
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setProperty("class", "secondary")
         cancel_btn.setMinimumWidth(100)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -202,7 +203,7 @@ class EditClientDialog(BaseDialog):
         button_row.addWidget(cancel_btn)
 
         # Save button
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(_("Save"))
         save_btn.setMinimumWidth(100)
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self.accept)
@@ -247,12 +248,12 @@ class EditClientDialog(BaseDialog):
         last_name = self._last_name_input.text().strip()
 
         if not first_name:
-            self.show_error("First name is required.")
+            self.show_error(_("First name is required."))
             self._first_name_input.setFocus()
             return
 
         if not last_name:
-            self.show_error("Last name is required.")
+            self.show_error(_("Last name is required."))
             self._last_name_input.setFocus()
             return
 
@@ -261,8 +262,9 @@ class EditClientDialog(BaseDialog):
         email = self._email_input.text().strip()
         if email and not is_valid_email(email):
             self.show_error(
-                "Invalid email format. Please enter a valid email "
-                "(e.g., user@example.com)."
+                _(
+                    "Invalid email format. Please enter a valid email (e.g., user@example.com)."
+                )
             )
             self._email_input.setFocus()
             return
@@ -289,12 +291,16 @@ class EditClientDialog(BaseDialog):
 
         # Show confirmation dialog
         confirm = ConfirmDialog(
-            "Delete Client",
-            f"Are you sure you want to delete {client_name}?\n\n"
-            f"This will also delete all associated treatment and product history.\n\n"
-            f"This action cannot be undone.",
-            ok_text="Delete",
-            cancel_text="Cancel",
+            _("Delete Client"),
+            _("Are you sure you want to delete {client_name}?").format(
+                client_name=client_name
+            )
+            + "\n\n"
+            + _("This will also delete all associated treatment and product history.")
+            + "\n\n"
+            + _("This action cannot be undone."),
+            ok_text=_("Delete"),
+            cancel_text=_("Cancel"),
             parent=self,
             width=450,
             height=250,

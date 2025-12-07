@@ -107,6 +107,11 @@ class AuditLog(BaseModel):
     # Automatically populated by database trigger
     created_at: Optional[datetime] = None
 
+    # Client ID that this change is related to
+    # Optional - not all changes are client-related (e.g., inventory changes)
+    # This allows efficient filtering and display of client-related audit logs
+    client_id: Optional[int] = None
+
     # =========================================================================
     # Validation Methods
     # =========================================================================

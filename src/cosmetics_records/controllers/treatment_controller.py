@@ -132,7 +132,11 @@ class TreatmentController:
         audit = AuditService(self.db)
         description = f"Treatment on {treatment.treatment_date}"
         audit.log_create(
-            "treatment_records", treatment_id, description, "TreatmentController"
+            "treatment_records",
+            treatment_id,
+            description,
+            "TreatmentController",
+            client_id=treatment.client_id,
         )
 
         logger.info(
@@ -250,6 +254,7 @@ class TreatmentController:
                 str(old_treatment.treatment_date),
                 str(treatment.treatment_date),
                 "TreatmentController",
+                client_id=treatment.client_id,
             )
         if old_treatment.treatment_notes != treatment.treatment_notes:
             audit.log_update(
@@ -259,6 +264,7 @@ class TreatmentController:
                 old_treatment.treatment_notes or "",
                 treatment.treatment_notes or "",
                 "TreatmentController",
+                client_id=treatment.client_id,
             )
 
         logger.info(f"Updated treatment ID {treatment.id}")
@@ -308,7 +314,11 @@ class TreatmentController:
         # Log deletion to audit log
         audit = AuditService(self.db)
         audit.log_delete(
-            "treatment_records", treatment_id, description, "TreatmentController"
+            "treatment_records",
+            treatment_id,
+            description,
+            "TreatmentController",
+            client_id=treatment.client_id,
         )
 
         logger.info(f"Deleted treatment ID {treatment_id}")

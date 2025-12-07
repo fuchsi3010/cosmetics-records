@@ -465,7 +465,7 @@ class AuditLogView(QWidget):
         self, audit_logs: List[AuditLog]
     ) -> dict[tuple[str, int], str]:
         """
-        Fetch client names for audit log entries about treatment/product records.
+        Fetch client names for audit log entries using stored client_id.
 
         Args:
             audit_logs: List of audit logs to fetch client names for
@@ -475,56 +475,41 @@ class AuditLogView(QWidget):
         """
         client_names: dict[tuple[str, int], str] = {}
 
-        # Collect record IDs by table
-        treatment_ids = set()
-        product_ids = set()
+        # Collect unique client IDs from audit logs
+        client_ids = set()
+        log_to_client: dict[tuple[str, int], int] = {}
 
         for log in audit_logs:
-            if log.table_name == "treatment_records":
-                treatment_ids.add(log.record_id)
-            elif log.table_name == "product_records":
-                product_ids.add(log.record_id)
+            if log.client_id is not None:
+                client_ids.add(log.client_id)
+                log_to_client[(log.table_name, log.record_id)] = log.client_id
 
-        if not treatment_ids and not product_ids:
+        if not client_ids:
             return client_names
 
         try:
             with DatabaseConnection() as db:
-                # Fetch client names for treatment records
-                if treatment_ids:
-                    placeholders = ",".join("?" * len(treatment_ids))
-                    db.execute(
-                        f"""
-                        SELECT tr.id as record_id,
-                               c.first_name || ' ' || c.last_name as client_name
-                        FROM treatment_records tr
-                        JOIN clients c ON tr.client_id = c.id
-                        WHERE tr.id IN ({placeholders})
-                        """,
-                        tuple(treatment_ids),
-                    )
-                    for row in db.fetchall():
-                        client_names[("treatment_records", row["record_id"])] = row[
-                            "client_name"
-                        ]
+                # Fetch client names for all referenced clients
+                placeholders = ",".join("?" * len(client_ids))
+                db.execute(
+                    f"""
+                    SELECT id,
+                           first_name || ' ' || last_name as client_name
+                    FROM clients
+                    WHERE id IN ({placeholders})
+                    """,
+                    tuple(client_ids),
+                )
 
-                # Fetch client names for product records
-                if product_ids:
-                    placeholders = ",".join("?" * len(product_ids))
-                    db.execute(
-                        f"""
-                        SELECT pr.id as record_id,
-                               c.first_name || ' ' || c.last_name as client_name
-                        FROM product_records pr
-                        JOIN clients c ON pr.client_id = c.id
-                        WHERE pr.id IN ({placeholders})
-                        """,
-                        tuple(product_ids),
-                    )
-                    for row in db.fetchall():
-                        client_names[("product_records", row["record_id"])] = row[
-                            "client_name"
-                        ]
+                # Build client_id -> name mapping
+                id_to_name: dict[int, str] = {}
+                for row in db.fetchall():
+                    id_to_name[row["id"]] = row["client_name"]
+
+                # Map (table_name, record_id) to client name
+                for key, client_id in log_to_client.items():
+                    if client_id in id_to_name:
+                        client_names[key] = id_to_name[client_id]
 
         except Exception as e:
             logger.error(f"Failed to fetch client names for audit logs: {e}")

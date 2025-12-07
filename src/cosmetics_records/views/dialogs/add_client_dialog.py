@@ -42,6 +42,7 @@ from ..components.date_picker import DatePicker
 from ..components.tag_input import TagInput
 from ..constants import DialogSize, ComponentHeight
 from cosmetics_records.utils.validators import is_valid_email
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ class AddClientDialog(BaseDialog):
         # Initialize base dialog with appropriate size
         # WHY LARGE: Tall enough for all client fields without scrolling
         super().__init__(
-            "Add New Client",
+            _("Add New Client"),
             parent,
             width=DialogSize.LARGE_WIDTH,
             height=DialogSize.LARGE_HEIGHT,
@@ -104,43 +105,43 @@ class AddClientDialog(BaseDialog):
 
         # First Name (required)
         self._first_name_input = QLineEdit()
-        self._first_name_input.setPlaceholderText("Enter first name...")
-        form_layout.addRow("First Name: *", self._first_name_input)
+        self._first_name_input.setPlaceholderText(_("Enter first name..."))
+        form_layout.addRow(_("First Name") + ": *", self._first_name_input)
 
         # Last Name (required)
         self._last_name_input = QLineEdit()
-        self._last_name_input.setPlaceholderText("Enter last name...")
-        form_layout.addRow("Last Name: *", self._last_name_input)
+        self._last_name_input.setPlaceholderText(_("Enter last name..."))
+        form_layout.addRow(_("Last Name") + ": *", self._last_name_input)
 
         # Email (optional)
         self._email_input = QLineEdit()
-        self._email_input.setPlaceholderText("Enter email address...")
-        form_layout.addRow("Email:", self._email_input)
+        self._email_input.setPlaceholderText(_("Enter email address..."))
+        form_layout.addRow(_("Email") + ":", self._email_input)
 
         # Phone (optional)
         self._phone_input = QLineEdit()
-        self._phone_input.setPlaceholderText("Enter phone number...")
-        form_layout.addRow("Phone:", self._phone_input)
+        self._phone_input.setPlaceholderText(_("Enter phone number..."))
+        form_layout.addRow(_("Phone") + ":", self._phone_input)
 
         # Address (optional)
         self._address_input = QTextEdit()
-        self._address_input.setPlaceholderText("Enter address...")
+        self._address_input.setPlaceholderText(_("Enter address..."))
         self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
-        form_layout.addRow("Address:", self._address_input)
+        form_layout.addRow(_("Address") + ":", self._address_input)
 
         # Date of Birth (optional)
         self._dob_picker = DatePicker()
-        form_layout.addRow("Date of Birth:", self._dob_picker)
+        form_layout.addRow(_("Date of Birth") + ":", self._dob_picker)
 
         # Allergies (optional)
         self._allergies_input = QTextEdit()
-        self._allergies_input.setPlaceholderText("Enter any allergies...")
+        self._allergies_input.setPlaceholderText(_("Enter any allergies..."))
         self._allergies_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
-        form_layout.addRow("Allergies:", self._allergies_input)
+        form_layout.addRow(_("Allergies") + ":", self._allergies_input)
 
         # Tags (optional)
         self._tag_input = TagInput()
-        form_layout.addRow("Tags:", self._tag_input)
+        form_layout.addRow(_("Tags") + ":", self._tag_input)
 
         layout.addLayout(form_layout)
 
@@ -148,12 +149,12 @@ class AddClientDialog(BaseDialog):
         layout.addStretch()
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
         # Save/Cancel buttons
-        button_row = self.create_button_row("Save", "Cancel")
+        button_row = self.create_button_row(_("Save"), _("Cancel"))
         layout.addLayout(button_row)
 
     def accept(self) -> None:
@@ -168,12 +169,12 @@ class AddClientDialog(BaseDialog):
         last_name = self._last_name_input.text().strip()
 
         if not first_name:
-            self.show_error("First name is required.")
+            self.show_error(_("First name is required."))
             self._first_name_input.setFocus()
             return
 
         if not last_name:
-            self.show_error("Last name is required.")
+            self.show_error(_("Last name is required."))
             self._last_name_input.setFocus()
             return
 
@@ -182,8 +183,9 @@ class AddClientDialog(BaseDialog):
         email = self._email_input.text().strip()
         if email and not is_valid_email(email):
             self.show_error(
-                "Invalid email format. Please enter a valid email "
-                "(e.g., user@example.com)."
+                _(
+                    "Invalid email format. Please enter a valid email (e.g., user@example.com)."
+                )
             )
             self._email_input.setFocus()
             return

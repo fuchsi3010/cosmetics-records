@@ -35,6 +35,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class AddTreatmentDialog(BaseDialog):
 
         # Initialize base dialog
         # WHY 500x350: Compact size for simple form (smaller without date picker)
-        super().__init__("Add Treatment", parent, width=500, height=350)
+        super().__init__(_("Add Treatment"), parent, width=500, height=350)
 
         logger.debug(f"AddTreatmentDialog initialized for client {client_id}")
 
@@ -91,11 +92,11 @@ class AddTreatmentDialog(BaseDialog):
         layout.addWidget(date_label)
 
         # Notes (required)
-        notes_label = QLabel("Notes: *")
+        notes_label = QLabel(_("Notes: *"))
         layout.addWidget(notes_label)
 
         self._notes_input = QTextEdit()
-        self._notes_input.setPlaceholderText("Enter treatment notes...")
+        self._notes_input.setPlaceholderText(_("Enter treatment notes..."))
         self._notes_input.setMinimumHeight(150)
         layout.addWidget(self._notes_input)
 
@@ -115,7 +116,7 @@ class AddTreatmentDialog(BaseDialog):
         # Validate notes
         notes = self._notes_input.toPlainText().strip()
         if not notes:
-            self.show_error("Notes are required.")
+            self.show_error(_("Notes are required."))
             self._notes_input.setFocus()
             return
 
@@ -140,7 +141,7 @@ class AddTreatmentDialog(BaseDialog):
         """
         self._existing_treatment_id = treatment_id
         self._notes_input.setPlainText(notes)
-        self.setWindowTitle("Edit Treatment")
+        self.setWindowTitle(_("Edit Treatment"))
         logger.debug(f"Editing existing treatment {treatment_id}")
 
     def is_editing_existing(self) -> bool:

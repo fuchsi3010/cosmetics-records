@@ -71,7 +71,12 @@ class AuditService:
         logger.debug("AuditService initialized")
 
     def log_create(
-        self, table_name: str, record_id: int, new_value: str, ui_location: str
+        self,
+        table_name: str,
+        record_id: int,
+        new_value: str,
+        ui_location: str,
+        client_id: Optional[int] = None,
     ) -> None:
         """
         Log a CREATE action to the audit log.
@@ -88,6 +93,7 @@ class AuditService:
                       (e.g., "Jane Doe", "Retinol Serum 30ml")
             ui_location: Name of the UI view that created the record
                         (e.g., "ClientEditView", "TreatmentHistoryView")
+            client_id: Optional ID of the client this change is related to
 
         Raises:
             sqlite3.Error: If the database insert fails
@@ -97,7 +103,8 @@ class AuditService:
             ...     "clients",
             ...     42,
             ...     "Jane Doe",
-            ...     "ClientEditView"
+            ...     "ClientEditView",
+            ...     client_id=42
             ... )
         """
         try:
@@ -111,6 +118,7 @@ class AuditService:
                 old_value=None,  # No old value for newly created records
                 new_value=new_value,
                 ui_location=ui_location,
+                client_id=client_id,
             )
 
             # Insert the audit log into the database
@@ -124,9 +132,10 @@ class AuditService:
                     field_name,
                     old_value,
                     new_value,
-                    ui_location
+                    ui_location,
+                    client_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     audit_log.table_name,
@@ -136,6 +145,7 @@ class AuditService:
                     audit_log.old_value,
                     audit_log.new_value,
                     audit_log.ui_location,
+                    audit_log.client_id,
                 ),
             )
 
@@ -144,7 +154,7 @@ class AuditService:
 
             logger.info(
                 f"CREATE logged: {table_name}[{record_id}] = '{new_value}' "
-                f"from {ui_location}"
+                f"from {ui_location} (client_id={client_id})"
             )
 
         except Exception as e:
@@ -161,6 +171,7 @@ class AuditService:
         old_value: str,
         new_value: str,
         ui_location: str,
+        client_id: Optional[int] = None,
     ) -> None:
         """
         Log an UPDATE action to the audit log.
@@ -177,6 +188,7 @@ class AuditService:
             old_value: Previous value before the change (as string)
             new_value: New value after the change (as string)
             ui_location: Name of the UI view that made the update
+            client_id: Optional ID of the client this change is related to
 
         Raises:
             sqlite3.Error: If the database insert fails
@@ -188,7 +200,8 @@ class AuditService:
             ...     "email",
             ...     "old@example.com",
             ...     "new@example.com",
-            ...     "ClientEditView"
+            ...     "ClientEditView",
+            ...     client_id=42
             ... )
         """
         # Skip logging if values are identical (no actual change occurred)
@@ -209,6 +222,7 @@ class AuditService:
                 old_value=old_value,
                 new_value=new_value,
                 ui_location=ui_location,
+                client_id=client_id,
             )
 
             # Insert the audit log into the database
@@ -221,9 +235,10 @@ class AuditService:
                     field_name,
                     old_value,
                     new_value,
-                    ui_location
+                    ui_location,
+                    client_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     audit_log.table_name,
@@ -233,6 +248,7 @@ class AuditService:
                     audit_log.old_value,
                     audit_log.new_value,
                     audit_log.ui_location,
+                    audit_log.client_id,
                 ),
             )
 
@@ -249,7 +265,12 @@ class AuditService:
             raise
 
     def log_delete(
-        self, table_name: str, record_id: int, old_value: str, ui_location: str
+        self,
+        table_name: str,
+        record_id: int,
+        old_value: str,
+        ui_location: str,
+        client_id: Optional[int] = None,
     ) -> None:
         """
         Log a DELETE action to the audit log.
@@ -264,6 +285,7 @@ class AuditService:
             old_value: Human-readable representation of the deleted record
                       (e.g., "Jane Doe", "Treatment on 2024-01-15")
             ui_location: Name of the UI view that performed the deletion
+            client_id: Optional ID of the client this change is related to
 
         Raises:
             sqlite3.Error: If the database insert fails
@@ -273,7 +295,8 @@ class AuditService:
             ...     "treatment_records",
             ...     123,
             ...     "Treatment on 2024-01-15 for Jane Doe",
-            ...     "TreatmentHistoryView"
+            ...     "TreatmentHistoryView",
+            ...     client_id=5
             ... )
         """
         try:
@@ -286,6 +309,7 @@ class AuditService:
                 old_value=old_value,
                 new_value=None,  # No new value for deleted records
                 ui_location=ui_location,
+                client_id=client_id,
             )
 
             # Insert the audit log into the database
@@ -298,9 +322,10 @@ class AuditService:
                     field_name,
                     old_value,
                     new_value,
-                    ui_location
+                    ui_location,
+                    client_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     audit_log.table_name,
@@ -310,6 +335,7 @@ class AuditService:
                     audit_log.old_value,
                     audit_log.new_value,
                     audit_log.ui_location,
+                    audit_log.client_id,
                 ),
             )
 
@@ -318,7 +344,7 @@ class AuditService:
 
             logger.info(
                 f"DELETE logged: {table_name}[{record_id}] = '{old_value}' "
-                f"from {ui_location}"
+                f"from {ui_location} (client_id={client_id})"
             )
 
         except Exception as e:
@@ -375,7 +401,8 @@ class AuditService:
                     old_value,
                     new_value,
                     ui_location,
-                    created_at
+                    created_at,
+                    client_id
                 FROM audit_log
             """
 
@@ -420,6 +447,7 @@ class AuditService:
                     new_value=row["new_value"],
                     ui_location=row["ui_location"],
                     created_at=datetime.fromisoformat(row["created_at"]),
+                    client_id=row["client_id"],
                 )
                 audit_logs.append(audit_log)
 
@@ -596,7 +624,8 @@ class AuditService:
                     old_value,
                     new_value,
                     ui_location,
-                    created_at
+                    created_at,
+                    client_id
                 FROM audit_log
                 WHERE table_name = ? AND record_id = ?
                 ORDER BY created_at DESC, id DESC
@@ -619,6 +648,7 @@ class AuditService:
                     new_value=row["new_value"],
                     ui_location=row["ui_location"],
                     created_at=datetime.fromisoformat(row["created_at"]),
+                    client_id=row["client_id"],
                 )
                 audit_logs.append(audit_log)
 

@@ -138,7 +138,13 @@ class ProductController:
         # Log creation to audit log
         audit = AuditService(self.db)
         description = f"Product record on {record.product_date}"
-        audit.log_create("product_records", record_id, description, "ProductController")
+        audit.log_create(
+            "product_records",
+            record_id,
+            description,
+            "ProductController",
+            client_id=record.client_id,
+        )
 
         logger.info(
             f"Created product record for client {record.client_id} "
@@ -256,6 +262,7 @@ class ProductController:
                 str(old_record.product_date),
                 str(record.product_date),
                 "ProductController",
+                client_id=record.client_id,
             )
         if old_record.product_text != record.product_text:
             audit.log_update(
@@ -265,6 +272,7 @@ class ProductController:
                 old_record.product_text or "",
                 record.product_text or "",
                 "ProductController",
+                client_id=record.client_id,
             )
 
         logger.info(f"Updated product record ID {record.id}")
@@ -313,7 +321,13 @@ class ProductController:
 
         # Log deletion to audit log
         audit = AuditService(self.db)
-        audit.log_delete("product_records", record_id, description, "ProductController")
+        audit.log_delete(
+            "product_records",
+            record_id,
+            description,
+            "ProductController",
+            client_id=record.client_id,
+        )
 
         logger.info(f"Deleted product record ID {record_id}")
         return True

@@ -59,6 +59,7 @@ from PyQt6.QtWidgets import (
     QWidget,
     QGridLayout,
 )
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -140,10 +141,10 @@ class HistoryItem(QFrame):
         # Edit button (hidden via CSS property, shown on hover)
         # Delete is handled in the edit dialog
         # Using "Edit" text for reliability across fonts
-        self._edit_btn = QPushButton("Edit")
+        self._edit_btn = QPushButton(_("Edit"))
         self._edit_btn.setProperty("class", "history_edit_button")
         self._edit_btn.setProperty("visible_state", "hidden")
-        self._edit_btn.setFixedSize(50, 24)  # Fixed size to prevent layout shifts
+        self._edit_btn.setMinimumWidth(50)  # Minimum width to prevent layout shifts
         self._edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._edit_btn.clicked.connect(self.edit_clicked.emit)
         top_row.addWidget(self._edit_btn)
@@ -252,7 +253,7 @@ class HistoryList(QWidget):
 
         title_row.addStretch()
 
-        add_btn = QPushButton("+ Add")
+        add_btn = QPushButton(_("+ Add"))
         add_btn.setProperty("class", "primary")
         add_btn.setMinimumWidth(80)
         add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -370,11 +371,11 @@ class HistoryList(QWidget):
         if not self._has_more and len(self._items) > 0 and scrollbar_visible:
             # Determine message based on title
             if "Treatment" in self._title:
-                self._end_label_text.setText("No more treatments")
+                self._end_label_text.setText(_("No more treatments"))
             elif "Product" in self._title:
-                self._end_label_text.setText("No more products")
+                self._end_label_text.setText(_("No more products"))
             else:
-                self._end_label_text.setText("No more items")
+                self._end_label_text.setText(_("No more items"))
             self._end_label.setVisible(True)
         else:
             self._end_label.setVisible(False)
@@ -494,7 +495,7 @@ class AutoSaveTextEdit(QTextEdit):
         if self._has_changes:
             self._save_timer.stop()
             self._save_timer.start(self.AUTOSAVE_DELAY)
-            self._show_status("Saving...")
+            self._show_status(_("Saving..."))
 
     def _save_content(self) -> None:
         """
@@ -506,7 +507,7 @@ class AutoSaveTextEdit(QTextEdit):
         self._initial_content = text  # Update initial content after save
         self._has_changes = False
         self.content_saved.emit(text)
-        self._show_status("Saved ✓")
+        self._show_status(_("Saved") + " ✓")
         # Hide the saved indicator after a delay
         self._status_timer.start(self.SAVED_INDICATOR_DURATION)
         logger.debug("Auto-save triggered")
@@ -605,10 +606,10 @@ class ClientDetailView(QWidget):
         grid.setSpacing(16)
 
         # Top-left: Planned Treatment
-        planned_frame = self._create_section_frame("Planned Treatment")
+        planned_frame = self._create_section_frame(_("Planned Treatment"))
         self._planned_treatment_edit = AutoSaveTextEdit()
         self._planned_treatment_edit.setPlaceholderText(
-            "Enter planned treatment details..."
+            _("Enter planned treatment details...")
         )
         self._planned_treatment_edit.content_saved.connect(
             self._on_planned_treatment_saved
@@ -617,22 +618,22 @@ class ClientDetailView(QWidget):
         grid.addWidget(planned_frame, 0, 0)
 
         # Top-right: Personal Notes
-        notes_frame = self._create_section_frame("Personal Notes")
+        notes_frame = self._create_section_frame(_("Personal Notes"))
         self._personal_notes_edit = AutoSaveTextEdit()
-        self._personal_notes_edit.setPlaceholderText("Enter personal notes...")
+        self._personal_notes_edit.setPlaceholderText(_("Enter personal notes..."))
         self._personal_notes_edit.content_saved.connect(self._on_personal_notes_saved)
         notes_frame.layout().addWidget(self._personal_notes_edit)
         grid.addWidget(notes_frame, 0, 1)
 
         # Bottom-left: Treatment History
-        self._treatment_history = HistoryList("Treatment History")
+        self._treatment_history = HistoryList(_("Treatment History"))
         self._treatment_history.add_clicked.connect(self._on_add_treatment)
         self._treatment_history.load_more_clicked.connect(self._on_load_more_treatments)
         self._treatment_history.edit_item.connect(self._on_edit_treatment)
         grid.addWidget(self._treatment_history, 1, 0)
 
         # Bottom-right: Product History
-        self._product_history = HistoryList("Product History")
+        self._product_history = HistoryList(_("Product History"))
         self._product_history.add_clicked.connect(self._on_add_product)
         self._product_history.load_more_clicked.connect(self._on_load_more_products)
         self._product_history.edit_item.connect(self._on_edit_product)
@@ -683,7 +684,7 @@ class ClientDetailView(QWidget):
         top_row.addStretch()
 
         # Edit button (back button removed - navigation via navbar)
-        edit_btn = QPushButton("Edit")
+        edit_btn = QPushButton(_("Edit"))
         edit_btn.setProperty("class", "secondary")
         edit_btn.setMinimumWidth(80)
         edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
