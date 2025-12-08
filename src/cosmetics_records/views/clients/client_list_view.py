@@ -595,13 +595,45 @@ class ClientListView(QWidget):
         """
         Handle client row click.
 
-        Emits the client_selected signal with the client ID.
+        Resets search and filter, then emits the client_selected signal.
 
         Args:
             client_id: Database ID of the clicked client
         """
         logger.debug(f"Client clicked: {client_id}")
+
+        # Reset search and filter so the list is clean when user returns
+        self.reset_filters()
+
         self.client_selected.emit(client_id)
+
+    def reset_filters(self) -> None:
+        """
+        Reset search bar and alphabet filter to default state.
+
+        Clears the search text and sets alphabet filter to "All",
+        then reloads the client list.
+        """
+        # Block signals to prevent double reload
+        self._search_bar.blockSignals(True)
+        self._alphabet_filter.blockSignals(True)
+
+        # Clear UI elements
+        self._search_bar.clear()
+        self._alphabet_filter.set_active("All")
+
+        # Re-enable signals
+        self._search_bar.blockSignals(False)
+        self._alphabet_filter.blockSignals(False)
+
+        # Update internal state
+        self._current_search = ""
+        self._current_filter = "All"
+
+        # Reload list with cleared filters
+        self._reset_and_reload()
+
+        logger.debug("Filters reset")
 
     def refresh(self) -> None:
         """

@@ -131,7 +131,9 @@ class AddProductRecordDialog(BaseDialog):
         self._quantity_combo = QComboBox()
         for i in range(1, 11):
             self._quantity_combo.addItem(f"{i}x")
-        self._quantity_combo.setFixedWidth(60)
+        self._quantity_combo.setFixedWidth(70)
+        # CSS property for compact styling
+        self._quantity_combo.setProperty("quantity_selector", True)
         entry_row.addWidget(self._quantity_combo)
 
         # Product autocomplete input

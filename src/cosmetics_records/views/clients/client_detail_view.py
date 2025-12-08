@@ -104,6 +104,13 @@ class HistoryItem(QFrame):
 
         self.setProperty("history_item", True)  # CSS class
 
+        # Prevent item from expanding to fill available vertical space
+        # WHY: Without this, a single history item would stretch to fill
+        # the entire history section, which looks wrong
+        self.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
+        )
+
         # Set up the UI
         self._init_ui()
 

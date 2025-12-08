@@ -289,6 +289,24 @@ QListWidget::item:selected {{
     color: white;
 }}
 
+/* Autocomplete dropdown - more prominent to stand out as a popup */
+QListWidget[autocomplete_dropdown="true"] {{
+    background-color: {DARK_SURFACE};
+    border: 2px solid {PRIMARY_BLUE};
+    border-radius: {BORDER_RADIUS};
+    margin-top: 4px;
+}}
+
+QListWidget[autocomplete_dropdown="true"]::item {{
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin: 2px 4px;
+}}
+
+QListWidget[autocomplete_dropdown="true"]::item:hover {{
+    background-color: #3d5a80;
+}}
+
 /* ==========================================================================
    Scroll Areas
    ========================================================================== */
@@ -669,6 +687,16 @@ QComboBox QAbstractItemView {{
     color: {DARK_TEXT};
     border: 1px solid {DARK_BORDER};
     selection-background-color: {PRIMARY_BLUE};
+}}
+
+/* Compact quantity selector - less padding for small widths */
+QComboBox[quantity_selector="true"] {{
+    padding: 6px 4px 6px 8px;
+    font-weight: bold;
+}}
+
+QComboBox[quantity_selector="true"]::drop-down {{
+    width: 16px;
 }}
 
 /* ==========================================================================
@@ -1083,6 +1111,24 @@ QListWidget::item:selected {{
     color: white;
 }}
 
+/* Autocomplete dropdown - more prominent to stand out as a popup */
+QListWidget[autocomplete_dropdown="true"] {{
+    background-color: {LIGHT_SURFACE};
+    border: 2px solid {PRIMARY_BLUE};
+    border-radius: {BORDER_RADIUS};
+    margin-top: 4px;
+}}
+
+QListWidget[autocomplete_dropdown="true"]::item {{
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin: 2px 4px;
+}}
+
+QListWidget[autocomplete_dropdown="true"]::item:hover {{
+    background-color: #a8d0e6;
+}}
+
 /* ==========================================================================
    Scroll Areas
    ========================================================================== */
@@ -1458,6 +1504,16 @@ QComboBox QAbstractItemView {{
     color: {LIGHT_TEXT};
     border: 1px solid {LIGHT_BORDER};
     selection-background-color: {PRIMARY_BLUE};
+}}
+
+/* Compact quantity selector - less padding for small widths */
+QComboBox[quantity_selector="true"] {{
+    padding: 6px 4px 6px 8px;
+    font-weight: bold;
+}}
+
+QComboBox[quantity_selector="true"]::drop-down {{
+    width: 16px;
 }}
 
 /* ==========================================================================

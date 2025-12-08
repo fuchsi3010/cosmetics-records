@@ -562,10 +562,10 @@ class ClientController:
             # Example: "john" matches "John Smith" with high score
             score = fuzz.partial_ratio(query, searchable_text)
 
-            # Only include matches above 60% threshold
-            # WHY 60%: Good balance between flexibility and precision
-            # Lower values would return too many false positives
-            if score >= 60:
+            # Only include matches above 70% threshold
+            # WHY 70%: Stricter threshold to reduce false positives while
+            # still allowing for typos and partial name matches
+            if score >= 70:
                 matches.append((client, score))
 
         # Sort by score (highest first) and limit results

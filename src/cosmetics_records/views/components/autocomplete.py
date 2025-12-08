@@ -120,6 +120,8 @@ class Autocomplete(QWidget):
         self._suggestions_list = QListWidget()
         self._suggestions_list.setVisible(False)
         self._suggestions_list.itemClicked.connect(self._on_item_clicked)
+        # CSS property for styling - makes it stand out as a dropdown
+        self._suggestions_list.setProperty("autocomplete_dropdown", True)
 
         layout.addWidget(self._suggestions_list)
 
@@ -268,9 +270,9 @@ class Autocomplete(QWidget):
         self._suggestions_list.setVisible(True)
 
         # Adjust height based on number of items
-        # WHY 30: Approximate height per item
-        item_height = 30
-        list_height = min(len(suggestions) * item_height, 300)  # Max 300px
+        # WHY 40: Approximate height per item (including padding)
+        item_height = 40
+        list_height = min(len(suggestions) * item_height, 350)  # Max 350px
         self._suggestions_list.setFixedHeight(list_height)
 
     def _hide_suggestions(self) -> None:
