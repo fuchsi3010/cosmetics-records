@@ -68,7 +68,7 @@ jobs:
             artifact_name: CosmeticsRecords-Linux
           - os: windows-latest
             artifact_name: CosmeticsRecords-Windows
-          - os: macos-13
+          - os: macos-15-intel
             artifact_name: CosmeticsRecords-macOS-Intel
           - os: macos-latest
             artifact_name: CosmeticsRecords-macOS-AppleSilicon
