@@ -1,0 +1,32 @@
+# =============================================================================
+# Flake8 Configuration
+# =============================================================================
+# This file configures flake8 to be compatible with black code formatter.
+# Black uses 88 character line length by default.
+# =============================================================================
+
+[flake8]
+# Match black's line length
+max-line-length = 88
+
+# Extend ignore to work well with black
+# E203: whitespace before ':' (black formats slices differently)
+# E501: line too long (black handles this, but some edge cases remain)
+# W503: line break before binary operator (black prefers this style)
+extend-ignore = E203, W503
+
+# Exclude common directories
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info
+
+# Show source code for errors
+show-source = true
+
+# Count errors by type
+statistics = true

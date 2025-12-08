@@ -409,12 +409,15 @@ class ClientListView(QWidget):
     def _clear_client_list(self) -> None:
         """
         Remove all client rows from the UI.
+
+        Preserves the empty state label - only removes ClientRow widgets.
         """
-        # Remove all widgets from layout
-        while self._client_layout.count():
-            item = self._client_layout.takeAt(0)
+        # Remove all ClientRow widgets from layout, but keep _empty_state_label
+        for i in reversed(range(self._client_layout.count())):
+            item = self._client_layout.itemAt(i)
             widget = item.widget()
-            if widget:
+            if widget and isinstance(widget, ClientRow):
+                self._client_layout.takeAt(i)
                 widget.deleteLater()
 
     def _on_scroll_changed(self, value: int) -> None:

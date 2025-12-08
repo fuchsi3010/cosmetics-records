@@ -133,6 +133,20 @@ pip install -e .
 python src/cosmetics_records/app.py
 ```
 
+### Command-Line Options
+
+```bash
+# Run with verbose/debug logging
+python src/cosmetics_records/app.py -v
+python src/cosmetics_records/app.py --verbose
+
+# Set specific log level (debug, info, warning, error)
+python src/cosmetics_records/app.py --log-level=debug
+python src/cosmetics_records/app.py --log-level=info
+```
+
+Note: File logging always captures debug-level messages regardless of console log level.
+
 ## Development
 
 ### Code Quality

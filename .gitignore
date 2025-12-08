@@ -145,3 +145,6 @@ tmp/
 temp/
 *.tmp
 shell.nix
+# Temporary conversion script
+scripts/convert_old_data.py
+scripts/convert_access_db.py

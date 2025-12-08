@@ -24,6 +24,7 @@
 #   # or use the main() function from another module
 # =============================================================================
 
+import argparse
 import logging
 import sys
 from pathlib import Path
@@ -674,31 +675,79 @@ class MainWindow(QMainWindow):
             logger.error(f"Failed to apply language change: {e}")
 
 
-def setup_logging() -> None:
+def setup_logging(console_level: int = logging.WARNING) -> None:
     """
     Configure application logging.
 
     Sets up both console and file logging with appropriate formatting.
+    Console defaults to WARNING level to reduce noise, file always logs DEBUG.
+
+    Args:
+        console_level: Logging level for console output (default: WARNING)
     """
     # Get config to determine log location
     config = Config.get_instance()
     log_dir = config.get_config_dir()
     log_file = log_dir / "cosmetics_records.log"
 
-    # Create logging configuration
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[
-            # Console handler
-            logging.StreamHandler(sys.stdout),
-            # File handler
-            logging.FileHandler(log_file, encoding="utf-8"),
-        ],
+    # Create formatter
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
+
+    # Console handler - uses specified level
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(console_level)
+    console_handler.setFormatter(formatter)
+
+    # File handler - always DEBUG for full diagnostics
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)  # Capture all, handlers filter
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
 
     logger.info("Logging configured")
     logger.info(f"Log file: {log_file}")
+    logger.info(f"Console log level: {logging.getLevelName(console_level)}")
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    Parse command-line arguments.
+
+    Returns:
+        Parsed arguments namespace
+    """
+    parser = argparse.ArgumentParser(
+        description="Cosmetics Records - Client and treatment management"
+    )
+
+    parser.add_argument(
+        "--log-level",
+        choices=["debug", "info", "warning", "error"],
+        default="warning",
+        help="Console log level (default: warning). File always logs debug.",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output (same as --log-level=debug)",
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"Cosmetics Records {__version__}",
+    )
+
+    return parser.parse_args()
 
 
 def main() -> int:
@@ -706,11 +755,12 @@ def main() -> int:
     Main application entry point.
 
     This function:
-    1. Sets up logging
-    2. Creates QApplication
-    3. Creates and shows MainWindow
-    4. Starts event loop
-    5. Returns exit code
+    1. Parses command-line arguments
+    2. Sets up logging
+    3. Creates QApplication
+    4. Creates and shows MainWindow
+    5. Starts event loop
+    6. Returns exit code
 
     Returns:
         int: Application exit code (0 for success)
@@ -719,8 +769,23 @@ def main() -> int:
         if __name__ == "__main__":
             sys.exit(main())
     """
-    # Set up logging first
-    setup_logging()
+    # Parse command-line arguments
+    args = parse_args()
+
+    # Determine log level
+    if args.verbose:
+        console_level = logging.DEBUG
+    else:
+        level_map = {
+            "debug": logging.DEBUG,
+            "info": logging.INFO,
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+        }
+        console_level = level_map[args.log_level]
+
+    # Set up logging
+    setup_logging(console_level)
 
     logger.info("=" * 80)
     logger.info("Cosmetics Records Application Starting")
