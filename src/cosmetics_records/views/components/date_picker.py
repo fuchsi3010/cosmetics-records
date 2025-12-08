@@ -28,6 +28,8 @@ from datetime import date
 from typing import Optional
 
 from PyQt6.QtCore import QDate, Qt, pyqtSignal
+
+from cosmetics_records.utils.time_utils import format_date_localized
 from PyQt6.QtWidgets import (
     QCalendarWidget,
     QHBoxLayout,
@@ -268,9 +270,8 @@ class DatePicker(QWidget):
 
         # Update display
         if d:
-            # Format as "Dec 15, 2023"
-            # WHY this format: Clear, readable, unambiguous
-            formatted = d.strftime("%b %d, %Y")
+            # Use localized date format (respects user's locale setting)
+            formatted = format_date_localized(d)
             self._date_display.setText(formatted)
         else:
             self._date_display.clear()
