@@ -38,6 +38,7 @@ from cosmetics_records.database.connection import DatabaseConnection
 # WHY: In PyInstaller bundles, importlib.util.spec_from_file_location() cannot
 # load bundled .py files. We import them directly here and reference them by name.
 from cosmetics_records.database.migrations import v001_initial_schema
+from cosmetics_records.database.migrations import v002_add_audit_client_id
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -152,6 +153,7 @@ class MigrationManager:
     # The modules are imported at the top of this file for PyInstaller compatibility.
     KNOWN_MIGRATIONS = [
         "v001_initial_schema",
+        "v002_add_audit_client_id",
     ]
 
     # Map of migration names to their imported modules (for PyInstaller)
@@ -159,6 +161,7 @@ class MigrationManager:
     # them directly and reference them from this dictionary.
     MIGRATION_MODULES = {
         "v001_initial_schema": v001_initial_schema,
+        "v002_add_audit_client_id": v002_add_audit_client_id,
     }
 
     def _discover_migration_files(self) -> List[Tuple[str, Path]]:
