@@ -257,6 +257,8 @@ class MainWindow(QMainWindow):
             settings_view.scale_changed.connect(self._on_scale_changed)
             # Wire up language changes to apply immediately
             settings_view.language_changed.connect(self._on_language_changed)
+            # Wire up data import to refresh client list
+            settings_view.data_imported.connect(self._on_data_imported)
             self.views["settings"] = settings_view
             self.stacked_widget.addWidget(settings_view)
             logger.debug("SettingsView created and connected")
@@ -524,6 +526,9 @@ class MainWindow(QMainWindow):
         """
         self._navigate_to("clients")
 
+        # Hide the client detail navbar item since no client is selected
+        self.navbar.set_item_visible("client_detail", False)
+
         # Refresh the list to reflect any changes (e.g., deleted client)
         if "clients" in self.views:
             view = self.views["clients"]
@@ -531,6 +536,20 @@ class MainWindow(QMainWindow):
                 view.refresh()
 
         logger.debug("Returned to client list and refreshed")
+
+    def _on_data_imported(self) -> None:
+        """
+        Handle data import completion.
+
+        Refreshes the client list to show newly imported clients.
+        """
+        logger.info("Data imported, refreshing client list")
+
+        # Refresh the client list to show imported clients
+        if "clients" in self.views:
+            view = self.views["clients"]
+            if hasattr(view, "refresh"):
+                view.refresh()
 
     def _is_dark_theme(self, theme_name: str) -> bool:
         """

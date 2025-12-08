@@ -152,7 +152,7 @@ class EditClientDialog(BaseDialog):
         # Address (optional)
         self._address_input = QTextEdit()
         self._address_input.setPlaceholderText(_("Enter address..."))
-        self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_SMALL)
+        self._address_input.setFixedHeight(ComponentHeight.TEXTAREA_MEDIUM)
         form_layout.addRow(_("Address") + ":", self._address_input)
 
         # Date of Birth (optional)

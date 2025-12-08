@@ -452,9 +452,9 @@ QLabel[tag_more="true"] {{
    Tag Input Component (TagInput widget)
    ========================================================================== */
 
-/* Tags container - slightly darker than dialog background */
+/* Tags container - transparent to match dialog background */
 QWidget[chips_container="true"] {{
-    background-color: #2a2a2a;
+    background-color: transparent;
     border-radius: 4px;
 }}
 
@@ -472,18 +472,19 @@ QPushButton[tag_label="true"] {{
     font-size: {sizes["secondary"]};
 }}
 
-/* Tag remove button */
+/* Tag remove button - red for visibility */
 QPushButton[tag_remove="true"] {{
-    background-color: transparent;
-    color: {DARK_TEXT_SECONDARY};
+    background-color: rgba(255, 100, 100, 0.3);
+    color: #ff6b6b;
     border: none;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: bold;
 }}
 
 QPushButton[tag_remove="true"]:hover {{
-    color: {DARK_TEXT};
-    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    background-color: #e74c3c;
     border-radius: 8px;
 }}
 
@@ -1241,9 +1242,9 @@ QLabel[tag_more="true"] {{
    Tag Input Component (TagInput widget)
    ========================================================================== */
 
-/* Tags container - slightly darker than dialog background */
+/* Tags container - transparent to match dialog background */
 QWidget[chips_container="true"] {{
-    background-color: #f0f0f0;
+    background-color: transparent;
     border-radius: 4px;
 }}
 
@@ -1261,18 +1262,19 @@ QPushButton[tag_label="true"] {{
     font-size: {sizes["secondary"]};
 }}
 
-/* Tag remove button */
+/* Tag remove button - red for visibility */
 QPushButton[tag_remove="true"] {{
-    background-color: transparent;
-    color: {LIGHT_TEXT_SECONDARY};
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #c0392b;
     border: none;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: bold;
 }}
 
 QPushButton[tag_remove="true"]:hover {{
-    color: {LIGHT_TEXT};
-    background-color: rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    background-color: #e74c3c;
     border-radius: 8px;
 }}
 

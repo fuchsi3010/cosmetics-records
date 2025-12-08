@@ -279,7 +279,7 @@ class AuditLogView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        # Title row (no background, just title and refresh button)
+        # Title row
         title_layout = QHBoxLayout()
         title_layout.setContentsMargins(16, 16, 16, 8)
 
@@ -290,12 +290,6 @@ class AuditLogView(QWidget):
         title_layout.addWidget(title_label)
 
         title_layout.addStretch()
-
-        # Refresh button
-        refresh_btn = QPushButton(_("Refresh"))
-        refresh_btn.setMinimumWidth(100)
-        refresh_btn.clicked.connect(self.refresh)
-        title_layout.addWidget(refresh_btn)
 
         main_layout.addLayout(title_layout)
 

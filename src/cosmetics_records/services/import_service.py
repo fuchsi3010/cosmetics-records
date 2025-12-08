@@ -51,6 +51,7 @@ from typing import Dict, List, Optional, Tuple
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.client import Client
 from cosmetics_records.models.product import InventoryItem
+from cosmetics_records.utils.validators import is_valid_email
 
 # Configure module logger for debugging import operations
 logger = logging.getLogger(__name__)
@@ -311,14 +312,14 @@ class ImportService:
 
         # Step 2: Parse and validate each file
         # Parse clients first (needed to validate references in other files)
-        client_import_ids = self._parse_clients_csv()
+        valid_client_ids, all_client_ids = self._parse_clients_csv()
 
         # Parse optional files
         if self._treatments_path and self._treatments_path.exists():
-            self._parse_treatments_csv(client_import_ids)
+            self._parse_treatments_csv(valid_client_ids, all_client_ids)
 
         if self._products_path and self._products_path.exists():
-            self._parse_products_csv(client_import_ids)
+            self._parse_products_csv(valid_client_ids, all_client_ids)
 
         if self._inventory_path and self._inventory_path.exists():
             self._parse_inventory_csv()
@@ -507,21 +508,24 @@ class ImportService:
     # CSV Parsing Methods
     # =========================================================================
 
-    def _parse_clients_csv(self) -> set:
+    def _parse_clients_csv(self) -> tuple[set, set]:
         """
         Parse and validate the clients CSV file.
 
         Returns:
-            Set of valid import_id values for reference validation
+            Tuple of (valid_import_ids, all_import_ids) for reference validation.
+            valid_import_ids: Set of import_ids that passed all validation
+            all_import_ids: Set of all import_ids found in the file (for better errors)
 
         Note:
             Populates self._parsed_data.clients and self._errors
         """
         if not self._clients_path or not self._clients_path.exists():
-            return set()
+            return set(), set()
 
         file_name = "clients.csv"
         valid_import_ids: set = set()
+        all_import_ids: set = set()  # Track all IDs for better error messages
 
         try:
             with open(self._clients_path, "r", encoding="utf-8-sig", newline="") as f:
@@ -530,7 +534,7 @@ class ImportService:
                 # Validate header columns
                 if reader.fieldnames is None:
                     self._add_error(file_name, None, None, "Empty file or invalid CSV")
-                    return set()
+                    return set(), set()
 
                 # Check required columns
                 missing_cols = self.CLIENTS_REQUIRED_COLUMNS - set(reader.fieldnames)
@@ -541,7 +545,7 @@ class ImportService:
                         None,
                         f"Missing required columns: {', '.join(sorted(missing_cols))}",
                     )
-                    return set()
+                    return set(), set()
 
                 # Track import_id values to detect duplicates
                 seen_import_ids: Dict[str, int] = {}  # import_id -> row number
@@ -556,6 +560,9 @@ class ImportService:
                             file_name, row_idx, "import_id", "import_id cannot be empty"
                         )
                         continue
+
+                    # Track all import_ids for better error messages
+                    all_import_ids.add(import_id)
 
                     # Check for duplicate import_id
                     if import_id in seen_import_ids:
@@ -600,14 +607,15 @@ class ImportService:
                             # Error already added by _parse_date
                             continue
 
-                    # Validate email format (basic check)
+                    # Validate email format using the same validator as the UI
                     email = row.get("email", "").strip() or None
-                    if email and "@" not in email:
+                    if email and not is_valid_email(email):
                         self._add_error(
                             file_name,
                             row_idx,
                             "email",
-                            f"Invalid email format: {email}",
+                            f"Invalid email format: '{email}' "
+                            "(expected format: user@example.com)",
                         )
                         continue
 
@@ -636,16 +644,18 @@ class ImportService:
 
         except Exception as e:
             self._add_error(file_name, None, None, f"Error reading file: {e}")
+            return set(), set()
 
         logger.debug(f"Parsed {len(valid_import_ids)} clients from {file_name}")
-        return valid_import_ids
+        return valid_import_ids, all_import_ids
 
-    def _parse_treatments_csv(self, valid_client_ids: set) -> None:
+    def _parse_treatments_csv(self, valid_client_ids: set, all_client_ids: set) -> None:
         """
         Parse and validate the treatments CSV file.
 
         Args:
-            valid_client_ids: Set of valid client import_id values
+            valid_client_ids: Set of client import_ids that passed validation
+            all_client_ids: Set of all client import_ids found (for better errors)
 
         Note:
             Populates self._parsed_data.treatments and self._errors
@@ -693,12 +703,22 @@ class ImportService:
 
                     # Validate client_import_id references valid client
                     if client_import_id not in valid_client_ids:
+                        # Better error if ID exists but failed validation
+                        if client_import_id in all_client_ids:
+                            msg = (
+                                f"client_import_id '{client_import_id}' exists in "
+                                "clients.csv but has validation errors (check above)"
+                            )
+                        else:
+                            msg = (
+                                f"client_import_id '{client_import_id}' "
+                                "not found in clients.csv"
+                            )
                         self._add_error(
                             file_name,
                             row_idx,
                             "client_import_id",
-                            f"client_import_id '{client_import_id}' "
-                            "not found in clients.csv",
+                            msg,
                         )
                         continue
 
@@ -747,12 +767,13 @@ class ImportService:
         parsed_treatments = len(self._get_parsed_data().treatments)
         logger.debug(f"Parsed {parsed_treatments} treatments from {file_name}")
 
-    def _parse_products_csv(self, valid_client_ids: set) -> None:
+    def _parse_products_csv(self, valid_client_ids: set, all_client_ids: set) -> None:
         """
         Parse and validate the product_sales CSV file.
 
         Args:
-            valid_client_ids: Set of valid client import_id values
+            valid_client_ids: Set of client import_ids that passed validation
+            all_client_ids: Set of all client import_ids found (for better errors)
 
         Note:
             Populates self._parsed_data.products and self._errors
@@ -798,12 +819,22 @@ class ImportService:
 
                     # Validate client_import_id references valid client
                     if client_import_id not in valid_client_ids:
+                        # Better error if ID exists but failed validation
+                        if client_import_id in all_client_ids:
+                            msg = (
+                                f"client_import_id '{client_import_id}' exists in "
+                                "clients.csv but has validation errors (check above)"
+                            )
+                        else:
+                            msg = (
+                                f"client_import_id '{client_import_id}' "
+                                "not found in clients.csv"
+                            )
                         self._add_error(
                             file_name,
                             row_idx,
                             "client_import_id",
-                            f"client_import_id '{client_import_id}' "
-                            "not found in clients.csv",
+                            msg,
                         )
                         continue
 

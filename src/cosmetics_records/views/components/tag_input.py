@@ -162,18 +162,19 @@ class TagInput(QWidget):
         # Input field for adding new tags
         self._line_edit = QLineEdit()
         self._line_edit.setPlaceholderText("Type tag and press Enter, Tab, or comma...")
-        self._line_edit.returnPressed.connect(self._add_tag_from_input)
+        # Don't connect returnPressed - we handle Enter in eventFilter to prevent
+        # dialog from closing when user just wants to add a tag
         self._line_edit.textChanged.connect(self._on_text_changed)
-        # Install event filter to intercept Tab key
+        # Install event filter to intercept Tab and Enter keys
         self._line_edit.installEventFilter(self)
         layout.addWidget(self._line_edit)
 
     def eventFilter(self, obj: Optional[QObject], event: Optional[QEvent]) -> bool:
         """
-        Event filter to intercept Tab key in the line edit.
+        Event filter to intercept Tab and Enter keys in the line edit.
 
-        When Tab is pressed with text in the input, add it as a tag instead
-        of navigating to the next widget.
+        When Tab or Enter is pressed with text in the input, add it as a tag
+        instead of navigating to the next widget or triggering dialog buttons.
 
         Args:
             obj: The object that triggered the event
@@ -194,6 +195,13 @@ class TagInput(QWidget):
                 if self._line_edit.text().strip():
                     self._add_tag_from_input()
                     return True  # Consume the event
+
+            elif event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                # Always consume Enter to prevent dialog from closing
+                # Add tag if there's text, otherwise just consume the event
+                if self._line_edit.text().strip():
+                    self._add_tag_from_input()
+                return True  # Always consume Enter key
 
         # Let other events pass through
         return super().eventFilter(obj, event)
