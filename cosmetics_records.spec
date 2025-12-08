@@ -52,8 +52,15 @@ else:
 # PyQt6 requires Qt plugins (platforms, styles, imageformats) to be bundled.
 # On Windows, missing plugins cause "DLL load failed" errors.
 
+from PyInstaller.utils.hooks import collect_dynamic_libs
+
 pyqt6_datas = collect_data_files("PyQt6", include_py_files=False)
 pyqt6_hiddenimports = collect_submodules("PyQt6")
+
+# Collect Qt6 DLLs explicitly on Windows
+pyqt6_binaries = []
+if sys.platform == "win32":
+    pyqt6_binaries = collect_dynamic_libs("PyQt6")
 
 # =============================================================================
 # Analysis - Collect all Python files and dependencies
@@ -66,8 +73,8 @@ a = Analysis(
     # Path to search for imports
     pathex=[str(src_dir)],
 
-    # Binary files to include (none for this pure-Python project)
-    binaries=[],
+    # Binary files to include (Qt6 DLLs on Windows)
+    binaries=pyqt6_binaries,
 
     # Data files to include (non-Python files needed at runtime)
     datas=[

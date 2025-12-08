@@ -458,9 +458,9 @@ QWidget[chips_container="true"] {{
     border-radius: 4px;
 }}
 
-/* Individual tag chips - lighter for better contrast against container */
+/* Individual tag chips - blue accent for visibility against dialog background */
 QWidget[tag_chip="true"] {{
-    background-color: #4a4a4a;
+    background-color: #3d5a80;
     border-radius: 12px;
 }}
 
@@ -1248,9 +1248,9 @@ QWidget[chips_container="true"] {{
     border-radius: 4px;
 }}
 
-/* Individual tag chips - darker for better contrast against container */
+/* Individual tag chips - blue accent for visibility against dialog background */
 QWidget[tag_chip="true"] {{
-    background-color: #d0d0d0;
+    background-color: #a8d0e6;
     border-radius: 12px;
 }}
 
