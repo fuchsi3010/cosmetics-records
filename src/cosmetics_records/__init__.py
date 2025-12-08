@@ -48,7 +48,7 @@ def _get_version() -> str:
             if env_version:
                 return env_version
             # NOTE: Update this fallback when releasing a new version
-            return "0.9.0"
+            return "0.9.0-alpha9"
 
         if tomllib is not None:
             # Python 3.11+ - use tomllib
@@ -74,7 +74,7 @@ def _get_version() -> str:
         if env_version:
             return env_version
         # NOTE: Update this fallback when releasing a new version
-        return "0.9.0"
+        return "0.9.0-alpha9"
 
 
 # Package version - read from pyproject.toml
