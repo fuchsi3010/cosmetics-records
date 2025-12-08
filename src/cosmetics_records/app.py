@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
         Sets up the window properties, navigation bar, and view container.
         """
         # Window properties
-        self.setWindowTitle("Cosmetics Records v1.0")
+        self.setWindowTitle(f"Cosmetics Records v{__version__}")
         self.setMinimumSize(1200, 800)
 
         # Note: Application icon is set on QApplication in main() for proper
@@ -828,7 +828,17 @@ def main() -> int:
     # Set application icon (for app switchers, taskbars, launchers)
     # WHY set on QApplication: Ensures all windows inherit the icon
     try:
-        icon_path = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
+        # Handle PyInstaller bundled resources
+        # WHY _MEIPASS: PyInstaller extracts bundled files to a temp directory
+        # and sets sys._MEIPASS to that path. In development, we use __file__.
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            # Running from PyInstaller bundle
+            base_path = Path(sys._MEIPASS) / "cosmetics_records"
+        else:
+            # Running in development
+            base_path = Path(__file__).parent
+
+        icon_path = base_path / "resources" / "icons" / "icon-256.png"
         if icon_path.exists():
             app.setWindowIcon(QIcon(str(icon_path)))
             logger.debug(f"Application icon set from {icon_path}")

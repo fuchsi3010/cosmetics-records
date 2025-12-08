@@ -22,6 +22,7 @@
 # =============================================================================
 
 import sqlite3
+import sys
 from pathlib import Path
 from types import ModuleType
 from typing import List, Optional, Tuple
@@ -32,6 +33,11 @@ import importlib.util
 
 # Import the DatabaseConnection class from the parent package
 from cosmetics_records.database.connection import DatabaseConnection
+
+# Direct imports for PyInstaller compatibility
+# WHY: In PyInstaller bundles, importlib.util.spec_from_file_location() cannot
+# load bundled .py files. We import them directly here and reference them by name.
+from cosmetics_records.database.migrations import v001_initial_schema
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -140,6 +146,21 @@ class MigrationManager:
             # This handles the case where schema_migrations table doesn't exist
             return []
 
+    # Registry of known migrations for PyInstaller compatibility
+    # When running from a frozen bundle, glob() can't find bundled files,
+    # so we explicitly list all migrations here.
+    # The modules are imported at the top of this file for PyInstaller compatibility.
+    KNOWN_MIGRATIONS = [
+        "v001_initial_schema",
+    ]
+
+    # Map of migration names to their imported modules (for PyInstaller)
+    # WHY: In PyInstaller, we can't dynamically load .py files, so we import
+    # them directly and reference them from this dictionary.
+    MIGRATION_MODULES = {
+        "v001_initial_schema": v001_initial_schema,
+    }
+
     def _discover_migration_files(self) -> List[Tuple[str, Path]]:
         """
         Discover all migration files in the migrations directory.
@@ -153,15 +174,26 @@ class MigrationManager:
             Only files matching the pattern "v[0-9][0-9][0-9]_*.py" are
             considered migration files. This prevents accidentally treating
             other Python files (like __init__.py or this file) as migrations.
+
+            When running from PyInstaller bundle, we use KNOWN_MIGRATIONS
+            registry since glob() doesn't work for bundled files.
         """
         migrations = []
 
-        # Iterate through all Python files in the migrations directory
+        # Try glob first (works in development)
         for file_path in self.migrations_dir.glob("v[0-9][0-9][0-9]_*.py"):
             # Extract the version from the filename
             # Example: "v001_initial_schema.py" -> "v001"
             version = file_path.stem.split("_")[0]  # stem removes .py extension
             migrations.append((version, file_path))
+
+        # If glob found nothing (PyInstaller bundle), use registry
+        if not migrations:
+            logger.info("No migration files found via glob, using registry")
+            for migration_name in self.KNOWN_MIGRATIONS:
+                version = migration_name.split("_")[0]
+                file_path = self.migrations_dir / f"{migration_name}.py"
+                migrations.append((version, file_path))
 
         # Sort by version to ensure migrations are applied in order
         # This is critical - applying v002 before v001 could fail or corrupt data
@@ -259,22 +291,40 @@ class MigrationManager:
             RuntimeError: If the file can't be loaded or doesn't have apply()
 
         Note:
-            We use dynamic imports because we don't know which migration files
-            exist at compile time. The importlib.util approach is the standard
-            way to import modules from arbitrary file paths.
+            In development, we use dynamic imports via importlib.util.
+            In PyInstaller bundles, we use pre-imported modules from
+            MIGRATION_MODULES since dynamic file loading doesn't work.
         """
+        # Get the migration name from the file path (e.g., "v001_initial_schema")
+        migration_name = file_path.stem
+
         try:
-            # Create a module specification from the file
-            spec = importlib.util.spec_from_file_location(version, file_path)
+            # Check if running from PyInstaller bundle
+            # WHY: PyInstaller bundles .py files into the executable, so
+            # importlib.util.spec_from_file_location() cannot load them.
+            # We use pre-imported modules instead.
+            if getattr(sys, "frozen", False):
+                # Running from PyInstaller bundle - use pre-imported module
+                if migration_name in self.MIGRATION_MODULES:
+                    module = self.MIGRATION_MODULES[migration_name]
+                    logger.debug(f"Loaded migration {version} from pre-imported module")
+                else:
+                    raise RuntimeError(
+                        f"Migration {migration_name} is not in MIGRATION_MODULES. "
+                        f"Add it to the registry in migration_manager.py."
+                    )
+            else:
+                # Development mode - use dynamic loading
+                spec = importlib.util.spec_from_file_location(version, file_path)
 
-            if spec is None or spec.loader is None:
-                raise RuntimeError(f"Could not load module spec for {file_path}")
+                if spec is None or spec.loader is None:
+                    raise RuntimeError(f"Could not load module spec for {file_path}")
 
-            # Create a module from the specification
-            module = importlib.util.module_from_spec(spec)
+                # Create a module from the specification
+                module = importlib.util.module_from_spec(spec)
 
-            # Execute the module (runs its code)
-            spec.loader.exec_module(module)
+                # Execute the module (runs its code)
+                spec.loader.exec_module(module)
 
             # Verify the module has an apply() function
             if not hasattr(module, "apply"):

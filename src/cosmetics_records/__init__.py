@@ -40,9 +40,15 @@ def _get_version() -> str:
 
         if not pyproject_path.exists():
             # When running from installed package or PyInstaller bundle,
-            # pyproject.toml won't be available - use fallback
+            # pyproject.toml won't be available - check environment variable
+            # set during build, or use fallback
+            import os
+
+            env_version = os.environ.get("APP_VERSION")
+            if env_version:
+                return env_version
             # NOTE: Update this fallback when releasing a new version
-            return "0.9.0-alpha6"
+            return "0.9.0"
 
         if tomllib is not None:
             # Python 3.11+ - use tomllib
@@ -61,9 +67,14 @@ def _get_version() -> str:
             return "0.0.0"
 
     except Exception:
-        # Any error reading version - return fallback
+        # Any error reading version - check environment or return fallback
+        import os
+
+        env_version = os.environ.get("APP_VERSION")
+        if env_version:
+            return env_version
         # NOTE: Update this fallback when releasing a new version
-        return "0.9.0-alpha6"
+        return "0.9.0"
 
 
 # Package version - read from pyproject.toml
