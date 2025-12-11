@@ -605,6 +605,12 @@ QLabel[history_notes="true"] {{
     color: {DARK_TEXT};
 }}
 
+QTextEdit[history_notes="true"] {{
+    background-color: transparent;
+    color: {DARK_TEXT};
+    border: none;
+}}
+
 QLabel[history_timestamp="true"] {{
     background-color: transparent;
     font-size: 10px;
@@ -1421,6 +1427,12 @@ QLabel[history_date="true"] {{
 QLabel[history_notes="true"] {{
     background-color: transparent;
     color: {LIGHT_TEXT};
+}}
+
+QTextEdit[history_notes="true"] {{
+    background-color: transparent;
+    color: {LIGHT_TEXT};
+    border: none;
 }}
 
 QLabel[history_timestamp="true"] {{

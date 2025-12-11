@@ -160,18 +160,47 @@ class HistoryItem(QFrame):
         layout.addLayout(top_row)
 
         # Notes content (full text with word wrap)
+        # WHY QTextEdit instead of QLabel: QLabel with word wrap doesn't properly
+        # calculate height when text wraps - its sizeHint() assumes single line.
+        # QTextEdit with read-only mode correctly sizes based on wrapped content.
         notes = self.item_data.get("notes", "")
 
-        notes_label = QLabel(notes)
-        notes_label.setProperty("history_notes", True)  # CSS class
-        notes_label.setWordWrap(True)
-        # WHY MinimumExpanding: Ensures label expands vertically to fit wrapped
-        # text at higher zoom levels (e.g. 120%) without cutting off content
-        notes_label.setSizePolicy(
-            QSizePolicy.Policy.Preferred,
-            QSizePolicy.Policy.MinimumExpanding,
-        )
-        layout.addWidget(notes_label)
+        notes_edit = QTextEdit()
+        notes_edit.setPlainText(notes)
+        notes_edit.setReadOnly(True)
+        notes_edit.setFrameShape(QTextEdit.Shape.NoFrame)
+        notes_edit.setProperty("history_notes", True)  # CSS class
+        # Disable scrollbars - content should fit
+        notes_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        notes_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Calculate required height based on content
+        # WHY document().size(): Gets actual rendered height of text with wrapping
+        notes_edit.document().setTextWidth(notes_edit.viewport().width())
+        doc_height = notes_edit.document().size().height()
+        # Add small padding for margins
+        notes_edit.setFixedHeight(int(doc_height) + 10)
+        # Update height when widget is resized (text may rewrap)
+        notes_edit.resizeEvent = lambda e: self._update_notes_height(notes_edit, e)
+        layout.addWidget(notes_edit)
+        self._notes_edit = notes_edit
+
+    def _update_notes_height(self, notes_edit: "QTextEdit", event: "QResizeEvent") -> None:
+        """
+        Update notes QTextEdit height when container is resized.
+
+        This recalculates the required height based on the new width,
+        since text may wrap differently.
+
+        Args:
+            notes_edit: The QTextEdit widget to resize
+            event: The resize event
+        """
+        # Call original resize event handler
+        QTextEdit.resizeEvent(notes_edit, event)
+        # Recalculate height based on new width
+        notes_edit.document().setTextWidth(notes_edit.viewport().width())
+        doc_height = notes_edit.document().size().height()
+        notes_edit.setFixedHeight(int(doc_height) + 10)
 
     def enterEvent(self, event: Optional["QEnterEvent"]) -> None:
         """
