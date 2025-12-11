@@ -149,10 +149,11 @@ class AddProductRecordDialog(BaseDialog):
 
         layout.addLayout(entry_row)
 
-        # Info note about free text
+        # Info note about free text (smaller, subtle hint)
         info_note = QLabel(_("Type to search inventory, or enter custom product name"))
         info_note.setProperty("form_note", True)
         info_note.setWordWrap(True)
+        info_note.setStyleSheet("color: #666; font-size: 11px;")
         layout.addWidget(info_note)
 
         # Accumulated products text area

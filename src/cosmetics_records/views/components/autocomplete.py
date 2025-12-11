@@ -103,7 +103,7 @@ class Autocomplete(QWidget):
 
         Creates the input field and suggestions dropdown.
         """
-        # Main vertical layout: [input field] [suggestions list]
+        # Main vertical layout: just the input field
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -116,14 +116,24 @@ class Autocomplete(QWidget):
 
         layout.addWidget(self._line_edit)
 
-        # Suggestions list (initially hidden)
-        self._suggestions_list = QListWidget()
+        # Suggestions list as a POPUP (not in layout)
+        # WHY popup: So it floats above other dialog elements
+        self._suggestions_list = QListWidget(self)
         self._suggestions_list.setVisible(False)
         self._suggestions_list.itemClicked.connect(self._on_item_clicked)
         # CSS property for styling - makes it stand out as a dropdown
         self._suggestions_list.setProperty("autocomplete_dropdown", True)
-
-        layout.addWidget(self._suggestions_list)
+        # Set window flags to make it a popup that floats above other widgets
+        self._suggestions_list.setWindowFlags(
+            Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
+        )
+        # Style as a dropdown
+        self._suggestions_list.setStyleSheet(
+            "QListWidget { "
+            "  border: 1px solid #555; "
+            "  background-color: #2d2d2d; "
+            "}"
+        )
 
         # Install event filters AFTER both widgets are created
         # WHY: eventFilter can be called during initialization, so both
@@ -266,14 +276,22 @@ class Autocomplete(QWidget):
         for suggestion in suggestions:
             QListWidgetItem(suggestion, self._suggestions_list)
 
-        # Show the list
-        self._suggestions_list.setVisible(True)
-
-        # Adjust height based on number of items
+        # Adjust height and width based on number of items
         # WHY 40: Approximate height per item (including padding)
         item_height = 40
         list_height = min(len(suggestions) * item_height, 350)  # Max 350px
         self._suggestions_list.setFixedHeight(list_height)
+        self._suggestions_list.setFixedWidth(self._line_edit.width())
+
+        # Position the popup below the input field
+        # WHY mapToGlobal: Converts widget-relative position to screen position
+        global_pos = self._line_edit.mapToGlobal(
+            self._line_edit.rect().bottomLeft()
+        )
+        self._suggestions_list.move(global_pos)
+
+        # Show the list
+        self._suggestions_list.setVisible(True)
 
     def _hide_suggestions(self) -> None:
         """
