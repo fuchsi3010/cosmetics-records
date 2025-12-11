@@ -192,8 +192,8 @@ class Config:
             "ui_scale": 1.0,  # Range: 0.8 to 2.0
             # Backup Settings
             "auto_backup": True,  # Enable automatic backups
-            "backup_interval_minutes": 60,  # Backup every hour
-            "backup_retention_count": 5,  # Keep last 5 backups
+            "backup_interval_minutes": 120,  # Backup every 2 hours
+            "backup_retention_count": 25,  # Keep last 25 backups
             "last_backup_time": None,  # ISO format datetime string
             # Database Settings
             "database_path": None,  # Custom database path (None = default)
@@ -377,7 +377,7 @@ class Config:
     @property
     def backup_interval_minutes(self) -> int:
         """Get the backup interval in minutes."""
-        return int(self._settings.get("backup_interval_minutes", 60))
+        return int(self._settings.get("backup_interval_minutes", 120))
 
     @backup_interval_minutes.setter
     def backup_interval_minutes(self, value: int) -> None:
@@ -399,7 +399,7 @@ class Config:
     @property
     def backup_retention_count(self) -> int:
         """Get the number of backup files to retain."""
-        return int(self._settings.get("backup_retention_count", 5))
+        return int(self._settings.get("backup_retention_count", 25))
 
     @backup_retention_count.setter
     def backup_retention_count(self, value: int) -> None:
