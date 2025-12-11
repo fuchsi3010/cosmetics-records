@@ -144,11 +144,13 @@ class ExportService:
                     ORDER BY last_name, first_name
                 """
 
-            # Add LIMIT clause if specified
+            # Add LIMIT clause if specified (use parameterized query for security)
+            params: tuple = ()
             if limit is not None and limit > 0:
-                query += f" LIMIT {limit}"
+                query += " LIMIT ?"
+                params = (limit,)
 
-            self.db.execute(query)
+            self.db.execute(query, params)
             rows = self.db.fetchall()
 
             # Write to CSV file

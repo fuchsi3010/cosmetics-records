@@ -447,9 +447,13 @@ class BackupService:
                 logger.warning(f"Backup file not found: {backup_path}")
                 return False
 
-            # Verify it's actually in the backup directory
-            # This prevents accidental deletion of files outside the backup dir
-            if self.backup_dir not in backup_path_obj.parents:
+            # Verify it's actually in the backup directory (security check)
+            # Use resolve() to prevent path traversal attacks like "../../../etc/passwd"
+            backup_path_resolved = backup_path_obj.resolve()
+            backup_dir_resolved = self.backup_dir.resolve()
+            try:
+                backup_path_resolved.relative_to(backup_dir_resolved)
+            except ValueError:
                 logger.error(
                     f"Security error: Backup file is outside backup directory: "
                     f"{backup_path}"
