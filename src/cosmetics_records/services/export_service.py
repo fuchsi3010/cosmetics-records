@@ -405,7 +405,7 @@ class ExportService:
                     unit,
                     created_at,
                     updated_at
-                FROM inventory_items
+                FROM inventory
                 ORDER BY name
                 """
             )
