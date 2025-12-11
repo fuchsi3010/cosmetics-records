@@ -4,7 +4,7 @@ A desktop application for cosmetics salon client management, built with Python 3
 
 ## Demo
 
-<video src="explainer.mp4" controls width="100%"></video>
+https://github.com/user-attachments/assets/53ab8bae-1e0d-4bfa-960b-3c6606fa2ee1
 
 ## Features
 
