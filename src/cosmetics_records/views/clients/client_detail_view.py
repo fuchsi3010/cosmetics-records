@@ -173,6 +173,8 @@ class HistoryItem(QFrame):
         # Disable scrollbars - content should fit
         notes_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         notes_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Ignore wheel events so they propagate to parent scroll area
+        notes_edit.wheelEvent = lambda e: e.ignore()
         # Calculate required height based on content
         # WHY document().size(): Gets actual rendered height of text with wrapping
         notes_edit.document().setTextWidth(notes_edit.viewport().width())
