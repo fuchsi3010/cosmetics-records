@@ -136,8 +136,12 @@ class ProductController:
         record_id = self.db.get_last_insert_id()
 
         # Log creation to audit log
+        # Include the product content so it's visible in the audit history
         audit = AuditService(self.db)
-        description = f"Product record on {record.product_date}"
+        description = (
+            f"Product sale on {record.product_date}:\n"
+            f"{record.product_text or ''}"
+        )
         audit.log_create(
             "product_records",
             record_id,

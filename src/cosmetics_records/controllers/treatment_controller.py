@@ -129,8 +129,12 @@ class TreatmentController:
         treatment_id = self.db.get_last_insert_id()
 
         # Log creation to audit log
+        # Include the treatment content so it's visible in the audit history
         audit = AuditService(self.db)
-        description = f"Treatment on {treatment.treatment_date}"
+        description = (
+            f"Treatment on {treatment.treatment_date}:\n"
+            f"{treatment.treatment_notes or ''}"
+        )
         audit.log_create(
             "treatment_records",
             treatment_id,
