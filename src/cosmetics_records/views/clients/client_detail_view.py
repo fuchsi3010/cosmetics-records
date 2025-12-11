@@ -66,6 +66,46 @@ from cosmetics_records.utils.localization import _
 logger = logging.getLogger(__name__)
 
 
+class HistoryNotesTextEdit(QTextEdit):
+    """
+    Custom QTextEdit for displaying history notes.
+
+    This subclass provides two key behaviors:
+    1. Ignores wheel events so they propagate to the parent scroll area
+    2. Auto-adjusts height based on content when resized
+
+    WHY a subclass instead of monkey-patching:
+    - MyPy type checking requires proper method overrides
+    - Cleaner code organization
+    - Proper inheritance chain for event handling
+    """
+
+    def wheelEvent(self, event: "QWheelEvent") -> None:  # type: ignore[name-defined]
+        """
+        Ignore wheel events so they propagate to parent scroll area.
+
+        WHY: When notes are inside a scrollable history list, we want
+        the scroll wheel to scroll the list, not the individual note.
+        """
+        event.ignore()
+
+    def resizeEvent(self, event: Optional["QResizeEvent"]) -> None:
+        """
+        Update height when widget is resized to fit content.
+
+        WHY: When the container width changes, text may wrap differently,
+        requiring a new height calculation to show all content.
+
+        Args:
+            event: The resize event
+        """
+        super().resizeEvent(event)
+        # Recalculate height based on new width
+        self.document().setTextWidth(self.viewport().width())
+        doc_height = self.document().size().height()
+        self.setFixedHeight(int(doc_height) + 10)
+
+
 class HistoryItem(QFrame):
     """
     Single history item (treatment or product record).
@@ -163,7 +203,10 @@ class HistoryItem(QFrame):
         # QTextEdit with read-only mode correctly sizes based on wrapped content.
         notes = self.item_data.get("notes", "")
 
-        notes_edit = QTextEdit()
+        # Use custom HistoryNotesTextEdit which:
+        # - Ignores wheel events (propagates to parent scroll area)
+        # - Auto-adjusts height on resize (text may rewrap)
+        notes_edit = HistoryNotesTextEdit()
         notes_edit.setPlainText(notes)
         notes_edit.setReadOnly(True)
         notes_edit.setFrameShape(QTextEdit.Shape.NoFrame)
@@ -171,38 +214,14 @@ class HistoryItem(QFrame):
         # Disable scrollbars - content should fit
         notes_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         notes_edit.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # Ignore wheel events so they propagate to parent scroll area
-        notes_edit.wheelEvent = lambda e: e.ignore()
         # Calculate required height based on content
         # WHY document().size(): Gets actual rendered height of text with wrapping
         notes_edit.document().setTextWidth(notes_edit.viewport().width())
         doc_height = notes_edit.document().size().height()
         # Add small padding for margins
         notes_edit.setFixedHeight(int(doc_height) + 10)
-        # Update height when widget is resized (text may rewrap)
-        notes_edit.resizeEvent = lambda e: self._update_notes_height(notes_edit, e)
         layout.addWidget(notes_edit)
         self._notes_edit = notes_edit
-
-    def _update_notes_height(
-        self, notes_edit: "QTextEdit", event: "QResizeEvent"
-    ) -> None:
-        """
-        Update notes QTextEdit height when container is resized.
-
-        This recalculates the required height based on the new width,
-        since text may wrap differently.
-
-        Args:
-            notes_edit: The QTextEdit widget to resize
-            event: The resize event
-        """
-        # Call original resize event handler
-        QTextEdit.resizeEvent(notes_edit, event)
-        # Recalculate height based on new width
-        notes_edit.document().setTextWidth(notes_edit.viewport().width())
-        doc_height = notes_edit.document().size().height()
-        notes_edit.setFixedHeight(int(doc_height) + 10)
 
     def enterEvent(self, event: Optional["QEnterEvent"]) -> None:
         """
