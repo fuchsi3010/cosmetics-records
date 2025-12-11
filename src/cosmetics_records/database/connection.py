@@ -50,18 +50,21 @@ class DatabaseConnection:
 
         Args:
             db_path: Path to the SQLite database file. If None, uses the
-                    platform-appropriate user data directory.
+                    path from Config (which may be custom or default).
 
         Note:
             The database file is NOT created here - only the path is stored.
             Actual connection happens in __enter__() when used as context manager.
         """
-        # If no path provided, use platform-appropriate user data directory
+        # If no path provided, check Config for custom path or use default
         if db_path is None:
-            user_data_dir = self._get_user_data_dir()
+            # Import here to avoid circular import
+            from cosmetics_records.config import Config
+
+            config = Config.get_instance()
+            self.db_path = config.get_database_path()
             # Ensure the directory exists before we try to create the database
-            user_data_dir.mkdir(parents=True, exist_ok=True)
-            self.db_path = user_data_dir / "cosmetics_records.db"
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         else:
             self.db_path = Path(db_path)
 

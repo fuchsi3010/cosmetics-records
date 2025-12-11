@@ -547,11 +547,24 @@ class SettingsView(QWidget):
         self._db_size_label.setProperty("class", "secondary")
         section.add_widget(self._db_size_label)
 
+        # Button row for database actions
+        db_btn_row = QHBoxLayout()
+        db_btn_row.setSpacing(12)
+
+        # Open database folder button
+        open_db_folder_btn = QPushButton(_("Open Folder"))
+        open_db_folder_btn.setMinimumWidth(120)
+        open_db_folder_btn.clicked.connect(self._on_open_database_folder)
+        db_btn_row.addWidget(open_db_folder_btn)
+
         # Change database location button
-        change_path_btn = QPushButton(_("Change Database Location"))
-        change_path_btn.setMinimumWidth(200)
+        change_path_btn = QPushButton(_("Change Location"))
+        change_path_btn.setMinimumWidth(120)
         change_path_btn.clicked.connect(self._on_change_database_path)
-        section.add_widget(change_path_btn)
+        db_btn_row.addWidget(change_path_btn)
+
+        db_btn_row.addStretch()
+        section.add_layout(db_btn_row)
 
         # Update database size
         self._update_database_size()
@@ -1122,6 +1135,40 @@ class SettingsView(QWidget):
                 f"Failed to export data:\n{str(e)}",
             )
 
+    def _on_open_database_folder(self) -> None:
+        """
+        Handle open database folder button click.
+
+        Opens the directory containing the database file in the system file manager.
+        """
+        db_path = self.config.get_database_path()
+        db_folder = db_path.parent
+
+        # Ensure directory exists
+        db_folder.mkdir(parents=True, exist_ok=True)
+
+        # Open in file manager
+        try:
+            import platform
+            import subprocess
+
+            system = platform.system()
+            if system == "Windows":
+                os.startfile(db_folder)  # type: ignore[attr-defined]
+            elif system == "Darwin":  # macOS
+                subprocess.run(["open", str(db_folder)])
+            else:  # Linux
+                subprocess.run(["xdg-open", str(db_folder)])
+
+            logger.info(f"Opened database folder: {db_folder}")
+        except Exception as e:
+            logger.error(f"Failed to open database folder: {e}")
+            QMessageBox.warning(
+                self,
+                _("Cannot Open Folder"),
+                _("Could not open database folder") + f":\n{str(db_folder)}",
+            )
+
     def _on_change_database_path(self) -> None:
         """
         Handle change database location button click.
@@ -1131,11 +1178,19 @@ class SettingsView(QWidget):
         """
         import shutil
 
+        # Get current database path to start the dialog there
+        current_path = self.config.get_database_path()
+        if current_path.exists():
+            start_dir = str(current_path.parent)
+        else:
+            start_dir = str(Path.home())
+
         # Show file dialog to select new database location
+        # Start at the current database directory
         selected_path, _filter = QFileDialog.getSaveFileName(
             self,
             _("Select Database Location"),
-            str(Path.home()),
+            start_dir,
             "SQLite Database (*.db)",
         )
 
@@ -1148,10 +1203,8 @@ class SettingsView(QWidget):
         if not new_path.suffix:
             new_path = new_path.with_suffix(".db")
 
-        # Get current database path
-        current_path = self.config.get_database_path()
-
         # Ask if user wants to move the existing database
+        # (current_path was already retrieved above for the start_dir)
         if current_path.exists() and current_path != new_path:
             reply = QMessageBox.question(
                 self,
