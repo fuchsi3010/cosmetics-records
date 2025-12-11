@@ -385,7 +385,7 @@ class TestClientDetailHandlers:
 
         # Verify client was updated
         assert mock_client.planned_treatment == "Updated planned treatment"
-        mock_controller.update_client.assert_called_once_with(mock_client)
+        mock_controller.update_client.assert_called_once_with(mock_client, skip_audit=True)
         view.client_updated.emit.assert_called_once()
 
     def test_on_personal_notes_saved(self):
@@ -417,7 +417,7 @@ class TestClientDetailHandlers:
 
         # Verify client was updated
         assert mock_client.notes == "Updated notes"
-        mock_controller.update_client.assert_called_once_with(mock_client)
+        mock_controller.update_client.assert_called_once_with(mock_client, skip_audit=True)
 
 
 # =============================================================================

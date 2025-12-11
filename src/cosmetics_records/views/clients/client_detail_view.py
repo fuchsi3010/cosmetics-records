@@ -1106,9 +1106,7 @@ class ClientDetailView(QWidget):
         except Exception as e:
             logger.error(f"Failed to log planned treatment edit: {e}")
 
-    def _on_personal_notes_editing_finished(
-        self, old_text: str, new_text: str
-    ) -> None:
+    def _on_personal_notes_editing_finished(self, old_text: str, new_text: str) -> None:
         """
         Handle personal notes editing session end - log to audit.
 
@@ -1569,10 +1567,9 @@ class ClientDetailView(QWidget):
             product_id: Database ID of the product record to edit
         """
         from PyQt6.QtWidgets import QDialog
-        from cosmetics_records.views.dialogs.add_product_record_dialog import (
-            AddProductRecordDialog,
+        from cosmetics_records.views.dialogs.edit_product_record_dialog import (
+            EditProductRecordDialog,
         )
-        from cosmetics_records.views.dialogs.base_dialog import ConfirmDialog
         from cosmetics_records.database.connection import DatabaseConnection
         from cosmetics_records.controllers.product_controller import ProductController
         from cosmetics_records.controllers.inventory_controller import (
@@ -1594,15 +1591,14 @@ class ClientDetailView(QWidget):
                 inv_controller = InventoryController(db)
                 inventory_names = inv_controller.get_all_names()
 
-            # Show edit dialog (reusing AddProductRecordDialog)
-            if self._client_id is None:
-                logger.error("Cannot edit product record: client_id is None")
-                return
-            dialog = AddProductRecordDialog(
-                self._client_id, inventory_names, None, self
-            )
-            dialog.set_existing_record(
-                product_id, product.product_date, product.product_text
+                record_data = {
+                    "date": product.product_date,
+                    "product_text": product.product_text,
+                }
+
+            # Show edit dialog with delete button
+            dialog = EditProductRecordDialog(
+                product_id, record_data, inventory_names, self
             )
 
             result = dialog.exec()
@@ -1611,22 +1607,13 @@ class ClientDetailView(QWidget):
                 with DatabaseConnection() as db:
                     controller = ProductController(db)
 
-                    # Check if user wants to delete (empty text)
-                    product_data = dialog.get_product_record_data()
-                    if not product_data["product_text"].strip():
-                        # Show delete confirmation
-                        confirm = ConfirmDialog(
-                            "Delete Product Sale",
-                            "The product text is empty. Delete this record?",
-                            ok_text="Delete",
-                            cancel_text="Cancel",
-                            parent=self,
-                        )
-                        if confirm.exec() == QDialog.DialogCode.Accepted:
-                            controller.delete_product_record(product_id)
-                            logger.info(f"Product record {product_id} deleted")
+                    if dialog.was_deleted():
+                        # Delete the product record
+                        controller.delete_product_record(product_id)
+                        logger.info(f"Product record {product_id} deleted")
                     else:
                         # Update the product record
+                        product_data = dialog.get_product_record_data()
                         product.product_date = product_data["date"]
                         product.product_text = product_data["product_text"]
                         controller.update_product_record(product)

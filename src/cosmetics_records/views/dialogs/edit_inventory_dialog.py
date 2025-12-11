@@ -211,9 +211,10 @@ class EditInventoryDialog(BaseDialog):
         self._capacity_input.setValue(capacity)
 
         # Set unit
+        # NOTE: The unit is guaranteed to be in the dropdown because we add it
+        # in _create_content if it's not part of the current measurement system
         unit = self._item_data.get("unit", "ml")
-        if unit in self.UNITS:
-            self._unit_input.setCurrentText(unit)
+        self._unit_input.setCurrentText(unit)
 
     def accept(self) -> None:
         """

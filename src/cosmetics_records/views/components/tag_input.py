@@ -29,7 +29,9 @@ from typing import List, Optional
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QObject
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QPushButton,
     QVBoxLayout,
@@ -40,11 +42,12 @@ from PyQt6.QtWidgets import (
 logger = logging.getLogger(__name__)
 
 
-class TagChip(QWidget):
+class TagChip(QFrame):
     """
     A single tag chip with label and remove button.
 
     This widget represents one tag as a pill-shaped chip with a remove button.
+    Uses QFrame instead of QWidget so background styling works properly.
 
     Signals:
         remove_clicked: Emitted when the X button is clicked
@@ -79,25 +82,26 @@ class TagChip(QWidget):
         """
         # Horizontal layout for tag text and X button
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 4, 4)
-        layout.setSpacing(4)
+        # WHY small margins: The chip background needs to wrap tightly around content
+        layout.setContentsMargins(10, 4, 6, 4)
+        layout.setSpacing(6)
 
-        # Tag text label (using QPushButton for styling flexibility)
-        self._label = QPushButton(self.tag_text)
-        self._label.setEnabled(False)  # Non-interactive
+        # Tag text label - using QLabel for proper text display
+        self._label = QLabel(self.tag_text)
         self._label.setProperty("tag_label", True)  # CSS class
         layout.addWidget(self._label)
 
         # Remove button (X)
         self._remove_btn = QPushButton("×")
-        self._remove_btn.setFixedSize(16, 16)
+        self._remove_btn.setFixedSize(18, 18)
         self._remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._remove_btn.setProperty("tag_remove", True)  # CSS class
         self._remove_btn.clicked.connect(self.remove_clicked.emit)
         layout.addWidget(self._remove_btn)
 
-        # Style the chip itself
+        # Style the chip itself - QFrame picks up background styles properly
         self.setProperty("tag_chip", True)  # CSS class
+        self.setFrameShape(QFrame.Shape.NoFrame)  # No default frame border
 
 
 class TagInput(QWidget):

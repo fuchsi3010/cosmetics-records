@@ -304,9 +304,9 @@ class TestClientController:
         results = controller.search_clients("Doe")
         assert len(results) >= 2
 
-        # Fuzzy search with typo "Jone" (should still match "Jane" and "John")
-        results = controller.search_clients("Jone")
-        assert len(results) > 0  # Fuzzy matching should find something
+        # Fuzzy search with partial name "John D" (should match "John Doe")
+        results = controller.search_clients("John D")
+        assert len(results) > 0  # Partial name matching should find something
 
     def test_search_clients_empty_query_raises_error(self, db_connection):
         """

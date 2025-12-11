@@ -116,17 +116,24 @@ class Autocomplete(QWidget):
 
         layout.addWidget(self._line_edit)
 
-        # Suggestions list as a POPUP (not in layout)
-        # WHY popup: So it floats above other dialog elements
+        # Suggestions list as a TOOLTIP window (not in layout)
+        # WHY ToolTip: Floats above other dialog elements WITHOUT stealing focus
+        # (Popup flag steals focus which breaks typing in the input field)
         self._suggestions_list = QListWidget(self)
         self._suggestions_list.setVisible(False)
         self._suggestions_list.itemClicked.connect(self._on_item_clicked)
         # CSS property for styling - makes it stand out as a dropdown
         self._suggestions_list.setProperty("autocomplete_dropdown", True)
-        # Set window flags to make it a popup that floats above other widgets
+        # Set window flags to make it float above other widgets without stealing focus
         self._suggestions_list.setWindowFlags(
-            Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
+            Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint
         )
+        # Prevent the suggestions list from activating/stealing focus when shown
+        self._suggestions_list.setAttribute(
+            Qt.WidgetAttribute.WA_ShowWithoutActivating, True
+        )
+        # Prevent keyboard focus - mouse clicks still work for selection
+        self._suggestions_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         # Style as a dropdown
         self._suggestions_list.setStyleSheet(
             "QListWidget { "
@@ -146,6 +153,8 @@ class Autocomplete(QWidget):
         Event filter for keyboard navigation.
 
         Handles arrow keys to navigate suggestions and Enter to select.
+        All keyboard navigation happens from the line edit since the
+        suggestions list has NoFocus policy (to avoid stealing focus).
 
         Args:
             obj: Object that received the event
@@ -163,36 +172,40 @@ class Autocomplete(QWidget):
             return super().eventFilter(obj, event)
 
         # Handle key presses in the line edit
+        # NOTE: All keyboard navigation is handled here since suggestions list
+        # has NoFocus policy to prevent focus stealing
         if obj == self._line_edit and event.type() == QEvent.Type.KeyPress:
             from PyQt6.QtGui import QKeyEvent
 
             key_event = cast(QKeyEvent, event)
             key = key_event.key()
 
-            # Down arrow: move focus to suggestions list
-            if key == Qt.Key.Key_Down and self._suggestions_list.isVisible():
-                self._suggestions_list.setFocus()
-                self._suggestions_list.setCurrentRow(0)
-                return True
+            if self._suggestions_list.isVisible():
+                current_row = self._suggestions_list.currentRow()
+                max_row = self._suggestions_list.count() - 1
 
-        # Handle key presses in the suggestions list
-        elif obj == self._suggestions_list and event.type() == QEvent.Type.KeyPress:
-            from PyQt6.QtGui import QKeyEvent
+                # Down arrow: move selection down in suggestions
+                if key == Qt.Key.Key_Down:
+                    if current_row < max_row:
+                        self._suggestions_list.setCurrentRow(current_row + 1)
+                    elif current_row == -1 and max_row >= 0:
+                        # No selection yet, select first item
+                        self._suggestions_list.setCurrentRow(0)
+                    return True
 
-            key_event = cast(QKeyEvent, event)
-            key = key_event.key()
+                # Up arrow: move selection up in suggestions
+                elif key == Qt.Key.Key_Up:
+                    if current_row > 0:
+                        self._suggestions_list.setCurrentRow(current_row - 1)
+                    elif current_row == 0:
+                        # At top, deselect
+                        self._suggestions_list.setCurrentRow(-1)
+                    return True
 
-            # Up arrow on first item: return to input
-            if key == Qt.Key.Key_Up and self._suggestions_list.currentRow() == 0:
-                self._line_edit.setFocus()
-                return True
-
-            # Enter: select current item
-            elif key == Qt.Key.Key_Return or key == Qt.Key.Key_Enter:
-                current_item = self._suggestions_list.currentItem()
-                if current_item:
-                    self._select_item(current_item.text())
-                return True
+                # Escape: hide suggestions
+                elif key == Qt.Key.Key_Escape:
+                    self._hide_suggestions()
+                    return True
 
         return super().eventFilter(obj, event)
 
@@ -285,9 +298,7 @@ class Autocomplete(QWidget):
 
         # Position the popup below the input field
         # WHY mapToGlobal: Converts widget-relative position to screen position
-        global_pos = self._line_edit.mapToGlobal(
-            self._line_edit.rect().bottomLeft()
-        )
+        global_pos = self._line_edit.mapToGlobal(self._line_edit.rect().bottomLeft())
         self._suggestions_list.move(global_pos)
 
         # Show the list
@@ -304,11 +315,17 @@ class Autocomplete(QWidget):
         """
         Handle Enter key press in the input field.
 
-        If there are suggestions showing, select the first one.
+        If there are suggestions showing, select the highlighted one
+        (or the first one if none highlighted).
         """
         if self._suggestions_list.isVisible():
-            # Select first suggestion
-            item = self._suggestions_list.item(0)
+            # Select highlighted item, or first if none highlighted
+            current_row = self._suggestions_list.currentRow()
+            if current_row >= 0:
+                item = self._suggestions_list.item(current_row)
+            else:
+                item = self._suggestions_list.item(0)
+
             if item:
                 self._select_item(item.text())
 
@@ -336,6 +353,10 @@ class Autocomplete(QWidget):
 
         # Hide suggestions
         self._hide_suggestions()
+
+        # Return focus to the input field
+        # WHY: After clicking a suggestion, user expects to continue typing
+        self._line_edit.setFocus()
 
         # Emit signal
         self.item_selected.emit(text)

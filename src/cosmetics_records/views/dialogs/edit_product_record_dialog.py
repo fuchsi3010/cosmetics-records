@@ -44,6 +44,7 @@ from PyQt6.QtWidgets import (
 from .base_dialog import BaseDialog, ConfirmDialog
 from ..components.autocomplete import Autocomplete
 from ..components.date_picker import DatePicker
+from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -89,7 +90,7 @@ class EditProductRecordDialog(BaseDialog):
         self._deleted = False
 
         # Initialize base dialog
-        super().__init__("Edit Product Record", parent, width=500, height=350)
+        super().__init__(_("Edit Product Sale"), parent, width=500, height=350)
 
         # Set autocomplete suggestions
         if self._inventory_items:
@@ -120,12 +121,12 @@ class EditProductRecordDialog(BaseDialog):
 
         # Date (required)
         self._date_picker = DatePicker()
-        form_layout.addRow("Date: *", self._date_picker)
+        form_layout.addRow(_("Date: *"), self._date_picker)
 
         # Product (autocomplete from inventory, but allows free text)
         self._product_input = Autocomplete()
-        self._product_input.set_placeholder("Type product name...")
-        form_layout.addRow("Product: *", self._product_input)
+        self._product_input.set_placeholder(_("Type product name..."))
+        form_layout.addRow(_("Products:") + " *", self._product_input)
 
         layout.addLayout(form_layout)
 
@@ -133,13 +134,13 @@ class EditProductRecordDialog(BaseDialog):
         layout.addStretch()
 
         # Info note about free text
-        info_note = QLabel("Type to search inventory, or enter custom product name")
+        info_note = QLabel(_("Type to search inventory, or enter custom product name"))
         info_note.setProperty("form_note", True)  # CSS class (small, gray)
         info_note.setWordWrap(True)
         layout.addWidget(info_note)
 
         # Required fields note
-        required_note = QLabel("* Required fields")
+        required_note = QLabel(_("* Required fields"))
         required_note.setProperty("form_note", True)  # CSS class (small, gray)
         layout.addWidget(required_note)
 
@@ -148,7 +149,7 @@ class EditProductRecordDialog(BaseDialog):
         button_row.setSpacing(8)
 
         # Delete button (left side)
-        delete_btn = QPushButton("Delete")
+        delete_btn = QPushButton(_("Delete"))
         delete_btn.setProperty("class", "danger")  # Danger button styling
         delete_btn.setMinimumWidth(100)
         delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -159,7 +160,7 @@ class EditProductRecordDialog(BaseDialog):
         button_row.addStretch()
 
         # Cancel button
-        cancel_btn = QPushButton("Cancel")
+        cancel_btn = QPushButton(_("Cancel"))
         cancel_btn.setProperty("class", "secondary")
         cancel_btn.setMinimumWidth(100)
         cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -167,7 +168,7 @@ class EditProductRecordDialog(BaseDialog):
         button_row.addWidget(cancel_btn)
 
         # Save button
-        save_btn = QPushButton("Save")
+        save_btn = QPushButton(_("Save"))
         save_btn.setMinimumWidth(100)
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self.accept)
@@ -200,13 +201,13 @@ class EditProductRecordDialog(BaseDialog):
         # Validate date
         record_date = self._date_picker.get_date()
         if not record_date:
-            self.show_error("Date is required.")
+            self.show_error(_("Date is required."))
             return
 
         # Validate product text
         product_text = self._product_input.get_text().strip()
         if not product_text:
-            self.show_error("Product is required.")
+            self.show_error(_("Please enter a product name."))
             self._product_input.set_focus()
             return
 
@@ -236,12 +237,12 @@ class EditProductRecordDialog(BaseDialog):
 
         # Show confirmation dialog
         confirm = ConfirmDialog(
-            "Delete Product Record",
-            f"Are you sure you want to delete the product record:\n\n"
-            f"{product_text} ({date_str})\n\n"
-            f"This action cannot be undone.",
-            ok_text="Delete",
-            cancel_text="Cancel",
+            _("Delete Product Sale"),
+            _("Are you sure you want to delete '{name}'?").format(name=product_text)
+            + f" ({date_str})\n\n"
+            + _("This action cannot be undone."),
+            ok_text=_("Delete"),
+            cancel_text=_("Cancel"),
             parent=self,
             width=450,
             height=200,

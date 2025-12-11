@@ -477,16 +477,17 @@ QWidget[chips_container="true"] {{
 }}
 
 /* Individual tag chips - blue accent for visibility against dialog background */
-QWidget[tag_chip="true"] {{
+/* Using QFrame so background styling is applied properly */
+QFrame[tag_chip="true"] {{
     background-color: #3d5a80;
-    border-radius: 12px;
+    border: none;
+    border-radius: 14px;
 }}
 
-/* Tag label text */
-QPushButton[tag_label="true"] {{
+/* Tag label text - using QLabel for proper text rendering */
+QLabel[tag_label="true"] {{
     background-color: transparent;
     color: {DARK_TEXT};
-    border: none;
     font-size: {sizes["secondary"]};
 }}
 
@@ -495,7 +496,7 @@ QPushButton[tag_remove="true"] {{
     background-color: rgba(255, 100, 100, 0.3);
     color: #ff6b6b;
     border: none;
-    border-radius: 8px;
+    border-radius: 9px;
     font-size: 14px;
     font-weight: bold;
 }}
@@ -503,7 +504,7 @@ QPushButton[tag_remove="true"] {{
 QPushButton[tag_remove="true"]:hover {{
     color: #ffffff;
     background-color: #e74c3c;
-    border-radius: 8px;
+    border-radius: 9px;
 }}
 
 /* ==========================================================================
@@ -1301,16 +1302,17 @@ QWidget[chips_container="true"] {{
 }}
 
 /* Individual tag chips - blue accent for visibility against dialog background */
-QWidget[tag_chip="true"] {{
+/* Using QFrame so background styling is applied properly */
+QFrame[tag_chip="true"] {{
     background-color: #a8d0e6;
-    border-radius: 12px;
+    border: none;
+    border-radius: 14px;
 }}
 
-/* Tag label text */
-QPushButton[tag_label="true"] {{
+/* Tag label text - using QLabel for proper text rendering */
+QLabel[tag_label="true"] {{
     background-color: transparent;
     color: {LIGHT_TEXT};
-    border: none;
     font-size: {sizes["secondary"]};
 }}
 
@@ -1319,7 +1321,7 @@ QPushButton[tag_remove="true"] {{
     background-color: rgba(231, 76, 60, 0.2);
     color: #c0392b;
     border: none;
-    border-radius: 8px;
+    border-radius: 9px;
     font-size: 14px;
     font-weight: bold;
 }}
@@ -1327,7 +1329,7 @@ QPushButton[tag_remove="true"] {{
 QPushButton[tag_remove="true"]:hover {{
     color: #ffffff;
     background-color: #e74c3c;
-    border-radius: 8px;
+    border-radius: 9px;
 }}
 
 /* ==========================================================================
