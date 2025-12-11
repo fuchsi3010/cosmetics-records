@@ -74,7 +74,12 @@ class ExportService:
         self.db = db
         logger.debug("ExportService initialized")
 
-    def export_clients_for_mail_merge(self, file_path: str) -> int:
+    def export_clients_for_mail_merge(
+        self,
+        file_path: str,
+        sort_by_recent_activity: bool = False,
+        limit: Optional[int] = None,
+    ) -> int:
         """
         Export client data to CSV for mail merge.
 
@@ -89,6 +94,9 @@ class ExportService:
         Args:
             file_path: Path where the CSV file will be created
                       (will overwrite if exists)
+            sort_by_recent_activity: If True, sort clients by most recent
+                                    treatment or product sale (most recent first)
+            limit: Optional maximum number of clients to export
 
         Returns:
             Number of client records exported
@@ -104,21 +112,43 @@ class ExportService:
             >>> print(f"Exported {count} clients for mail merge")
         """
         try:
-            # Query clients with relevant mail merge fields
-            # We export all clients, even if some fields are empty
-            # (users can filter in their mail merge application)
-            self.db.execute(
+            # Build query based on options
+            if sort_by_recent_activity:
+                # Join with treatment and product records to find most recent activity
+                # Use COALESCE to handle clients with no activity (they go last)
+                query = """
+                    SELECT
+                        c.first_name,
+                        c.last_name,
+                        c.address,
+                        c.email,
+                        MAX(
+                            COALESCE(t.treatment_date, '1900-01-01'),
+                            COALESCE(p.product_date, '1900-01-01')
+                        ) as last_activity
+                    FROM clients c
+                    LEFT JOIN treatment_records t ON c.id = t.client_id
+                    LEFT JOIN product_records p ON c.id = p.client_id
+                    GROUP BY c.id, c.first_name, c.last_name, c.address, c.email
+                    ORDER BY last_activity DESC, c.last_name, c.first_name
                 """
-                SELECT
-                    first_name,
-                    last_name,
-                    address,
-                    email
-                FROM clients
-                ORDER BY last_name, first_name
+            else:
+                # Default: sort alphabetically by name
+                query = """
+                    SELECT
+                        first_name,
+                        last_name,
+                        address,
+                        email
+                    FROM clients
+                    ORDER BY last_name, first_name
                 """
-            )
 
+            # Add LIMIT clause if specified
+            if limit is not None and limit > 0:
+                query += f" LIMIT {limit}"
+
+            self.db.execute(query)
             rows = self.db.fetchall()
 
             # Write to CSV file

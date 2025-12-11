@@ -997,8 +997,21 @@ class SettingsView(QWidget):
         """
         Handle export clients for mail merge button click.
 
-        Shows file save dialog and exports client data to CSV.
+        Shows options dialog, then file save dialog, and exports client data to CSV.
         """
+        from cosmetics_records.views.dialogs.mail_merge_export_dialog import (
+            MailMergeExportDialog,
+        )
+
+        # Show options dialog first
+        options_dialog = MailMergeExportDialog(self)
+        if not options_dialog.exec():
+            return  # User cancelled
+
+        # Get export options
+        sort_by_recent = options_dialog.get_sort_by_recent_activity()
+        limit = options_dialog.get_limit()
+
         # Show file save dialog
         # WHY _filter not _: Using _ would shadow the translation function _()
         file_path, _filter = QFileDialog.getSaveFileName(
@@ -1013,11 +1026,16 @@ class SettingsView(QWidget):
 
         try:
             logger.info(f"Exporting clients for mail merge to: {file_path}")
+            logger.info(f"Options: sort_by_recent={sort_by_recent}, limit={limit}")
 
             # Export using ExportService
             with DatabaseConnection() as db:
                 export_service = ExportService(db)
-                count = export_service.export_clients_for_mail_merge(file_path)
+                count = export_service.export_clients_for_mail_merge(
+                    file_path,
+                    sort_by_recent_activity=sort_by_recent,
+                    limit=limit,
+                )
 
             # Show success message
             QMessageBox.information(
