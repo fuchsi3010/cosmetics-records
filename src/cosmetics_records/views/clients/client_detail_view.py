@@ -45,7 +45,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PyQt6.QtCore import QEvent
-    from PyQt6.QtGui import QEnterEvent, QResizeEvent, QWheelEvent
+    from PyQt6.QtGui import QEnterEvent, QFocusEvent, QResizeEvent, QWheelEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
@@ -473,17 +473,25 @@ class AutoSaveTextEdit(QTextEdit):
     to let users know their content is being saved.
 
     Signals:
-        content_saved(str): Emitted when content is auto-saved (passes text)
+        content_saved(str): Emitted when content is auto-saved (passes text).
+                           Use for saving data without audit logging.
+        editing_finished(str, str): Emitted when focus leaves and content changed.
+                                   Passes (old_text, new_text) for audit logging.
 
     Attributes:
         _save_timer: QTimer for debouncing saves
         _status_timer: QTimer for hiding the "Saved" indicator
         _status_label: QLabel showing save status
         _has_changes: Whether there are unsaved changes
+        _focus_start_content: Content when focus was gained (for audit)
     """
 
-    # Signal emitted when content is saved
+    # Signal emitted when content is saved (for data persistence, no audit)
     content_saved = pyqtSignal(str)
+
+    # Signal emitted when editing session ends (for audit logging)
+    # Passes (old_text, new_text) so the audit can record the full change
+    editing_finished = pyqtSignal(str, str)
 
     # Auto-save delay in milliseconds
     # WHY 1000ms (1 second): Long enough to avoid saving on every keystroke,
@@ -505,6 +513,8 @@ class AutoSaveTextEdit(QTextEdit):
         # Track if there are pending changes
         self._has_changes = False
         self._initial_content: str = ""
+        # Track content when focus was gained (for audit logging)
+        self._focus_start_content: str = ""
 
         # Create save timer
         self._save_timer = QTimer()
@@ -543,6 +553,7 @@ class AutoSaveTextEdit(QTextEdit):
             text: Text to set (None is treated as empty string)
         """
         self._initial_content = text or ""
+        self._focus_start_content = text or ""
         self._has_changes = False
         super().setPlainText(text)
 
@@ -611,6 +622,42 @@ class AutoSaveTextEdit(QTextEdit):
             y = self.height() - self._status_label.height() - 8
             self._status_label.move(x, y)
 
+    def focusInEvent(self, event: Optional["QFocusEvent"]) -> None:
+        """
+        Capture content when focus is gained for audit logging.
+
+        Args:
+            event: Focus event
+        """
+        super().focusInEvent(event)
+        # Record the content at the start of this editing session
+        self._focus_start_content = self.toPlainText()
+
+    def focusOutEvent(self, event: Optional["QFocusEvent"]) -> None:
+        """
+        Emit editing_finished signal if content changed during this session.
+
+        This allows audit logging to capture just the before/after state
+        of the entire editing session, rather than every intermediate save.
+
+        Args:
+            event: Focus event
+        """
+        super().focusOutEvent(event)
+
+        # Save any pending changes immediately
+        if self._has_changes:
+            self._save_timer.stop()
+            self._save_content()
+
+        # Check if content changed during this editing session
+        current_text = self.toPlainText()
+        if current_text != self._focus_start_content:
+            # Emit signal with old and new values for audit logging
+            self.editing_finished.emit(self._focus_start_content, current_text)
+            # Update focus start for next session
+            self._focus_start_content = current_text
+
 
 class ClientDetailView(QWidget):
     """
@@ -676,8 +723,13 @@ class ClientDetailView(QWidget):
         self._planned_treatment_edit.setPlaceholderText(
             _("Enter planned treatment details...")
         )
+        # content_saved: save data frequently (no audit, prevents data loss)
         self._planned_treatment_edit.content_saved.connect(
             self._on_planned_treatment_saved
+        )
+        # editing_finished: log to audit when editing session ends
+        self._planned_treatment_edit.editing_finished.connect(
+            self._on_planned_treatment_editing_finished
         )
         planned_frame.layout().addWidget(self._planned_treatment_edit)
         grid.addWidget(planned_frame, 0, 0)
@@ -686,7 +738,12 @@ class ClientDetailView(QWidget):
         notes_frame = self._create_section_frame(_("Personal Notes"))
         self._personal_notes_edit = AutoSaveTextEdit()
         self._personal_notes_edit.setPlaceholderText(_("Enter personal notes..."))
+        # content_saved: save data frequently (no audit, prevents data loss)
         self._personal_notes_edit.content_saved.connect(self._on_personal_notes_saved)
+        # editing_finished: log to audit when editing session ends
+        self._personal_notes_edit.editing_finished.connect(
+            self._on_personal_notes_editing_finished
+        )
         notes_frame.layout().addWidget(self._personal_notes_edit)
         grid.addWidget(notes_frame, 0, 1)
 
@@ -953,7 +1010,10 @@ class ClientDetailView(QWidget):
 
     def _on_planned_treatment_saved(self, text: str) -> None:
         """
-        Handle planned treatment auto-save.
+        Handle planned treatment auto-save (no audit logging).
+
+        This saves frequently during typing to prevent data loss.
+        Audit logging happens in _on_planned_treatment_editing_finished.
 
         Args:
             text: Updated planned treatment text
@@ -964,7 +1024,7 @@ class ClientDetailView(QWidget):
         if not self._client_id:
             return
 
-        logger.debug("Saving planned treatment")
+        logger.debug("Saving planned treatment (skip audit)")
 
         try:
             with DatabaseConnection() as db:
@@ -972,7 +1032,8 @@ class ClientDetailView(QWidget):
                 client = controller.get_client(self._client_id)
                 if client:
                     client.planned_treatment = text
-                    controller.update_client(client)
+                    # Skip audit during auto-save to avoid log spam
+                    controller.update_client(client, skip_audit=True)
                     logger.debug("Planned treatment saved")
                     self.client_updated.emit()
         except Exception as e:
@@ -980,7 +1041,10 @@ class ClientDetailView(QWidget):
 
     def _on_personal_notes_saved(self, text: str) -> None:
         """
-        Handle personal notes auto-save.
+        Handle personal notes auto-save (no audit logging).
+
+        This saves frequently during typing to prevent data loss.
+        Audit logging happens in _on_personal_notes_editing_finished.
 
         Args:
             text: Updated personal notes text
@@ -991,7 +1055,7 @@ class ClientDetailView(QWidget):
         if not self._client_id:
             return
 
-        logger.debug("Saving personal notes")
+        logger.debug("Saving personal notes (skip audit)")
 
         try:
             with DatabaseConnection() as db:
@@ -999,11 +1063,84 @@ class ClientDetailView(QWidget):
                 client = controller.get_client(self._client_id)
                 if client:
                     client.notes = text
-                    controller.update_client(client)
+                    # Skip audit during auto-save to avoid log spam
+                    controller.update_client(client, skip_audit=True)
                     logger.debug("Personal notes saved")
                     self.client_updated.emit()
         except Exception as e:
             logger.error(f"Failed to save personal notes: {e}")
+
+    def _on_planned_treatment_editing_finished(
+        self, old_text: str, new_text: str
+    ) -> None:
+        """
+        Handle planned treatment editing session end - log to audit.
+
+        This is called when focus leaves the field and content changed.
+        Logs a single audit entry for the entire editing session.
+
+        Args:
+            old_text: Content when editing started
+            new_text: Content when editing finished
+        """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.services.audit_service import AuditService
+
+        if not self._client_id:
+            return
+
+        logger.debug("Logging planned treatment edit to audit")
+
+        try:
+            with DatabaseConnection() as db:
+                audit = AuditService(db)
+                audit.log_update(
+                    "clients",
+                    self._client_id,
+                    "planned_treatment",
+                    old_text,
+                    new_text,
+                    "ClientDetailView",
+                    client_id=self._client_id,
+                )
+        except Exception as e:
+            logger.error(f"Failed to log planned treatment edit: {e}")
+
+    def _on_personal_notes_editing_finished(
+        self, old_text: str, new_text: str
+    ) -> None:
+        """
+        Handle personal notes editing session end - log to audit.
+
+        This is called when focus leaves the field and content changed.
+        Logs a single audit entry for the entire editing session.
+
+        Args:
+            old_text: Content when editing started
+            new_text: Content when editing finished
+        """
+        from cosmetics_records.database.connection import DatabaseConnection
+        from cosmetics_records.services.audit_service import AuditService
+
+        if not self._client_id:
+            return
+
+        logger.debug("Logging personal notes edit to audit")
+
+        try:
+            with DatabaseConnection() as db:
+                audit = AuditService(db)
+                audit.log_update(
+                    "clients",
+                    self._client_id,
+                    "notes",
+                    old_text,
+                    new_text,
+                    "ClientDetailView",
+                    client_id=self._client_id,
+                )
+        except Exception as e:
+            logger.error(f"Failed to log personal notes edit: {e}")
 
     def _on_edit_client(self) -> None:
         """

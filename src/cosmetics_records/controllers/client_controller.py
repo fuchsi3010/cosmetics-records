@@ -203,7 +203,7 @@ class ClientController:
         logger.debug(f"Retrieved client: {client.full_name()} (ID: {client_id})")
         return client
 
-    def update_client(self, client: Client) -> bool:
+    def update_client(self, client: Client, skip_audit: bool = False) -> bool:
         """
         Update an existing client record.
 
@@ -212,6 +212,8 @@ class ClientController:
 
         Args:
             client: Client model with updated data (must have valid ID)
+            skip_audit: If True, skip writing to audit log. Useful for
+                       auto-save scenarios where only the final state matters.
 
         Returns:
             True if client was updated, False if client not found
@@ -232,11 +234,13 @@ class ClientController:
                 "Cannot update client without ID. Use create_client() instead."
             )
 
-        # Fetch old client for audit logging
-        old_client = self.get_client(client.id)
-        if old_client is None:
-            logger.warning(f"Update failed: Client ID {client.id} not found")
-            return False
+        # Fetch old client for audit logging (only if we're going to audit)
+        old_client = None
+        if not skip_audit:
+            old_client = self.get_client(client.id)
+            if old_client is None:
+                logger.warning(f"Update failed: Client ID {client.id} not found")
+                return False
 
         # Convert tags list to comma-separated string
         tags_str = client.tags_string()
@@ -272,109 +276,110 @@ class ClientController:
         # Commit the transaction
         self.db.commit()
 
-        # Log changes to audit log
-        audit = AuditService(self.db)
+        # Log changes to audit log (skip if requested, e.g., for auto-save)
+        if not skip_audit and old_client:
+            audit = AuditService(self.db)
 
-        if old_client.first_name != client.first_name:
-            audit.log_update(
-                "clients",
-                client.id,
-                "first_name",
-                old_client.first_name,
-                client.first_name,
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.last_name != client.last_name:
-            audit.log_update(
-                "clients",
-                client.id,
-                "last_name",
-                old_client.last_name,
-                client.last_name,
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.email != client.email:
-            audit.log_update(
-                "clients",
-                client.id,
-                "email",
-                old_client.email or "",
-                client.email or "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.phone != client.phone:
-            audit.log_update(
-                "clients",
-                client.id,
-                "phone",
-                old_client.phone or "",
-                client.phone or "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.address != client.address:
-            audit.log_update(
-                "clients",
-                client.id,
-                "address",
-                old_client.address or "",
-                client.address or "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if str(old_client.date_of_birth) != str(client.date_of_birth):
-            audit.log_update(
-                "clients",
-                client.id,
-                "date_of_birth",
-                str(old_client.date_of_birth) if old_client.date_of_birth else "",
-                str(client.date_of_birth) if client.date_of_birth else "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.allergies != client.allergies:
-            audit.log_update(
-                "clients",
-                client.id,
-                "allergies",
-                old_client.allergies or "",
-                client.allergies or "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.tags_string() != client.tags_string():
-            audit.log_update(
-                "clients",
-                client.id,
-                "tags",
-                old_client.tags_string(),
-                client.tags_string(),
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.planned_treatment != client.planned_treatment:
-            audit.log_update(
-                "clients",
-                client.id,
-                "planned_treatment",
-                old_client.planned_treatment or "",
-                client.planned_treatment or "",
-                "ClientController",
-                client_id=client.id,
-            )
-        if old_client.notes != client.notes:
-            audit.log_update(
-                "clients",
-                client.id,
-                "notes",
-                old_client.notes or "",
-                client.notes or "",
-                "ClientController",
-                client_id=client.id,
-            )
+            if old_client.first_name != client.first_name:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "first_name",
+                    old_client.first_name,
+                    client.first_name,
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.last_name != client.last_name:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "last_name",
+                    old_client.last_name,
+                    client.last_name,
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.email != client.email:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "email",
+                    old_client.email or "",
+                    client.email or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.phone != client.phone:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "phone",
+                    old_client.phone or "",
+                    client.phone or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.address != client.address:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "address",
+                    old_client.address or "",
+                    client.address or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if str(old_client.date_of_birth) != str(client.date_of_birth):
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "date_of_birth",
+                    str(old_client.date_of_birth) if old_client.date_of_birth else "",
+                    str(client.date_of_birth) if client.date_of_birth else "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.allergies != client.allergies:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "allergies",
+                    old_client.allergies or "",
+                    client.allergies or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.tags_string() != client.tags_string():
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "tags",
+                    old_client.tags_string(),
+                    client.tags_string(),
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.planned_treatment != client.planned_treatment:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "planned_treatment",
+                    old_client.planned_treatment or "",
+                    client.planned_treatment or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
+            if old_client.notes != client.notes:
+                audit.log_update(
+                    "clients",
+                    client.id,
+                    "notes",
+                    old_client.notes or "",
+                    client.notes or "",
+                    "ClientController",
+                    client_id=client.id,
+                )
 
         logger.info(f"Updated client: {client.full_name()} (ID: {client.id})")
         return True
