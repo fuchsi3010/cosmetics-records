@@ -596,7 +596,7 @@ QPushButton[class="history_edit_button"][visible_state="visible"]:hover {{
 
 QLabel[history_date="true"] {{
     background-color: transparent;
-    font-size: 11px;
+    font-size: 13px;
     color: {DARK_TEXT_SECONDARY};
 }}
 
@@ -1420,7 +1420,7 @@ QPushButton[class="history_edit_button"][visible_state="visible"]:hover {{
 
 QLabel[history_date="true"] {{
     background-color: transparent;
-    font-size: 11px;
+    font-size: 13px;
     color: {LIGHT_TEXT_SECONDARY};
 }}
 
