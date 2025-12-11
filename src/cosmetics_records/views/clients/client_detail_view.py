@@ -45,7 +45,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PyQt6.QtCore import QEvent
-    from PyQt6.QtGui import QEnterEvent, QResizeEvent
+    from PyQt6.QtGui import QEnterEvent, QResizeEvent, QWheelEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtWidgets import (
@@ -80,14 +80,15 @@ class HistoryNotesTextEdit(QTextEdit):
     - Proper inheritance chain for event handling
     """
 
-    def wheelEvent(self, event: "QWheelEvent") -> None:  # type: ignore[name-defined]
+    def wheelEvent(self, event: Optional["QWheelEvent"]) -> None:
         """
         Ignore wheel events so they propagate to parent scroll area.
 
         WHY: When notes are inside a scrollable history list, we want
         the scroll wheel to scroll the list, not the individual note.
         """
-        event.ignore()
+        if event:
+            event.ignore()
 
     def resizeEvent(self, event: Optional["QResizeEvent"]) -> None:
         """
