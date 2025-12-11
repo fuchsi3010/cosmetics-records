@@ -2,6 +2,10 @@
 
 A desktop application for cosmetics salon client management, built with Python 3.9+ and PyQt6.
 
+## Demo
+
+<video src="explainer.mp4" controls width="100%"></video>
+
 ## Features
 
 - **Client Management**: Track client information including name, contact details, allergies, and tags
