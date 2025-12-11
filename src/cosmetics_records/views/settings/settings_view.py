@@ -40,7 +40,10 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from PyQt6.QtGui import QWheelEvent
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -75,6 +78,20 @@ from cosmetics_records.views.dialogs.import_dialog import ImportDialog
 
 # Configure module logger
 logger = logging.getLogger(__name__)
+
+
+class NoScrollComboBox(QComboBox):
+    """
+    QComboBox that ignores mouse wheel events.
+
+    WHY: Prevents accidental selection changes when scrolling the settings page.
+    The user must click to open the dropdown and select an item.
+    """
+
+    def wheelEvent(self, event: Optional["QWheelEvent"]) -> None:
+        """Ignore wheel events to prevent accidental changes."""
+        if event:
+            event.ignore()
 
 
 class SectionHeader(QLabel):
@@ -324,7 +341,8 @@ class SettingsView(QWidget):
 
         # Dropdown with flag emojis
         # WHY flags: Visual identification of language at a glance
-        self._lang_combo = QComboBox()
+        # WHY NoScrollComboBox: Prevents accidental changes when scrolling page
+        self._lang_combo = NoScrollComboBox()
         self._lang_combo.addItem("🇺🇸 English", "en")
         self._lang_combo.addItem("🇩🇪 Deutsch", "de")
         self._lang_combo.setMinimumWidth(150)
