@@ -349,13 +349,21 @@ class InventoryView(QWidget):
     def _clear_item_list(self) -> None:
         """
         Remove all item rows from the UI.
+
+        Note: Preserves the empty state label - only removes InventoryRow widgets.
         """
-        # Remove all widgets from layout
-        while self._item_layout.count():
-            item = self._item_layout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        # Collect widgets to remove (excluding empty state label)
+        widgets_to_remove = []
+        for i in range(self._item_layout.count()):
+            item = self._item_layout.itemAt(i)
+            widget = item.widget() if item else None
+            if widget and widget != self._empty_state_label:
+                widgets_to_remove.append(widget)
+
+        # Remove and delete collected widgets
+        for widget in widgets_to_remove:
+            self._item_layout.removeWidget(widget)
+            widget.deleteLater()
 
     def _on_scroll_changed(self, value: int) -> None:
         """

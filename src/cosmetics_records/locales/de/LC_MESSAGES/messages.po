@@ -966,3 +966,41 @@ msgstr "Verschieben fehlgeschlagen"
 
 msgid "Failed to move database:"
 msgstr "Datenbank konnte nicht verschoben werden:"
+
+# =============================================================================
+# Units
+# =============================================================================
+
+msgid "Units"
+msgstr "Einheiten"
+
+msgid "Measurement system"
+msgstr "Maßsystem"
+
+msgid "Metric"
+msgstr "Metrisch"
+
+msgid "Imperial"
+msgstr "Imperial"
+
+msgid "Affects unit options when adding inventory items"
+msgstr "Beeinflusst die Einheitenoptionen beim Hinzufügen von Inventarartikeln"
+
+msgid "Pc."
+msgstr "Stk."
+
+# =============================================================================
+# Database Folder
+# =============================================================================
+
+msgid "Open Folder"
+msgstr "Ordner öffnen"
+
+msgid "Change Location"
+msgstr "Speicherort ändern"
+
+msgid "Cannot Open Folder"
+msgstr "Ordner kann nicht geöffnet werden"
+
+msgid "Could not open database folder"
+msgstr "Datenbankordner konnte nicht geöffnet werden"

@@ -40,10 +40,33 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog
+from cosmetics_records.config import Config
 from cosmetics_records.utils.localization import _
 
 # Configure module logger
 logger = logging.getLogger(__name__)
+
+# Unit options by measurement system
+METRIC_UNITS = ["ml", "g"]
+IMPERIAL_UNITS = ["fl oz", "oz"]
+
+
+def get_units_for_system() -> list:
+    """
+    Get the available units based on the configured measurement system.
+
+    Returns:
+        List of unit strings for the current system, plus localized "Pc."
+    """
+    config = Config.get_instance()
+    if config.units_system == "imperial":
+        base_units = IMPERIAL_UNITS.copy()
+    else:
+        base_units = METRIC_UNITS.copy()
+
+    # Add localized "Pc." (pieces) which is the same in both systems
+    base_units.append(_("Pc."))
+    return base_units
 
 
 class AddInventoryDialog(BaseDialog):
@@ -60,9 +83,6 @@ class AddInventoryDialog(BaseDialog):
         _unit_input: QComboBox for unit
         _error_label: QLabel for displaying validation errors
     """
-
-    # Available units
-    UNITS = ["ml", "g", "Pc."]
 
     def __init__(self, parent: Optional[QWidget] = None):
         """
@@ -119,9 +139,9 @@ class AddInventoryDialog(BaseDialog):
 
         # Unit (required, dropdown)
         self._unit_input = QComboBox()
-        self._unit_input.addItems(self.UNITS)
-        # WHY ml as default: Most common for cosmetics
-        self._unit_input.setCurrentText("ml")
+        self._unit_input.addItems(get_units_for_system())
+        # Default to first unit (ml for metric, fl oz for imperial)
+        self._unit_input.setCurrentIndex(0)
         self._unit_input.setFixedWidth(80)
         capacity_row.addWidget(self._unit_input)
 

@@ -188,6 +188,7 @@ class Config:
             # Localization
             "language": "en",  # Options: "en", "de"
             "date_format": "language",  # Options: "language", "iso8601", "us", "de"
+            "units_system": "metric",  # Options: "metric", "imperial"
             # UI Scaling
             "ui_scale": 1.0,  # Range: 0.8 to 2.0
             # Backup Settings
@@ -343,6 +344,28 @@ class Config:
                 f"Invalid date_format: {value}. Must be language, iso8601, us, or de"
             )
         self._settings["date_format"] = value
+
+    @property
+    def units_system(self) -> str:
+        """Get the current units system (metric or imperial)."""
+        return str(self._settings.get("units_system", "metric"))
+
+    @units_system.setter
+    def units_system(self, value: str) -> None:
+        """
+        Set the units system.
+
+        Args:
+            value: Units system - must be "metric" or "imperial"
+
+        Raises:
+            ValueError: If value is not a valid units system
+        """
+        if value not in ["metric", "imperial"]:
+            raise ValueError(
+                f"Invalid units_system: {value}. Must be metric or imperial"
+            )
+        self._settings["units_system"] = value
 
     @property
     def ui_scale(self) -> float:

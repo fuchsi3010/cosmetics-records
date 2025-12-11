@@ -45,6 +45,7 @@ from PyQt6.QtWidgets import (
 )
 
 from .base_dialog import BaseDialog, ConfirmDialog
+from .add_inventory_dialog import get_units_for_system
 from cosmetics_records.utils.localization import _
 
 # Configure module logger
@@ -68,9 +69,6 @@ class EditInventoryDialog(BaseDialog):
         _unit_input: QComboBox for unit
         _error_label: QLabel for displaying validation errors
     """
-
-    # Available units
-    UNITS = ["ml", "g", "Pc."]
 
     def __init__(self, item_id: int, item_data: dict, parent: Optional[QWidget] = None):
         """
@@ -139,7 +137,14 @@ class EditInventoryDialog(BaseDialog):
 
         # Unit (required, dropdown)
         self._unit_input = QComboBox()
-        self._unit_input.addItems(self.UNITS)
+        # Get units for current system
+        units = get_units_for_system()
+        # Include the existing unit if it's not in current system (e.g., item
+        # created in metric mode but now viewing in imperial mode)
+        existing_unit = self._item_data.get("unit", "")
+        if existing_unit and existing_unit not in units:
+            units.insert(0, existing_unit)
+        self._unit_input.addItems(units)
         self._unit_input.setFixedWidth(80)
         capacity_row.addWidget(self._unit_input)
 

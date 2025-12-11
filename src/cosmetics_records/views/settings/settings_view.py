@@ -238,6 +238,7 @@ class SettingsView(QWidget):
         container_layout.addWidget(self._create_appearance_section())
         container_layout.addWidget(self._create_language_section())
         container_layout.addWidget(self._create_date_format_section())
+        container_layout.addWidget(self._create_units_section())
         container_layout.addWidget(self._create_backup_section())
         container_layout.addWidget(self._create_export_section())
         container_layout.addWidget(self._create_database_section())
@@ -410,6 +411,52 @@ class SettingsView(QWidget):
         note_label = QLabel(
             _("Language default uses MM/DD/YYYY for English and DD.MM.YYYY for German")
         )
+        note_label.setProperty("class", "secondary")
+        note_label.setStyleSheet(
+            "color: gray; font-size: 11px; background: transparent;"
+        )
+        section.add_widget(note_label)
+
+        return section
+
+    def _create_units_section(self) -> QWidget:
+        """
+        Create the units system settings section.
+
+        Includes metric/imperial radio buttons for inventory units.
+
+        Returns:
+            QWidget containing units settings
+        """
+        section = SettingsSection(_("Units"))
+
+        # Units system selector
+        units_label = QLabel(_("Measurement system") + ":")
+        section.add_widget(units_label)
+
+        # Radio buttons for units system
+        units_row = QHBoxLayout()
+        units_row.setSpacing(12)
+
+        self._units_metric = QRadioButton(_("Metric") + " (ml, g)")
+        self._units_imperial = QRadioButton(_("Imperial") + " (fl oz, oz)")
+
+        # Connect signals
+        self._units_metric.toggled.connect(
+            lambda: self._on_units_system_changed("metric")
+        )
+        self._units_imperial.toggled.connect(
+            lambda: self._on_units_system_changed("imperial")
+        )
+
+        units_row.addWidget(self._units_metric)
+        units_row.addWidget(self._units_imperial)
+        units_row.addStretch()
+
+        section.add_layout(units_row)
+
+        # Note about units
+        note_label = QLabel(_("Affects unit options when adding inventory items"))
         note_label.setProperty("class", "secondary")
         note_label.setStyleSheet(
             "color: gray; font-size: 11px; background: transparent;"
@@ -691,6 +738,13 @@ class SettingsView(QWidget):
         else:  # "language" or default
             self._date_format_language.setChecked(True)
 
+        # Units system
+        units_system = self.config.units_system
+        if units_system == "imperial":
+            self._units_imperial.setChecked(True)
+        else:  # "metric" or default
+            self._units_metric.setChecked(True)
+
         # Backup settings
         self._auto_backup_check.setChecked(self.config.auto_backup)
         self._backup_interval_spin.setValue(self.config.backup_interval_minutes)
@@ -869,6 +923,27 @@ class SettingsView(QWidget):
 
         # Save to config
         self.config.date_format = format_code
+        self.config.save()
+
+        # Emit signal
+        self.settings_changed.emit()
+
+    def _on_units_system_changed(self, units_system: str) -> None:
+        """
+        Handle units system selection change.
+
+        Args:
+            units_system: Selected system ("metric" or "imperial")
+        """
+        # Only process if actually toggled on (not off)
+        sender = self.sender()
+        if not sender.isChecked():
+            return
+
+        logger.info(f"Units system changed to: {units_system}")
+
+        # Save to config
+        self.config.units_system = units_system
         self.config.save()
 
         # Emit signal

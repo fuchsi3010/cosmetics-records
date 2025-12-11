@@ -440,3 +440,41 @@ msgstr "UI scale has been changed. Please restart the application for the change
 
 msgid "All data exported successfully"
 msgstr "All data exported successfully"
+
+# =============================================================================
+# Units
+# =============================================================================
+
+msgid "Units"
+msgstr "Units"
+
+msgid "Measurement system"
+msgstr "Measurement system"
+
+msgid "Metric"
+msgstr "Metric"
+
+msgid "Imperial"
+msgstr "Imperial"
+
+msgid "Affects unit options when adding inventory items"
+msgstr "Affects unit options when adding inventory items"
+
+msgid "Pc."
+msgstr "Pc."
+
+# =============================================================================
+# Database Folder
+# =============================================================================
+
+msgid "Open Folder"
+msgstr "Open Folder"
+
+msgid "Change Location"
+msgstr "Change Location"
+
+msgid "Cannot Open Folder"
+msgstr "Cannot Open Folder"
+
+msgid "Could not open database folder"
+msgstr "Could not open database folder"
