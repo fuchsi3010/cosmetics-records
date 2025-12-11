@@ -32,11 +32,13 @@ from cosmetics_records.utils.time_utils import format_date_localized
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QComboBox,
     QDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -90,7 +92,7 @@ class EditProductRecordDialog(BaseDialog):
         self._deleted = False
 
         # Initialize base dialog
-        super().__init__(_("Edit Product Sale"), parent, width=500, height=350)
+        super().__init__(_("Edit Product Sale"), parent, width=550, height=500)
 
         # Set autocomplete suggestions
         if self._inventory_items:
@@ -106,6 +108,7 @@ class EditProductRecordDialog(BaseDialog):
         Create the dialog content.
 
         Adds form fields for date and product text plus delete button.
+        Uses same multi-product entry pattern as AddProductRecordDialog.
 
         Args:
             layout: Layout to add content to
@@ -114,24 +117,40 @@ class EditProductRecordDialog(BaseDialog):
         # WHY use BaseDialog method: Ensures consistent styling across all dialogs
         self.create_error_label(layout)
 
-        # Form layout for fields
+        # Form layout for date
         form_layout = QFormLayout()
-        form_layout.setSpacing(12)
-        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form_layout.setSpacing(10)
 
         # Date (required)
         self._date_picker = DatePicker()
         form_layout.addRow(_("Date: *"), self._date_picker)
 
-        # Product (autocomplete from inventory, but allows free text)
-        self._product_input = Autocomplete()
-        self._product_input.set_placeholder(_("Type product name..."))
-        form_layout.addRow(_("Products:") + " *", self._product_input)
-
         layout.addLayout(form_layout)
 
-        # Add stretch to push buttons to bottom
-        layout.addStretch()
+        # Product entry row: [Quantity] [Product input] [Add button]
+        entry_row = QHBoxLayout()
+        entry_row.setSpacing(8)
+
+        # Quantity selector (1x-10x)
+        self._quantity_combo = QComboBox()
+        for i in range(1, 11):
+            self._quantity_combo.addItem(f"{i}x")
+        self._quantity_combo.setFixedWidth(70)
+        self._quantity_combo.setProperty("quantity_selector", True)
+        entry_row.addWidget(self._quantity_combo)
+
+        # Product autocomplete input
+        self._product_input = Autocomplete()
+        self._product_input.set_placeholder(_("Type product name..."))
+        entry_row.addWidget(self._product_input, stretch=1)
+
+        # Add button
+        add_btn = QPushButton(_("Add"))
+        add_btn.setMinimumWidth(60)
+        add_btn.clicked.connect(self._on_add_product)
+        entry_row.addWidget(add_btn)
+
+        layout.addLayout(entry_row)
 
         # Info note about free text
         info_note = QLabel(_("Type to search inventory, or enter custom product name"))
@@ -139,10 +158,14 @@ class EditProductRecordDialog(BaseDialog):
         info_note.setWordWrap(True)
         layout.addWidget(info_note)
 
-        # Required fields note
-        required_note = QLabel(_("* Required fields"))
-        required_note.setProperty("form_note", True)  # CSS class (small, gray)
-        layout.addWidget(required_note)
+        # Products text area (shows accumulated products)
+        products_label = QLabel(_("Products:") + " *")
+        layout.addWidget(products_label)
+
+        self._products_text = QTextEdit()
+        self._products_text.setPlaceholderText(_("Added products will appear here..."))
+        self._products_text.setMinimumHeight(120)
+        layout.addWidget(self._products_text)
 
         # Button row: Delete + Save/Cancel
         button_row = QHBoxLayout()
@@ -188,15 +211,49 @@ class EditProductRecordDialog(BaseDialog):
         if record_date:
             self._date_picker.set_date(record_date)
 
-        # Set product text
+        # Set product text in the text area (not the autocomplete input)
         product_text = self._record_data.get("product_text", "")
-        self._product_input.set_text(product_text)
+        self._products_text.setPlainText(product_text)
+
+    def _on_add_product(self) -> None:
+        """
+        Handle Add button click.
+
+        Adds the current product with quantity to the products text area.
+        """
+        product_name = self._product_input.get_text().strip()
+        if not product_name:
+            self.show_error(_("Please enter a product name."))
+            self._product_input.set_focus()
+            return
+
+        # Get quantity
+        quantity = self._quantity_combo.currentText()
+
+        # Add to products text
+        current_text = self._products_text.toPlainText()
+        new_line = f"{quantity} {product_name}"
+
+        if current_text:
+            self._products_text.setPlainText(f"{current_text}\n{new_line}")
+        else:
+            self._products_text.setPlainText(new_line)
+
+        # Clear input for next product
+        self._product_input.clear()
+        self._quantity_combo.setCurrentIndex(0)
+        self._product_input.set_focus()
+
+        # Hide error if showing
+        self.hide_error()
+
+        logger.debug(f"Added product: {new_line}")
 
     def accept(self) -> None:
         """
         Accept the dialog after validating input.
 
-        Validates that date and product text are provided.
+        Validates that date is selected and at least one product is listed.
         """
         # Validate date
         record_date = self._date_picker.get_date()
@@ -204,10 +261,18 @@ class EditProductRecordDialog(BaseDialog):
             self.show_error(_("Date is required."))
             return
 
-        # Validate product text
-        product_text = self._product_input.get_text().strip()
-        if not product_text:
-            self.show_error(_("Please enter a product name."))
+        # Check if there's content in the products text
+        products_text = self._products_text.toPlainText().strip()
+
+        # Also check if there's something in the input field that wasn't added
+        pending_product = self._product_input.get_text().strip()
+        if pending_product and not products_text:
+            # Auto-add the pending product
+            self._on_add_product()
+            products_text = self._products_text.toPlainText().strip()
+
+        if not products_text:
+            self.show_error(_("Please add at least one product."))
             self._product_input.set_focus()
             return
 
@@ -284,5 +349,5 @@ class EditProductRecordDialog(BaseDialog):
         """
         return {
             "date": self._date_picker.get_date(),
-            "product_text": self._product_input.get_text().strip(),
+            "product_text": self._products_text.toPlainText().strip(),
         }
