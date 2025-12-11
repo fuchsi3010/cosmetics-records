@@ -107,9 +107,7 @@ class HistoryItem(QFrame):
         # Prevent item from expanding to fill available vertical space
         # WHY: Without this, a single history item would stretch to fill
         # the entire history section, which looks wrong
-        self.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
-        )
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
         # Set up the UI
         self._init_ui()
@@ -186,7 +184,9 @@ class HistoryItem(QFrame):
         layout.addWidget(notes_edit)
         self._notes_edit = notes_edit
 
-    def _update_notes_height(self, notes_edit: "QTextEdit", event: "QResizeEvent") -> None:
+    def _update_notes_height(
+        self, notes_edit: "QTextEdit", event: "QResizeEvent"
+    ) -> None:
         """
         Update notes QTextEdit height when container is resized.
 

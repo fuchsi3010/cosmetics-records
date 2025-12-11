@@ -139,8 +139,7 @@ class ProductController:
         # Include the product content so it's visible in the audit history
         audit = AuditService(self.db)
         description = (
-            f"Product sale on {record.product_date}:\n"
-            f"{record.product_text or ''}"
+            f"Product sale on {record.product_date}:\n" f"{record.product_text or ''}"
         )
         audit.log_create(
             "product_records",
