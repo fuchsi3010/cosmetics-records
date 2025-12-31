@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-12-31
+
+### Highlights
+
+First stable release! This version includes all features from the beta releases with additional bug fixes and improvements.
+
+### Fixed
+- Product sale edit dialog now properly displays existing products
+- Code formatting compliance with black
+
+### Changed
+- Improved client search threshold from 70% to 80% for more precise results
+
+### Documentation
+- Added demo video to README
+
+---
+
 ## [1.0.0-beta.1] - 2025-12-11
 
 ### Highlights
