@@ -14,7 +14,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Basic project metadata
 name = "cosmetics-records"
-version = "1.0.0-beta.2"
+version = "1.0.0"
 description = "A desktop application for cosmetics salon client management"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -30,7 +30,7 @@ keywords = ["cosmetics", "salon", "client management", "desktop", "pyqt6"]
 
 # Classifiers help users find your project on PyPI
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
