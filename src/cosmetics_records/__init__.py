@@ -27,54 +27,62 @@ from pathlib import Path
 
 def _get_version() -> str:
     """
-    Get the version from pyproject.toml.
+    Get the version from pyproject.toml or APP_VERSION environment variable.
 
     Returns:
-        str: The version string from pyproject.toml, or "0.0.0" if not found.
+        str: The version string from pyproject.toml or APP_VERSION env var.
+
+    Raises:
+        SystemExit: If version cannot be determined from either source.
     """
-    try:
-        # Find pyproject.toml - it's in the project root
-        # This file is at src/cosmetics_records/__init__.py
-        # So pyproject.toml is at ../../pyproject.toml relative to this file
-        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+    import os
 
-        if not pyproject_path.exists():
-            # When running from installed package or PyInstaller bundle,
-            # pyproject.toml won't be available - check environment variable
-            # set during build, or use fallback
-            import os
+    # Find pyproject.toml - it's in the project root
+    # This file is at src/cosmetics_records/__init__.py
+    # So pyproject.toml is at ../../pyproject.toml relative to this file
+    pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
 
-            env_version = os.environ.get("APP_VERSION")
-            if env_version:
-                return env_version
-            # NOTE: Update this fallback when releasing a new version
-            return "1.0.1-beta1"
+    # Try to read from pyproject.toml first
+    if pyproject_path.exists():
+        try:
+            if tomllib is not None:
+                # Python 3.11+ - use tomllib
+                with open(pyproject_path, "rb") as f:
+                    data = tomllib.load(f)
+                version = data.get("project", {}).get("version")
+                if version:
+                    return version
+            else:
+                # Python 3.9/3.10 - parse manually (simple approach)
+                with open(pyproject_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip().startswith("version"):
+                            # Parse: version = "x.y.z" from pyproject.toml
+                            parts = line.split("=", 1)
+                            if len(parts) == 2:
+                                version = parts[1].strip().strip('"').strip("'")
+                                if version:
+                                    return version
+        except Exception as e:
+            print(f"Warning: Error reading pyproject.toml: {e}", file=sys.stderr)
 
-        if tomllib is not None:
-            # Python 3.11+ - use tomllib
-            with open(pyproject_path, "rb") as f:
-                data = tomllib.load(f)
-            return data.get("project", {}).get("version", "0.0.0")
-        else:
-            # Python 3.9/3.10 - parse manually (simple approach)
-            with open(pyproject_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.strip().startswith("version"):
-                        # Parse: version = "x.y.z" from pyproject.toml
-                        parts = line.split("=", 1)
-                        if len(parts) == 2:
-                            return parts[1].strip().strip('"').strip("'")
-            return "0.0.0"
+    # When running from installed package or PyInstaller bundle,
+    # pyproject.toml won't be available - check environment variable
+    env_version = os.environ.get("APP_VERSION")
+    if env_version:
+        return env_version
 
-    except Exception:
-        # Any error reading version - check environment or return fallback
-        import os
-
-        env_version = os.environ.get("APP_VERSION")
-        if env_version:
-            return env_version
-        # NOTE: Update this fallback when releasing a new version
-        return "1.0.1-beta1"
+    # No version found - exit with error
+    print(
+        "ERROR: Could not determine application version.\n"
+        "Version must be set in one of:\n"
+        "  1. pyproject.toml (project.version)\n"
+        "  2. APP_VERSION environment variable\n"
+        "\n"
+        "This typically indicates a broken installation or build process.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 # Package version - read from pyproject.toml
