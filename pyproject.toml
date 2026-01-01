@@ -14,7 +14,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Basic project metadata
 name = "cosmetics-records"
-version = "1.0.0"
+version = "1.0.1-beta1"
 description = "A desktop application for cosmetics salon client management"
 readme = "README.md"
 license = {text = "Apache-2.0"}
