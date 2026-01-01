@@ -10,13 +10,21 @@
 #   - Validate all data before any database writes
 #   - Use transactions (all-or-nothing imports)
 #   - Map temporary import_id values to actual database IDs
-#   - Detailed error reporting with row numbers
+#   - Detailed error reporting with row numbers and actual filenames
+#   - Automatic encoding detection (UTF-8, Latin-1, Windows-1252, CP1252)
+#   - Automatic delimiter detection (comma, semicolon, tab)
 #
 # CSV File Structure:
-#   - clients.csv: Required - client personal data with import_id for linking
-#   - treatments.csv: Optional - treatment records linked to clients
-#   - product_sales.csv: Optional - product sale records linked to clients
-#   - inventory.csv: Optional - inventory items (standalone)
+#   - clients.csv: Optional - client personal data with import_id for linking
+#   - treatments.csv: Optional - requires clients.csv for validation
+#   - product_sales.csv: Optional - requires clients.csv for validation
+#   - inventory.csv: Optional - standalone, no dependencies
+#
+# Format Support:
+#   - Automatically detects encoding (UTF-8, Latin-1, Windows-1252, CP1252)
+#   - Automatically detects delimiter (comma, semicolon, tab)
+#   - Handles UTF-8 with BOM (from Excel exports)
+#   - Handles European Excel exports with semicolon delimiter
 #
 # Import Order:
 #   1. Inventory (standalone, no dependencies)
@@ -46,7 +54,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, TextIO, Tuple
 
 from cosmetics_records.database.connection import DatabaseConnection
 from cosmetics_records.models.client import Client
@@ -243,7 +251,7 @@ class ImportService:
 
     def validate_files(
         self,
-        clients_path: str,
+        clients_path: Optional[str] = None,
         treatments_path: Optional[str] = None,
         products_path: Optional[str] = None,
         inventory_path: Optional[str] = None,
@@ -261,7 +269,8 @@ class ImportService:
         - Inventory units are valid (ml, g, Pc.)
 
         Args:
-            clients_path: Path to clients CSV file (REQUIRED)
+            clients_path: Path to clients CSV file (optional, but required
+                         if importing treatments or products)
             treatments_path: Path to treatments CSV file (optional)
             products_path: Path to products CSV file (optional)
             inventory_path: Path to inventory CSV file (optional)
@@ -271,6 +280,9 @@ class ImportService:
 
         Example:
             >>> service = ImportService()
+            >>> # Import only inventory
+            >>> errors = service.validate_files(inventory_path="/path/to/inventory.csv")
+            >>> # Import clients and treatments
             >>> errors = service.validate_files(
             ...     clients_path="/path/to/clients.csv",
             ...     treatments_path="/path/to/treatments.csv"
@@ -285,8 +297,8 @@ class ImportService:
         self._errors = []
         self._parsed_data = ParsedData()
 
-        # Store file paths
-        self._clients_path = Path(clients_path)
+        # Convert paths to Path objects (None-safe)
+        self._clients_path = Path(clients_path) if clients_path else None
         self._treatments_path = Path(treatments_path) if treatments_path else None
         self._products_path = Path(products_path) if products_path else None
         self._inventory_path = Path(inventory_path) if inventory_path else None
@@ -297,22 +309,58 @@ class ImportService:
             f"inventory={inventory_path}"
         )
 
+        # Validate at least one file selected
+        if not any(
+            [
+                self._clients_path,
+                self._treatments_path,
+                self._products_path,
+                self._inventory_path,
+            ]
+        ):
+            self._add_error(
+                "Import", None, None, "Please select at least one CSV file to import"
+            )
+            return self._errors
+
+        # Check dependencies: treatments and products require clients
+        if (self._treatments_path or self._products_path) and not self._clients_path:
+            missing_for = []
+            if self._treatments_path:
+                missing_for.append(self._treatments_path.name)
+            if self._products_path:
+                missing_for.append(self._products_path.name)
+
+            self._add_error(
+                "Import",
+                None,
+                None,
+                f"Cannot import {', '.join(missing_for)} without a clients file "
+                f"because they contain client references that must be validated. "
+                f"Please also select a clients CSV file.",
+            )
+            return self._errors
+
         # Step 1: Validate file existence
-        self._validate_file_exists(self._clients_path, "clients.csv", required=True)
+        if self._clients_path:
+            self._validate_file_exists(self._clients_path)
         if self._treatments_path:
-            self._validate_file_exists(self._treatments_path, "treatments.csv")
+            self._validate_file_exists(self._treatments_path)
         if self._products_path:
-            self._validate_file_exists(self._products_path, "product_sales.csv")
+            self._validate_file_exists(self._products_path)
         if self._inventory_path:
-            self._validate_file_exists(self._inventory_path, "inventory.csv")
+            self._validate_file_exists(self._inventory_path)
 
         # Stop early if files don't exist
         if self._errors:
             return self._errors
 
         # Step 2: Parse and validate each file
-        # Parse clients first (needed to validate references in other files)
-        valid_client_ids, all_client_ids = self._parse_clients_csv()
+        # Parse clients first if present (needed for reference validation)
+        if self._clients_path and self._clients_path.exists():
+            valid_client_ids, all_client_ids = self._parse_clients_csv()
+        else:
+            valid_client_ids, all_client_ids = set(), set()
 
         # Parse optional files
         if self._treatments_path and self._treatments_path.exists():
@@ -456,36 +504,104 @@ class ImportService:
     # File Validation Helpers
     # =========================================================================
 
-    def _validate_file_exists(
-        self, path: Path, display_name: str, required: bool = False
-    ) -> None:
+    def _try_open_csv(self, path: Path) -> Tuple[Optional[TextIO], Optional[str]]:
+        """
+        Try opening CSV file with multiple encodings.
+
+        German/European Excel exports may use different encodings:
+        - UTF-8 with BOM (utf-8-sig)
+        - Plain UTF-8
+        - Latin-1 (ISO-8859-1) - common in Germany
+        - Windows-1252 (CP1252) - German Excel default
+
+        Args:
+            path: Path to the CSV file
+
+        Returns:
+            Tuple of (file_handle, encoding_name) or (None, None) if all fail
+        """
+        encodings = ["utf-8-sig", "utf-8", "latin-1", "windows-1252", "cp1252"]
+
+        for encoding in encodings:
+            f = None
+            try:
+                f = open(path, "r", encoding=encoding, newline="")
+                # Validate by reading first line
+                f.readline()
+                f.seek(0)  # Reset to start
+                logger.debug(f"Opened {path.name} with encoding: {encoding}")
+                return f, encoding
+            except UnicodeDecodeError:
+                if f:
+                    f.close()
+                continue
+            except Exception:
+                if f:
+                    f.close()
+                break
+
+        return None, None
+
+    def _detect_csv_delimiter(self, file_handle: TextIO) -> str:
+        """
+        Detect CSV delimiter (comma or semicolon).
+
+        German/European Excel exports often use semicolon (;) as delimiter
+        because comma is used for decimal numbers (1,50 instead of 1.50).
+
+        Args:
+            file_handle: Open file handle positioned at start
+
+        Returns:
+            Detected delimiter (',' or ';' or '\t')
+        """
+        # Read first few lines to detect delimiter
+        sample = file_handle.read(8192)  # Read up to 8KB sample
+        file_handle.seek(0)  # Reset to start
+
+        # Use csv.Sniffer to detect delimiter
+        try:
+            sniffer = csv.Sniffer()
+            dialect = sniffer.sniff(sample, delimiters=",;\t")
+            delimiter = dialect.delimiter
+            logger.debug(f"Detected CSV delimiter: {repr(delimiter)}")
+            return delimiter
+        except csv.Error:
+            # Default to comma if detection fails
+            logger.debug("Could not detect delimiter, defaulting to comma")
+            return ","
+
+    def _validate_file_exists(self, path: Path, required: bool = False) -> None:
         """
         Check if a file exists and is readable.
 
         Args:
             path: Path to the file
-            display_name: Name to show in error messages
             required: If True, add error when file doesn't exist
         """
+        display_name = path.name  # Use actual filename for error messages
+
         if not path.exists():
             if required:
-                self._add_error(display_name, None, None, f"File not found: {path}")
+                self._add_error(display_name, None, None, "File not found")
             return
 
         if not path.is_file():
-            self._add_error(display_name, None, None, f"Not a file: {path}")
+            self._add_error(display_name, None, None, "Not a file")
             return
 
-        # Try to read the file to check permissions
-        try:
-            with open(path, "r", encoding="utf-8-sig") as f:
-                f.read(1)
-        except PermissionError:
+        # Try to open with encoding detection
+        f, encoding = self._try_open_csv(path)
+        if f is None:
             self._add_error(
-                display_name, None, None, f"Permission denied reading file: {path}"
+                display_name,
+                None,
+                None,
+                "Cannot read file with common encodings "
+                "(tried UTF-8, Latin-1, Windows-1252)",
             )
-        except Exception as e:
-            self._add_error(display_name, None, None, f"Cannot read file: {e}")
+        else:
+            f.close()
 
     def _add_error(
         self,
@@ -523,13 +639,21 @@ class ImportService:
         if not self._clients_path or not self._clients_path.exists():
             return set(), set()
 
-        file_name = "clients.csv"
+        file_name = self._clients_path.name  # Use actual filename
         valid_import_ids: set = set()
         all_import_ids: set = set()  # Track all IDs for better error messages
 
+        # Open file with encoding detection
+        f, encoding = self._try_open_csv(self._clients_path)
+        if f is None:
+            self._add_error(file_name, None, None, "Cannot read file")
+            return set(), set()
+
         try:
-            with open(self._clients_path, "r", encoding="utf-8-sig", newline="") as f:
-                reader = csv.DictReader(f)
+            with f:
+                # Detect delimiter
+                delimiter = self._detect_csv_delimiter(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
 
                 # Validate header columns
                 if reader.fieldnames is None:
@@ -663,13 +787,19 @@ class ImportService:
         if not self._treatments_path or not self._treatments_path.exists():
             return
 
-        file_name = "treatments.csv"
+        file_name = self._treatments_path.name  # Use actual filename
+
+        # Open file with encoding detection
+        f, encoding = self._try_open_csv(self._treatments_path)
+        if f is None:
+            self._add_error(file_name, None, None, "Cannot read file")
+            return
 
         try:
-            with open(
-                self._treatments_path, "r", encoding="utf-8-sig", newline=""
-            ) as f:
-                reader = csv.DictReader(f)
+            with f:
+                # Detect delimiter
+                delimiter = self._detect_csv_delimiter(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
 
                 # Validate header columns
                 if reader.fieldnames is None:
@@ -781,11 +911,19 @@ class ImportService:
         if not self._products_path or not self._products_path.exists():
             return
 
-        file_name = "product_sales.csv"
+        file_name = self._products_path.name  # Use actual filename
+
+        # Open file with encoding detection
+        f, encoding = self._try_open_csv(self._products_path)
+        if f is None:
+            self._add_error(file_name, None, None, "Cannot read file")
+            return
 
         try:
-            with open(self._products_path, "r", encoding="utf-8-sig", newline="") as f:
-                reader = csv.DictReader(f)
+            with f:
+                # Detect delimiter
+                delimiter = self._detect_csv_delimiter(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
 
                 # Validate header columns
                 if reader.fieldnames is None:
@@ -894,11 +1032,19 @@ class ImportService:
         if not self._inventory_path or not self._inventory_path.exists():
             return
 
-        file_name = "inventory.csv"
+        file_name = self._inventory_path.name  # Use actual filename
+
+        # Open file with encoding detection
+        f, encoding = self._try_open_csv(self._inventory_path)
+        if f is None:
+            self._add_error(file_name, None, None, "Cannot read file")
+            return
 
         try:
-            with open(self._inventory_path, "r", encoding="utf-8-sig", newline="") as f:
-                reader = csv.DictReader(f)
+            with f:
+                # Detect delimiter
+                delimiter = self._detect_csv_delimiter(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
 
                 # Validate header columns
                 if reader.fieldnames is None:

@@ -151,9 +151,9 @@ class ImportDialog(BaseDialog):
         instruction.setProperty("dialog_label", True)
         layout.addWidget(instruction)
 
-        # Clients row (required)
+        # Clients row (no longer required)
         clients_row, self._clients_input = self._create_file_row(
-            _("Clients (required):"), self._browse_clients
+            _("Clients:"), self._browse_clients
         )
         layout.addLayout(clients_row)
 
@@ -174,6 +174,20 @@ class ImportDialog(BaseDialog):
             _("Inventory:"), self._browse_inventory
         )
         layout.addLayout(inventory_row)
+
+        # Add spacing
+        layout.addSpacing(10)
+
+        # Help text explaining dependencies
+        help_label = QLabel(
+            _(
+                "Note: Treatments and Product Sales require a Clients file "
+                "to validate customer references."
+            )
+        )
+        help_label.setWordWrap(True)
+        help_label.setStyleSheet("color: #888888; font-size: 11pt;")
+        layout.addWidget(help_label)
 
     def _create_file_row(
         self, label_text: str, browse_callback: Callable[[], None]
@@ -357,10 +371,17 @@ class ImportDialog(BaseDialog):
 
     def _on_validate_clicked(self) -> None:
         """Handle Validate button click."""
-        # Check that clients file is selected
-        if not self._clients_path:
+        # Check that at least one file is selected
+        if not any(
+            [
+                self._clients_path,
+                self._treatments_path,
+                self._products_path,
+                self._inventory_path,
+            ]
+        ):
             self._update_status_error(
-                [_("Please select a clients CSV file (required)")]
+                [_("Please select at least one CSV file to import")]
             )
             return
 
