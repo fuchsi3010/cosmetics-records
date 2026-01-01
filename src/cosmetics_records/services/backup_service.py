@@ -15,8 +15,8 @@
 #
 # Backup Format:
 #   - ZIP file containing the SQLite database file
-#   - Filename format: cosmetics_records_backup_YYYYMMDD_HHMMSS.zip
-#   - Example: cosmetics_records_backup_20240115_143000.zip
+#   - Filename format: cosmetics_records_backup_vX.Y.Z_YYYYMMDD_HHMMSS.zip
+#   - Example: cosmetics_records_backup_v1.0.1-beta1_20240115_143000.zip
 #
 # Usage Example:
 #   backup_service = BackupService(
@@ -39,6 +39,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from cosmetics_records import __version__
 
 # Configure module logger for debugging backup operations
 logger = logging.getLogger(__name__)
@@ -106,18 +108,18 @@ class BackupService:
         Example:
             >>> backup_path = backup_service.create_backup()
             >>> print(f"Backup created at: {backup_path}")
-            Backup created at: /path/to/backups/backup_20240115_143000.zip
+            .../cosmetics_records_backup_v1.0.1-beta1_20240115_143000.zip
         """
         try:
             # Verify database file exists before attempting backup
             if not self.db_path.exists():
                 raise FileNotFoundError(f"Database file not found: {self.db_path}")
 
-            # Generate timestamped filename
-            # Format: cosmetics_records_backup_YYYYMMDD_HHMMSS.zip
-            # This ensures unique filenames even if backups are created rapidly
+            # Generate timestamped filename with version
+            # Format: cosmetics_records_backup_vX.Y.Z_YYYYMMDD_HHMMSS.zip
+            # This ensures unique filenames and tracks which version created the backup
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_filename = f"cosmetics_records_backup_{timestamp}.zip"
+            backup_filename = f"cosmetics_records_backup_v{__version__}_{timestamp}.zip"
             backup_path = self.backup_dir / backup_filename
 
             # Create ZIP file with the database
@@ -163,9 +165,8 @@ class BackupService:
             OSError: If the restore fails for other reasons
 
         Example:
-            >>> success = backup_service.restore_backup(
-            ...     "/path/to/backups/cosmetics_records_backup_20240115_143000.zip"
-            ... )
+            >>> path = ".../cosmetics_records_backup_v1.0.0_20240115_143000.zip"
+            >>> success = backup_service.restore_backup(path)
             >>> if success:
             ...     print("Database restored successfully")
         """
@@ -182,11 +183,12 @@ class BackupService:
 
             # Create a pre-restore backup of the current database
             # This ensures we can recover if the restore goes wrong
-            # Format: cosmetics_records_backup_prerestore_YYYYMMDD_HHMMSS.zip
+            # Format: cosmetics_records_backup_prerestore_vX.Y.Z_YYYYMMDD_HHMMSS.zip
             if self.db_path.exists():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 prerestore_filename = (
-                    f"cosmetics_records_backup_prerestore_{timestamp}.zip"
+                    f"cosmetics_records_backup_prerestore_v{__version__}_"
+                    f"{timestamp}.zip"
                 )
                 prerestore_path = self.backup_dir / prerestore_filename
 
@@ -252,7 +254,7 @@ class BackupService:
             [
                 {
                     "path": "/path/to/backup.zip",
-                    "filename": "cosmetics_records_backup_20240115_143000.zip",
+                    "filename": "cosmetics_records_backup_v1.0.1_...",
                     "size": 1024000,  # Size in bytes
                     "created": datetime(2024, 1, 15, 14, 30, 0)
                 },
@@ -275,13 +277,24 @@ class BackupService:
                     stat = file_path.stat()
 
                     # Parse creation date from filename if possible
-                    # Format: cosmetics_records_backup_YYYYMMDD_HHMMSS.zip
+                    # New format: cosmetics_records_backup_vX.Y.Z_YYYYMMDD_HHMMSS.zip
+                    # Old format: cosmetics_records_backup_YYYYMMDD_HHMMSS.zip
                     filename = file_path.name
                     try:
-                        # Extract the timestamp part: YYYYMMDD_HHMMSS
+                        # Remove prefix and suffix
                         timestamp_str = filename.replace(
                             "cosmetics_records_backup_", ""
                         ).replace(".zip", "")
+
+                        # Check if it includes version (starts with 'v')
+                        if timestamp_str.startswith("v"):
+                            # New format: v1.0.1-beta1_20240115_143000
+                            # Extract just the timestamp part (after the version)
+                            parts = timestamp_str.split("_", 1)
+                            if len(parts) == 2:
+                                timestamp_str = parts[1]  # Just YYYYMMDD_HHMMSS
+
+                        # Parse the timestamp
                         created = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
                     except ValueError:
                         # If we can't parse the filename, use file modification time
@@ -433,9 +446,8 @@ class BackupService:
             True if the backup was deleted successfully, False otherwise
 
         Example:
-            >>> success = backup_service.delete_backup(
-            ...     "/path/to/backups/cosmetics_records_backup_20240115_143000.zip"
-            ... )
+            >>> path = ".../cosmetics_records_backup_v1.0.0_20240115_143000.zip"
+            >>> success = backup_service.delete_backup(path)
             >>> if success:
             ...     print("Backup deleted successfully")
         """
@@ -489,9 +501,8 @@ class BackupService:
             - message: Description of result or error
 
         Example:
-            >>> is_valid, message = backup_service.verify_backup(
-            ...     "/path/to/backups/cosmetics_records_backup_20240115_143000.zip"
-            ... )
+            >>> path = ".../cosmetics_records_backup_v1.0.0_20240115_143000.zip"
+            >>> is_valid, message = backup_service.verify_backup(path)
             >>> if is_valid:
             ...     print("Backup is valid")
             ... else:
