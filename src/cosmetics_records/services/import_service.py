@@ -342,14 +342,16 @@ class ImportService:
             return self._errors
 
         # Step 1: Validate file existence
+        # If a path is provided, the file must exist (the "optional" aspect
+        # means the user can omit the path entirely by passing None)
         if self._clients_path:
-            self._validate_file_exists(self._clients_path)
+            self._validate_file_exists(self._clients_path, required=True)
         if self._treatments_path:
-            self._validate_file_exists(self._treatments_path)
+            self._validate_file_exists(self._treatments_path, required=True)
         if self._products_path:
-            self._validate_file_exists(self._products_path)
+            self._validate_file_exists(self._products_path, required=True)
         if self._inventory_path:
-            self._validate_file_exists(self._inventory_path)
+            self._validate_file_exists(self._inventory_path, required=True)
 
         # Stop early if files don't exist
         if self._errors:
