@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-06
+
+### Highlights
+
+Complete reimplementation focused on speed and security: ~23,000 lines replaced by ~1,200. Existing 1.x databases open unchanged.
+
+### Changed
+- Audit logging moved into SQLite triggers — impossible to bypass, cascade deletes are now audited too
+- Single persistent WAL connection instead of per-query connections; startup no longer loads Pydantic/Babel/fuzzy-matching libraries
+- Native Qt widgets and system theme (Fusion) replace 1,800 lines of custom styling
+- German-only UI (the app's actual locale); i18n toolchain removed
+- Backups now use SQLite's online backup API (consistent snapshots even mid-write)
+
+### Added
+- File permissions hardening: database/config/backups 0600, data dir 0700
+- `PRAGMA secure_delete`: deleted client data is not recoverable from DB free pages
+- Fractional inventory capacities survive editing (1.x truncated them to integers)
+
+### Removed
+- CSV import (one-time initial migration, done), UI scale/date-format/imperial-units settings, log file (treatment notes no longer leak to disk), PyInstaller build scripts
+
 ## [1.0.0] - 2025-12-31
 
 ### Highlights
