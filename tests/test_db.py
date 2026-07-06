@@ -1,10 +1,42 @@
 """End-to-end check of the data layer: schema, audit triggers, backup/restore."""
 
+import ast
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from cosmetics_records import db  # noqa: E402
+from cosmetics_records import db, i18n  # noqa: E402
+
+
+def test_translations_cover_all_ui_strings():
+    """Every tr() literal and every TABLE_/FIELD_LABELS value has a German entry."""
+    app_py = Path(__file__).parent.parent / "src" / "cosmetics_records" / "app.py"
+    keys = set()
+    for node in ast.walk(ast.parse(app_py.read_text("utf-8"))):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "tr"
+            and node.args
+        ):
+            arg = node.args[0]
+            if isinstance(arg, ast.Constant):
+                keys.add(arg.value)
+            elif isinstance(arg, ast.Subscript) and isinstance(arg.value, ast.Dict):
+                keys |= {
+                    v.value for v in arg.value.values if isinstance(v, ast.Constant)
+                }
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Name) and t.id in ("TABLE_LABELS", "FIELD_LABELS")
+            for t in node.targets
+        ):
+            keys |= {v.value for v in node.value.values if isinstance(v, ast.Constant)}
+    missing = {k for k in keys if isinstance(k, str)} - set(i18n.DE)
+    assert not missing, f"untranslated: {sorted(missing)}"
+    i18n.set_language("de")
+    assert i18n.tr("Clients") == "Kunden"
+    i18n.set_language("en")
+    assert i18n.tr("Clients") == "Clients"
 
 
 def test_roundtrip(tmp_path, monkeypatch):

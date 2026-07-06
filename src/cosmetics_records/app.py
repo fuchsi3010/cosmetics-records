@@ -1,7 +1,7 @@
-"""Cosmetics Records — Kundenkartei für ein Ein-Personen-Kosmetikstudio.
+"""Cosmetics Records — client records app for a one-person cosmetics salon.
 
-Single-window PyQt6 app on top of db.py. German UI (the salon's language).
-Run: python src/cosmetics_records/app.py
+Single-window PyQt6 app on top of db.py. English/German UI (i18n.py),
+1.x look reproduced in style.py. Run: python src/cosmetics_records/app.py
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ import zipfile
 from datetime import date, datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QDate, Qt, QTimer, QUrl
-from PyQt6.QtGui import QDesktopServices, QFont
+from PyQt6.QtCore import QDate, QLocale, Qt, QTimer, QUrl
+from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -42,50 +42,56 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QStackedWidget,
-    QTabWidget,
     QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from cosmetics_records import db  # noqa: E402
+from cosmetics_records import db, i18n, style  # noqa: E402
+from cosmetics_records.i18n import tr  # noqa: E402
 
 EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+ICON = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
 
+# English source labels; rendered through tr() at display time.
 TABLE_LABELS = {
-    "clients": "Kunde",
-    "treatment_records": "Behandlung",
-    "product_records": "Produktverkauf",
-    "inventory": "Inventar",
-    "inventory_items": "Inventar",  # legacy table name in old audit rows
+    "clients": "Client",
+    "treatment_records": "Treatment",
+    "product_records": "Product sale",
+    "inventory": "Inventory",
+    "inventory_items": "Inventory",  # legacy table name in old audit rows
 }
 FIELD_LABELS = {
-    "first_name": "Vorname",
-    "last_name": "Nachname",
-    "email": "E-Mail",
-    "phone": "Telefon",
-    "address": "Adresse",
-    "date_of_birth": "Geburtsdatum",
-    "allergies": "Allergien",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "date_of_birth": "Date of birth",
+    "allergies": "Allergies",
     "tags": "Tags",
-    "planned_treatment": "Geplante Behandlung",
-    "notes": "Notizen",
-    "client_id": "Kunden-Nr.",
-    "treatment_date": "Datum",
-    "treatment_notes": "Behandlungsnotizen",
-    "product_date": "Datum",
-    "product_text": "Produkte",
+    "planned_treatment": "Planned treatment",
+    "notes": "Notes",
+    "client_id": "Client no.",
+    "treatment_date": "Date",
+    "treatment_notes": "Treatment notes",
+    "product_date": "Date",
+    "product_text": "Products",
     "name": "Name",
-    "description": "Beschreibung",
-    "capacity": "Inhalt",
-    "unit": "Einheit",
+    "description": "Description",
+    "capacity": "Capacity",
+    "unit": "Unit",
 }
+
+
+def date_format() -> str:
+    return "dd.MM.yyyy" if i18n.LANG == "de" else "yyyy-MM-dd"
 
 
 def fmt_date(iso: str | None) -> str:
     d = QDate.fromString(iso or "", Qt.DateFormat.ISODate)
-    return d.toString("dd.MM.yyyy") if d.isValid() else (iso or "")
+    return d.toString(date_format()) if d.isValid() else (iso or "")
 
 
 def parse_dob(text: str) -> str | None:
@@ -105,7 +111,7 @@ def confirm(parent: QWidget, text: str) -> bool:
     return (
         QMessageBox.question(
             parent,
-            "Bestätigen",
+            tr("Confirm"),
             text,
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -115,7 +121,7 @@ def confirm(parent: QWidget, text: str) -> bool:
 
 
 class SaveOnBlur(QPlainTextEdit):
-    """Speichert beim Verlassen des Feldes — ein Audit-Eintrag pro Sitzung."""
+    """Saves when focus leaves the field — one audit entry per editing session."""
 
     def __init__(self, on_save):
         super().__init__()
@@ -142,7 +148,7 @@ class ClientDialog(QDialog):
     def __init__(self, win: "MainWindow", client_id: int | None = None):
         super().__init__(win)
         self.win, self.client_id, self.deleted = win, client_id, False
-        self.setWindowTitle("Kunde bearbeiten" if client_id else "Neuer Kunde")
+        self.setWindowTitle(tr("Edit Client") if client_id else tr("New Client"))
         self.setMinimumWidth(420)
 
         self.first = QLineEdit()
@@ -151,20 +157,20 @@ class ClientDialog(QDialog):
         self.phone = QLineEdit()
         self.address = QPlainTextEdit()
         self.address.setFixedHeight(60)
-        self.dob = QLineEdit(placeholderText="TT.MM.JJJJ")
+        self.dob = QLineEdit(placeholderText=tr("YYYY-MM-DD"))
         self.allergies = QPlainTextEdit()
         self.allergies.setFixedHeight(60)
-        self.tags = QLineEdit(placeholderText="z. B. VIP, empfindliche Haut")
+        self.tags = QLineEdit(placeholderText=tr("e.g. VIP, sensitive skin"))
 
         form = QFormLayout(self)
-        form.addRow("Vorname*", self.first)
-        form.addRow("Nachname*", self.last)
-        form.addRow("E-Mail", self.email)
-        form.addRow("Telefon", self.phone)
-        form.addRow("Adresse", self.address)
-        form.addRow("Geburtsdatum", self.dob)
-        form.addRow("Allergien", self.allergies)
-        form.addRow("Tags", self.tags)
+        form.addRow(tr("First name*"), self.first)
+        form.addRow(tr("Last name*"), self.last)
+        form.addRow(tr("Email"), self.email)
+        form.addRow(tr("Phone"), self.phone)
+        form.addRow(tr("Address"), self.address)
+        form.addRow(tr("Date of birth"), self.dob)
+        form.addRow(tr("Allergies"), self.allergies)
+        form.addRow(tr("Tags"), self.tags)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
@@ -174,7 +180,7 @@ class ClientDialog(QDialog):
         buttons.rejected.connect(self.reject)
         if client_id:
             delete = buttons.addButton(
-                "Löschen…", QDialogButtonBox.ButtonRole.DestructiveRole
+                tr("Delete…"), QDialogButtonBox.ButtonRole.DestructiveRole
             )
             delete.clicked.connect(self._delete)
             row = db.get_client(win.conn, client_id)
@@ -189,7 +195,7 @@ class ClientDialog(QDialog):
         form.addRow(buttons)
 
     def _delete(self) -> None:
-        if confirm(self, "Kunde und gesamte Historie unwiderruflich löschen?"):
+        if confirm(self, tr("Delete client and entire history permanently?")):
             db.delete_client(self.win.conn, self.client_id)
             self.deleted = True
             QDialog.accept(self)
@@ -197,16 +203,18 @@ class ClientDialog(QDialog):
     def accept(self) -> None:
         if not self.first.text().strip() or not self.last.text().strip():
             return QMessageBox.warning(
-                self, "Fehler", "Vor- und Nachname sind Pflichtfelder."
+                self, tr("Error"), tr("First and last name are required.")
             )
         email = self.email.text().strip()
         if email and not EMAIL_RE.match(email):
-            return QMessageBox.warning(self, "Fehler", "Ungültige E-Mail-Adresse.")
+            return QMessageBox.warning(self, tr("Error"), tr("Invalid email address."))
         try:
             dob = parse_dob(self.dob.text())
         except ValueError:
             return QMessageBox.warning(
-                self, "Fehler", "Geburtsdatum bitte als TT.MM.JJJJ angeben."
+                self,
+                tr("Error"),
+                tr("Please enter the date of birth as {}.").format(tr("YYYY-MM-DD")),
             )
         fields = {
             "first_name": self.first.text().strip(),
@@ -218,9 +226,7 @@ class ClientDialog(QDialog):
             "allergies": self.allergies.toPlainText().strip() or None,
             "tags": self.tags.text().strip() or None,
         }
-        if (
-            self.client_id
-        ):  # planned_treatment/notes werden in der Detailansicht gepflegt
+        if self.client_id:  # planned_treatment/notes are edited in the detail view
             row = db.get_client(self.win.conn, self.client_id)
             fields["planned_treatment"] = row["planned_treatment"]
             fields["notes"] = row["notes"]
@@ -229,7 +235,7 @@ class ClientDialog(QDialog):
 
 
 class RecordDialog(QDialog):
-    """Behandlung oder Produktverkauf anlegen/bearbeiten."""
+    """Create or edit a treatment / product sale record."""
 
     def __init__(
         self, win: "MainWindow", table: str, client_id: int, record: dict | None = None
@@ -238,12 +244,12 @@ class RecordDialog(QDialog):
         self.win, self.table, self.client_id = win, table, client_id
         self.record_id = record["id"] if record else None
         is_product = table == "product_records"
-        self.setWindowTitle("Produktverkauf" if is_product else "Behandlung")
+        self.setWindowTitle(tr("Product Sale") if is_product else tr("Treatment"))
         self.setMinimumWidth(420)
         date_col, text_col = db.RECORD_COLS[table]
 
         self.date = QDateEdit(calendarPopup=True)
-        self.date.setDisplayFormat("dd.MM.yyyy")
+        self.date.setDisplayFormat(date_format())
         self.date.setMaximumDate(QDate.currentDate())
         self.date.setDate(
             QDate.fromString(record[date_col], Qt.DateFormat.ISODate)
@@ -253,8 +259,8 @@ class RecordDialog(QDialog):
         self.text = QPlainTextEdit(record[text_col] if record else "")
 
         form = QFormLayout(self)
-        form.addRow("Datum", self.date)
-        if is_product:  # Produktzeile: Menge + Name (mit Vorschlägen aus dem Inventar)
+        form.addRow(tr("Date"), self.date)
+        if is_product:  # product row: quantity + name (inventory suggestions)
             names = [
                 f"{r['name']} ({r['capacity']:g} {r['unit']})"
                 for r in db.search_inventory(win.conn)
@@ -265,15 +271,15 @@ class RecordDialog(QDialog):
             completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             completer.setFilterMode(Qt.MatchFlag.MatchContains)
             self.product.setCompleter(completer)
-            add = QPushButton("Hinzufügen")
+            add = QPushButton(tr("Add"))
             add.clicked.connect(self._add_product_line)
             self.product.returnPressed.connect(self._add_product_line)
             row = QHBoxLayout()
             row.addWidget(self.qty)
             row.addWidget(self.product, 1)
             row.addWidget(add)
-            form.addRow("Produkt", row)
-        form.addRow("Produkte" if is_product else "Notizen", self.text)
+            form.addRow(tr("Product"), row)
+        form.addRow(tr("Products") if is_product else tr("Notes"), self.text)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
@@ -283,7 +289,7 @@ class RecordDialog(QDialog):
         buttons.rejected.connect(self.reject)
         if self.record_id:
             delete = buttons.addButton(
-                "Löschen…", QDialogButtonBox.ButtonRole.DestructiveRole
+                tr("Delete…"), QDialogButtonBox.ButtonRole.DestructiveRole
             )
             delete.clicked.connect(self._delete)
         form.addRow(buttons)
@@ -295,22 +301,20 @@ class RecordDialog(QDialog):
             self.product.clear()
 
     def _delete(self) -> None:
-        if confirm(self, "Eintrag unwiderruflich löschen?"):
+        if confirm(self, tr("Delete this entry permanently?")):
             db.delete_record(self.win.conn, self.table, self.record_id)
             QDialog.accept(self)
 
     def accept(self) -> None:
         text = self.text.toPlainText().strip()
         if not text:
-            return QMessageBox.warning(self, "Fehler", "Bitte Text eingeben.")
+            return QMessageBox.warning(self, tr("Error"), tr("Please enter text."))
         iso = self.date.date().toString(Qt.DateFormat.ISODate)
         if (
             self.record_id is None
             and db.record_exists(self.win.conn, self.table, self.client_id, iso)
             and not confirm(
-                self,
-                "Für dieses Datum existiert bereits ein Eintrag.\n"
-                "Trotzdem speichern?",
+                self, tr("An entry already exists for this date.\nSave anyway?")
             )
         ):
             return
@@ -325,7 +329,7 @@ class InventoryDialog(QDialog):
         super().__init__(win)
         self.win = win
         self.item_id = item["id"] if item else None
-        self.setWindowTitle("Artikel bearbeiten" if item else "Neuer Artikel")
+        self.setWindowTitle(tr("Edit Item") if item else tr("New Item"))
         self.setMinimumWidth(380)
 
         self.name = QLineEdit(item["name"] if item else "")
@@ -334,15 +338,15 @@ class InventoryDialog(QDialog):
         self.capacity = QDoubleSpinBox(minimum=0.1, maximum=999999, decimals=1)
         self.capacity.setValue(item["capacity"] if item else 30)
         self.unit = QComboBox()
-        self.unit.addItems(["ml", "g", "Pc."])  # von der DB per CHECK erzwungen
+        self.unit.addItems(["ml", "g", "Pc."])  # enforced by the DB CHECK constraint
         if item:
             self.unit.setCurrentText(item["unit"])
 
         form = QFormLayout(self)
-        form.addRow("Name*", self.name)
-        form.addRow("Beschreibung", self.description)
-        form.addRow("Inhalt*", self.capacity)
-        form.addRow("Einheit*", self.unit)
+        form.addRow(tr("Name*"), self.name)
+        form.addRow(tr("Description"), self.description)
+        form.addRow(tr("Capacity*"), self.capacity)
+        form.addRow(tr("Unit*"), self.unit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
@@ -352,20 +356,20 @@ class InventoryDialog(QDialog):
         buttons.rejected.connect(self.reject)
         if self.item_id:
             delete = buttons.addButton(
-                "Löschen…", QDialogButtonBox.ButtonRole.DestructiveRole
+                tr("Delete…"), QDialogButtonBox.ButtonRole.DestructiveRole
             )
             delete.clicked.connect(self._delete)
         form.addRow(buttons)
 
     def _delete(self) -> None:
-        if confirm(self, "Artikel unwiderruflich löschen?"):
+        if confirm(self, tr("Delete this item permanently?")):
             db.delete_inventory(self.win.conn, self.item_id)
             QDialog.accept(self)
 
     def accept(self) -> None:
         name = self.name.text().strip()
         if not name:
-            return QMessageBox.warning(self, "Fehler", "Name ist ein Pflichtfeld.")
+            return QMessageBox.warning(self, tr("Error"), tr("Name is required."))
         db.save_inventory(
             self.win.conn,
             name,
@@ -378,7 +382,7 @@ class InventoryDialog(QDialog):
 
 
 # --------------------------------------------------------------------------
-# Kunden-Tab: Liste links, Detail rechts
+# Clients page: list on the left, detail on the right
 # --------------------------------------------------------------------------
 
 
@@ -388,17 +392,15 @@ class ClientDetail(QWidget):
         self.win, self.on_change, self.client_id = win, on_change, None
 
         self.stack = QStackedWidget()
-        placeholder = QLabel("Kundin/Kunde auswählen")
+        placeholder = QLabel(tr("Select a client"), objectName="Muted")
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.stack.addWidget(placeholder)
 
         page = QWidget()
-        self.header = QLabel()
-        self.header.setFont(QFont(self.font().family(), 15, QFont.Weight.Bold))
-        self.allergies = QLabel()
-        self.allergies.setStyleSheet("color: #cc2222; font-weight: bold;")
+        self.header = QLabel(objectName="DetailTitle")
+        self.allergies = QLabel(objectName="Allergy")
         self.allergies.setWordWrap(True)
-        edit = QPushButton("Bearbeiten…")
+        edit = QPushButton(tr("Edit…"))
         edit.clicked.connect(self._edit_client)
 
         self.planned = SaveOnBlur(lambda t: self._save_field("planned_treatment", t))
@@ -409,7 +411,7 @@ class ClientDetail(QWidget):
             (self.treatments, "treatment_records"),
             (self.products, "product_records"),
         ):
-            lst.setToolTip("Doppelklick zum Bearbeiten")
+            lst.setToolTip(tr("Double-click to edit"))
             lst.itemDoubleClicked.connect(
                 lambda item, t=table: self._edit_record(t, item)
             )
@@ -419,9 +421,7 @@ class ClientDetail(QWidget):
             lay = QVBoxLayout(box)
             lay.setContentsMargins(0, 0, 0, 0)
             head = QHBoxLayout()
-            label = QLabel(title)
-            label.setFont(QFont(self.font().family(), 11, QFont.Weight.Bold))
-            head.addWidget(label)
+            head.addWidget(QLabel(title, objectName="SectionTitle"))
             head.addStretch()
             if button:
                 head.addWidget(button)
@@ -429,20 +429,22 @@ class ClientDetail(QWidget):
             lay.addWidget(widget)
             return box
 
-        add_treatment = QPushButton("+ Behandlung")
+        add_treatment = QPushButton(tr("+ Treatment"))
         add_treatment.clicked.connect(lambda: self._add_record("treatment_records"))
-        add_product = QPushButton("+ Verkauf")
+        add_product = QPushButton(tr("+ Sale"))
         add_product.clicked.connect(lambda: self._add_record("product_records"))
 
         grid = QGridLayout()
-        grid.addWidget(titled("Geplante Behandlung", self.planned), 0, 0)
-        grid.addWidget(titled("Notizen", self.notes), 0, 1)
-        grid.addWidget(titled("Behandlungen", self.treatments, add_treatment), 1, 0)
-        grid.addWidget(titled("Produkte", self.products, add_product), 1, 1)
+        grid.setSpacing(16)
+        grid.addWidget(titled(tr("Planned Treatment"), self.planned), 0, 0)
+        grid.addWidget(titled(tr("Notes"), self.notes), 0, 1)
+        grid.addWidget(titled(tr("Treatments"), self.treatments, add_treatment), 1, 0)
+        grid.addWidget(titled(tr("Products"), self.products, add_product), 1, 1)
         grid.setRowStretch(0, 1)
         grid.setRowStretch(1, 2)
 
         lay = QVBoxLayout(page)
+        lay.setContentsMargins(0, 0, 0, 0)
         top = QHBoxLayout()
         top.addWidget(self.header)
         top.addStretch()
@@ -474,7 +476,7 @@ class ClientDetail(QWidget):
             age = f" ({years})"
         self.header.setText(f"{row['first_name']} {row['last_name']}{age}")
         self.allergies.setText(
-            f"Allergien: {row['allergies']}" if row["allergies"] else ""
+            f"⚠ {tr('Allergies')}: {row['allergies']}" if row["allergies"] else ""
         )
         self.allergies.setVisible(bool(row["allergies"]))
         self.planned.load(row["planned_treatment"])
@@ -494,7 +496,7 @@ class ClientDetail(QWidget):
         db.update_client_field(
             self.win.conn, self.client_id, field, value.strip() or None
         )
-        self.win.statusBar().showMessage("Gespeichert ✓", 2000)
+        self.win.statusBar().showMessage(tr("Saved ✓"), 2000)
 
     def _edit_client(self) -> None:
         dialog = ClientDialog(self.win, self.client_id)
@@ -512,11 +514,11 @@ class ClientDetail(QWidget):
             self.load(self.client_id)
 
 
-class ClientsTab(QWidget):
+class ClientsPage(QWidget):
     def __init__(self, win: "MainWindow"):
         super().__init__()
         self.win = win
-        self.search = QLineEdit(placeholderText="Suchen (Name oder Tag)…")
+        self.search = QLineEdit(placeholderText=tr("Search (name or tag)…"))
         self.search.textChanged.connect(self.refresh)
         self.list = QListWidget()
         self.list.currentItemChanged.connect(
@@ -524,7 +526,7 @@ class ClientsTab(QWidget):
                 item.data(Qt.ItemDataRole.UserRole) if item else None
             )
         )
-        add = QPushButton("+ Neuer Kunde")
+        add = QPushButton(tr("+ New Client"))
         add.clicked.connect(self._add)
         self.detail = ClientDetail(win, on_change=self.refresh)
 
@@ -535,11 +537,16 @@ class ClientsTab(QWidget):
         lay.addWidget(self.list)
         lay.addWidget(add)
         split = QSplitter()
+        split.setChildrenCollapsible(False)
         split.addWidget(left)
         split.addWidget(self.detail)
         split.setStretchFactor(1, 1)
         split.setSizes([280, 720])
-        outer = QHBoxLayout(self)
+        split.setHandleWidth(20)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(24, 20, 24, 16)
+        outer.addWidget(QLabel(tr("Clients"), objectName="PageTitle"))
+        outer.addSpacing(8)
         outer.addWidget(split)
         self.refresh()
 
@@ -567,23 +574,26 @@ class ClientsTab(QWidget):
 
 
 # --------------------------------------------------------------------------
-# Inventar-Tab
+# Inventory page
 # --------------------------------------------------------------------------
 
 
-class InventoryTab(QWidget):
+class InventoryPage(QWidget):
     def __init__(self, win: "MainWindow"):
         super().__init__()
         self.win = win
-        self.search = QLineEdit(placeholderText="Artikel suchen…")
+        self.search = QLineEdit(placeholderText=tr("Search items…"))
         self.search.textChanged.connect(self.refresh)
         self.list = QListWidget()
-        self.list.setToolTip("Doppelklick zum Bearbeiten")
+        self.list.setToolTip(tr("Double-click to edit"))
         self.list.itemDoubleClicked.connect(self._edit)
-        add = QPushButton("+ Neuer Artikel")
+        add = QPushButton(tr("+ New Item"))
         add.clicked.connect(self._add)
 
         lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 20, 24, 16)
+        lay.addWidget(QLabel(tr("Inventory"), objectName="PageTitle"))
+        lay.addSpacing(8)
         lay.addWidget(self.search)
         lay.addWidget(self.list)
         lay.addWidget(add)
@@ -609,20 +619,20 @@ class InventoryTab(QWidget):
 
 
 # --------------------------------------------------------------------------
-# Protokoll-Tab (Audit-Log)
+# Change log page (audit log)
 # --------------------------------------------------------------------------
 
 
-class AuditTab(QWidget):
+class AuditPage(QWidget):
     PER_PAGE = 50
 
     def __init__(self, win: "MainWindow"):
         super().__init__()
         self.win, self.page = win, 0
         self.view = QTextBrowser()
-        self.prev = QPushButton("← Neuere")
-        self.next = QPushButton("Ältere →")
-        self.label = QLabel()
+        self.prev = QPushButton(tr("← Newer"))
+        self.next = QPushButton(tr("Older →"))
+        self.label = QLabel(objectName="Muted")
         self.prev.clicked.connect(lambda: self._go(-1))
         self.next.clicked.connect(lambda: self._go(1))
 
@@ -632,6 +642,9 @@ class AuditTab(QWidget):
         nav.addStretch()
         nav.addWidget(self.next)
         lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 20, 24, 16)
+        lay.addWidget(QLabel(tr("Change Log"), objectName="PageTitle"))
+        lay.addSpacing(8)
         lay.addWidget(self.view)
         lay.addLayout(nav)
 
@@ -647,40 +660,42 @@ class AuditTab(QWidget):
         entries, total = db.audit_page(self.win.conn, self.page, self.PER_PAGE)
         pages = max(1, -(-total // self.PER_PAGE))
         self.page = min(self.page, pages - 1)
-        self.label.setText(f"Seite {self.page + 1} von {pages} ({total} Einträge)")
+        self.label.setText(
+            tr("Page {} of {} ({} entries)").format(self.page + 1, pages, total)
+        )
         self.prev.setEnabled(self.page > 0)
         self.next.setEnabled(self.page < pages - 1)
         self.view.setHtml(
-            "".join(self._render(e) for e in entries) or "<p>Keine Einträge.</p>"
+            "".join(self._render(e) for e in entries) or f"<p>{tr('No entries.')}</p>"
         )
 
     @staticmethod
     def _field_line(field: str, old, new) -> str:
-        label = html.escape(FIELD_LABELS.get(field, field))
+        label = html.escape(tr(FIELD_LABELS.get(field, field)))
         return (
             f"<div><b>{label}:</b> <s>{html.escape(str(old or '—'))}</s> → "
             f"<b>{html.escape(str(new or '—'))}</b></div>"
         )
 
     def _render(self, e: dict) -> str:
-        verb = {"CREATE": "erstellt", "UPDATE": "geändert", "DELETE": "gelöscht"}[
-            e["action"]
-        ]
-        table = TABLE_LABELS.get(e["table_name"], e["table_name"])
+        verb = tr(
+            {"CREATE": "created", "UPDATE": "changed", "DELETE": "deleted"}[e["action"]]
+        )
+        table = tr(TABLE_LABELS.get(e["table_name"], e["table_name"]))
         who = f" — {html.escape(e['client_name'])}" if e["client_name"] else ""
         body = ""
-        if e["changes"]:  # Trigger-Zeilen: JSON-Diff der geänderten Felder
+        if e["changes"]:  # trigger rows: JSON diff of changed fields
             body = "".join(
                 self._field_line(f, old, new) for f, old, new in e["changes"]
             )
-        elif e["field_name"]:  # Alt-Zeilen der Vorgängerversion: ein Feld pro Zeile
+        elif e["field_name"]:  # legacy 1.x rows: one field per row
             body = self._field_line(e["field_name"], e["old_value"], e["new_value"])
         elif e["action"] in ("CREATE", "DELETE"):
             snapshot = e["new_value"] if e["action"] == "CREATE" else e["old_value"]
             try:
                 fields = json.loads(snapshot or "")
                 body = "".join(
-                    f"<div><b>{html.escape(FIELD_LABELS.get(f, f))}:</b> "
+                    f"<div><b>{html.escape(tr(FIELD_LABELS.get(f, f)))}:</b> "
                     f"{html.escape(str(v))}</div>"
                     for f, v in fields.items()
                     if v not in (None, "")
@@ -694,21 +709,50 @@ class AuditTab(QWidget):
 
 
 # --------------------------------------------------------------------------
-# Einstellungen-Tab
+# Settings page
 # --------------------------------------------------------------------------
 
 
-class SettingsTab(QWidget):
+class SettingsPage(QWidget):
     def __init__(self, win: "MainWindow"):
         super().__init__()
         self.win = win
         cfg = win.cfg
 
-        self.auto = QCheckBox("Automatisches Backup beim Start")
+        self.theme = QComboBox()
+        self.theme.setFixedWidth(220)
+        for label, value in (
+            (tr("System"), "system"),
+            (tr("Light"), "light"),
+            (tr("Dark"), "dark"),
+        ):
+            self.theme.addItem(label, value)
+        self.theme.setCurrentIndex(self.theme.findData(cfg.get("theme", "system")))
+        self.theme.currentIndexChanged.connect(self._theme_changed)
+
+        self.language = QComboBox()
+        self.language.setFixedWidth(220)
+        self.language.addItem("English", "en")
+        self.language.addItem("Deutsch", "de")
+        self.language.setCurrentIndex(self.language.findData(i18n.LANG))
+        self.language.currentIndexChanged.connect(self._language_changed)
+        self.restart_hint = QLabel("", objectName="Muted")
+
+        appearance_box = QGroupBox(tr("Appearance"))
+        appearance = QFormLayout(appearance_box)
+        appearance.addRow(tr("Theme"), self.theme)
+        lang_row = QHBoxLayout()
+        lang_row.addWidget(self.language)
+        lang_row.addWidget(self.restart_hint, 1)
+        appearance.addRow(tr("Language"), lang_row)
+
+        self.auto = QCheckBox(tr("Automatic backup at startup"))
         self.auto.setChecked(cfg.get("auto_backup", True))
-        self.interval = QSpinBox(minimum=1, maximum=1440, suffix=" Min.")
+        self.interval = QSpinBox(minimum=1, maximum=1440, suffix=tr(" min"))
+        self.interval.setFixedWidth(120)
         self.interval.setValue(cfg.get("backup_interval_minutes", 120))
         self.keep = QSpinBox(minimum=1, maximum=100)
+        self.keep.setFixedWidth(120)
         self.keep.setValue(cfg.get("backup_retention_count", 25))
         for widget, key in (
             (self.auto, "auto_backup"),
@@ -720,39 +764,46 @@ class SettingsTab(QWidget):
             )
             signal.connect(lambda value, k=key: self._set(k, value))
 
-        backup_now = QPushButton("Jetzt sichern")
+        backup_now = QPushButton(tr("Back up now"))
         backup_now.clicked.connect(self._backup_now)
-        restore = QPushButton("Backup wiederherstellen…")
+        restore = QPushButton(tr("Restore backup…"))
         restore.clicked.connect(self._restore)
-        open_dir = QPushButton("Backup-Ordner öffnen")
+        open_dir = QPushButton(tr("Open backup folder"))
         open_dir.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(db.backups_dir())))
         )
 
-        backup_box = QGroupBox("Backup")
+        backup_box = QGroupBox(tr("Backup"))
         form = QFormLayout(backup_box)
         form.addRow(self.auto)
-        form.addRow("Intervall", self.interval)
-        form.addRow("Anzahl behalten", self.keep)
+        form.addRow(tr("Interval"), self.interval)
+        form.addRow(tr("Backups to keep"), self.keep)
         row = QHBoxLayout()
         row.addWidget(backup_now)
         row.addWidget(restore)
         row.addWidget(open_dir)
         form.addRow(row)
 
-        mail_merge = QPushButton("Serienbrief-Export (CSV)…")
+        mail_merge = QPushButton(tr("Mail Merge Export (CSV)…"))
         mail_merge.clicked.connect(self._mail_merge)
-        full_export = QPushButton("Alle Daten exportieren (CSV)…")
+        full_export = QPushButton(tr("Export All Data (CSV)…"))
         full_export.clicked.connect(self._export_all)
-        export_box = QGroupBox("Export")
+        export_box = QGroupBox(tr("Export"))
         export_lay = QHBoxLayout(export_box)
         export_lay.addWidget(mail_merge)
         export_lay.addWidget(full_export)
 
-        info = QLabel(f"Datenbank: {win.path}\nVersion {db.VERSION}")
+        info = QLabel(
+            tr("Database: {}").format(win.path) + f"\nCosmetics Records {db.VERSION}",
+            objectName="Muted",
+        )
         info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 20, 24, 16)
+        lay.addWidget(QLabel(tr("Settings"), objectName="PageTitle"))
+        lay.addSpacing(8)
+        lay.addWidget(appearance_box)
         lay.addWidget(backup_box)
         lay.addWidget(export_box)
         lay.addWidget(info)
@@ -762,58 +813,77 @@ class SettingsTab(QWidget):
         self.win.cfg[key] = value
         db.save_config(self.win.cfg)
 
+    def _theme_changed(self) -> None:
+        self._set("theme", self.theme.currentData())
+        style.apply_theme(self.theme.currentData())
+
+    def _language_changed(self) -> None:
+        self._set("language", self.language.currentData())
+        self.restart_hint.setText(tr("Takes effect after restarting."))
+
     def _backup_now(self) -> None:
         path = db.create_backup(self.win.conn, self.win.path)
         db.cleanup_backups(self.keep.value())
         self.win.cfg["last_backup_time"] = datetime.now().isoformat()
         db.save_config(self.win.cfg)
-        QMessageBox.information(self, "Backup", f"Backup erstellt:\n{path.name}")
+        QMessageBox.information(
+            self, tr("Backup"), tr("Backup created:\n{}").format(path.name)
+        )
 
     def _restore(self) -> None:
         backups = db.list_backups()
         if not backups:
-            return QMessageBox.information(self, "Backup", "Keine Backups vorhanden.")
+            return QMessageBox.information(
+                self, tr("Backup"), tr("No backups available.")
+            )
         name, ok = QInputDialog.getItem(
             self,
-            "Backup wiederherstellen",
-            "Backup auswählen:",
+            tr("Restore Backup"),
+            tr("Select backup:"),
             [p.name for p in backups],
             0,
             False,
         )
         if not ok or not confirm(
             self,
-            "Aktuelle Daten werden ersetzt.\n"
-            "Vorher wird automatisch ein Sicherheits-Backup erstellt.\nFortfahren?",
+            tr(
+                "Current data will be replaced.\nA safety backup is created first.\nContinue?"
+            ),
         ):
             return
         try:
             self.win.restore(db.backups_dir() / name)
-            QMessageBox.information(self, "Backup", "Backup wiederhergestellt.")
+            QMessageBox.information(self, tr("Backup"), tr("Backup restored."))
         except (ValueError, OSError, zipfile.BadZipFile) as err:
             QMessageBox.critical(
-                self, "Fehler", f"Wiederherstellung fehlgeschlagen:\n{err}"
+                self, tr("Error"), tr("Restore failed:\n{}").format(err)
             )
 
     def _mail_merge(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
-            self, "Serienbrief-Export", "kunden_serienbrief.csv", "CSV (*.csv)"
+            self, tr("Mail Merge Export"), tr("clients_mail_merge.csv"), "CSV (*.csv)"
         )
         if path:
             count = db.export_mail_merge(self.win.conn, Path(path))
-            QMessageBox.information(self, "Export", f"{count} Kunden exportiert.")
+            QMessageBox.information(
+                self, tr("Export"), tr("{} clients exported.").format(count)
+            )
 
     def _export_all(self) -> None:
-        directory = QFileDialog.getExistingDirectory(self, "Zielordner wählen")
+        directory = QFileDialog.getExistingDirectory(
+            self, tr("Choose destination folder")
+        )
         if directory:
             files = db.export_all(self.win.conn, Path(directory))
             QMessageBox.information(
-                self, "Export", f"{len(files)} Dateien exportiert nach:\n{directory}"
+                self,
+                tr("Export"),
+                tr("{} files exported to:\n{}").format(len(files), directory),
             )
 
 
 # --------------------------------------------------------------------------
-# Hauptfenster
+# Main window: sidebar navigation + stacked pages
 # --------------------------------------------------------------------------
 
 
@@ -825,26 +895,45 @@ class MainWindow(QMainWindow):
         self.conn = db.connect(self.path)
 
         self.setWindowTitle("Cosmetics Records")
-        self.resize(1100, 700)
-        self.clients = ClientsTab(self)
-        self.inventory = InventoryTab(self)
-        tabs = QTabWidget()
-        tabs.addTab(self.clients, "Kunden")
-        tabs.addTab(self.inventory, "Inventar")
-        tabs.addTab(AuditTab(self), "Protokoll")
-        tabs.addTab(SettingsTab(self), "Einstellungen")
-        self.setCentralWidget(tabs)
+        self.resize(1150, 720)
+
+        self.clients = ClientsPage(self)
+        self.inventory = InventoryPage(self)
+        self.pages = QStackedWidget()
+        for page in (self.clients, self.inventory, AuditPage(self), SettingsPage(self)):
+            self.pages.addWidget(page)
+
+        self.nav = QListWidget(objectName="Nav")
+        self.nav.setFixedWidth(200)
+        for name in ("Clients", "Inventory", "Change Log", "Settings"):
+            self.nav.addItem(tr(name))
+        self.nav.currentRowChanged.connect(self.pages.setCurrentIndex)
+        self.nav.setCurrentRow(0)
+
+        sidebar = QWidget(objectName="Sidebar")
+        side = QVBoxLayout(sidebar)
+        side.setContentsMargins(0, 0, 0, 0)
+        side.addWidget(QLabel("Cosmetics Records", objectName="AppTitle"))
+        side.addWidget(self.nav, 1)
+
+        central = QWidget()
+        lay = QHBoxLayout(central)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        lay.addWidget(sidebar)
+        lay.addWidget(self.pages, 1)
+        self.setCentralWidget(central)
         self.statusBar()
 
-        # Backup nach dem ersten Anzeigen — der Start bleibt sofort bedienbar
+        # backup after first paint — startup stays instantly usable
         QTimer.singleShot(0, self._startup_backup)
 
     def _startup_backup(self) -> None:
         if db.auto_backup_if_due(self.conn, self.cfg, self.path):
-            self.statusBar().showMessage("Automatisches Backup erstellt ✓", 4000)
+            self.statusBar().showMessage(tr("Automatic backup created ✓"), 4000)
 
     def restore(self, backup: Path) -> None:
-        db.create_backup(self.conn, self.path)  # Sicherheitskopie des Ist-Stands
+        db.create_backup(self.conn, self.path)  # safety copy of the current state
         self.conn.close()
         try:
             db.restore_backup(backup, self.path)
@@ -861,8 +950,20 @@ class MainWindow(QMainWindow):
 def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("Cosmetics Records")
-    app.setStyle("Fusion")  # folgt ab Qt 6.5 dem hellen/dunklen Systemschema
+    app.setStyle("Fusion")
+    if ICON.exists():
+        app.setWindowIcon(QIcon(str(ICON)))
+
+    cfg = db.load_config()
+    default = "de" if QLocale.system().name().startswith("de") else "en"
+    i18n.set_language(cfg.get("language") or default)
+    style.apply_theme(cfg.get("theme", "system"))
+
     window = MainWindow()
+    app.styleHints().colorSchemeChanged.connect(
+        lambda *_: window.cfg.get("theme", "system") == "system"
+        and style.apply_theme("system")
+    )
     window.show()
     sys.exit(app.exec())
 
