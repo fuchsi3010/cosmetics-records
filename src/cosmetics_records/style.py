@@ -6,27 +6,29 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QApplication
 
-ACCENT = "#3B8ED0"
-ACCENT_HOVER = "#1F6AA5"
-ERROR = "#e74c3c"
+# Salon-warm palette: dusty rose accent, warm-tinted neutrals.
+# The 1.x blue was ACCENT "#3B8ED0" / HOVER "#1F6AA5" with plain gray neutrals.
+ACCENT = "#B85C79"
+ACCENT_HOVER = "#9C4762"
+ERROR = "#D93A2B"
 
 DARK = {
-    "bg": "#2b2b2b",
-    "surface": "#333333",
-    "sidebar": "#232323",
-    "border": "#444444",
-    "text": "#E0E0E0",
-    "muted": "#A0A0A0",
-    "hover": "#3a3a3a",
+    "bg": "#2e2a28",
+    "surface": "#38322f",
+    "sidebar": "#262220",
+    "border": "#4a423e",
+    "text": "#EAE4E0",
+    "muted": "#A89C94",
+    "hover": "#403935",
 }
 LIGHT = {
-    "bg": "#f5f5f5",
-    "surface": "#ffffff",
-    "sidebar": "#ebebeb",
-    "border": "#e0e0e0",
-    "text": "#1a1a1a",
-    "muted": "#666666",
-    "hover": "#e8e8e8",
+    "bg": "#f8f4f1",
+    "surface": "#fffdfb",
+    "sidebar": "#f0e8e3",
+    "border": "#e3d8d1",
+    "text": "#332b27",
+    "muted": "#8a7a71",
+    "hover": "#efe5df",
 }
 
 
@@ -114,9 +116,9 @@ QGroupBox::title {{ subcontrol-origin: margin; left: 12px; color: {ACCENT}; }}
 
 QWidget#Sidebar {{ background: {c["sidebar"]}; }}
 QLabel#AppTitle {{
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
-    padding: 18px 16px 10px 16px;
+    padding: 18px 12px 10px 12px;
     background: transparent;
 }}
 QListWidget#Nav {{

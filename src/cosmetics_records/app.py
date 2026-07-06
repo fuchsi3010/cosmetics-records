@@ -40,7 +40,6 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
-    QSplitter,
     QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
@@ -387,17 +386,13 @@ class InventoryDialog(QDialog):
 
 
 class ClientDetail(QWidget):
-    def __init__(self, win: "MainWindow", on_change):
+    def __init__(self, win: "MainWindow", on_change, on_back):
         super().__init__()
         self.win, self.on_change, self.client_id = win, on_change, None
 
-        self.stack = QStackedWidget()
-        placeholder = QLabel(tr("Select a client"), objectName="Muted")
-        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.stack.addWidget(placeholder)
-
-        page = QWidget()
-        self.header = QLabel(objectName="DetailTitle")
+        back = QPushButton(tr("← Back"))
+        back.clicked.connect(on_back)
+        self.header = QLabel(objectName="PageTitle")
         self.allergies = QLabel(objectName="Allergy")
         self.allergies.setWordWrap(True)
         edit = QPushButton(tr("Edit…"))
@@ -443,26 +438,23 @@ class ClientDetail(QWidget):
         grid.setRowStretch(0, 1)
         grid.setRowStretch(1, 2)
 
-        lay = QVBoxLayout(page)
+        lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         top = QHBoxLayout()
+        top.addWidget(back)
+        top.addSpacing(8)
         top.addWidget(self.header)
         top.addStretch()
         top.addWidget(edit)
         lay.addLayout(top)
         lay.addWidget(self.allergies)
         lay.addLayout(grid)
-        self.stack.addWidget(page)
-
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(self.stack)
 
     def load(self, client_id: int | None) -> None:
         self.client_id = client_id
         row = db.get_client(self.win.conn, client_id) if client_id else None
-        self.stack.setCurrentIndex(1 if row else 0)
         if not row:
+            self.client_id = None
             return
         age = ""
         if row["date_of_birth"]:
@@ -515,44 +507,37 @@ class ClientDetail(QWidget):
 
 
 class ClientsPage(QWidget):
+    """List view first; clicking a client opens the full-width detail view."""
+
     def __init__(self, win: "MainWindow"):
         super().__init__()
         self.win = win
         self.search = QLineEdit(placeholderText=tr("Search (name or tag)…"))
         self.search.textChanged.connect(self.refresh)
         self.list = QListWidget()
-        self.list.currentItemChanged.connect(
-            lambda item, _: self.detail.load(
-                item.data(Qt.ItemDataRole.UserRole) if item else None
-            )
-        )
+        self.list.itemClicked.connect(self._open)
         add = QPushButton(tr("+ New Client"))
         add.clicked.connect(self._add)
-        self.detail = ClientDetail(win, on_change=self.refresh)
+        self.detail = ClientDetail(win, on_change=self._changed, on_back=self.show_list)
 
-        left = QWidget()
-        lay = QVBoxLayout(left)
+        list_page = QWidget()
+        lay = QVBoxLayout(list_page)
         lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(QLabel(tr("Clients"), objectName="PageTitle"))
+        lay.addSpacing(8)
         lay.addWidget(self.search)
         lay.addWidget(self.list)
         lay.addWidget(add)
-        split = QSplitter()
-        split.setChildrenCollapsible(False)
-        split.addWidget(left)
-        split.addWidget(self.detail)
-        split.setStretchFactor(1, 1)
-        split.setSizes([280, 720])
-        split.setHandleWidth(20)
+
+        self.stack = QStackedWidget()
+        self.stack.addWidget(list_page)
+        self.stack.addWidget(self.detail)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(24, 20, 24, 16)
-        outer.addWidget(QLabel(tr("Clients"), objectName="PageTitle"))
-        outer.addSpacing(8)
-        outer.addWidget(split)
+        outer.addWidget(self.stack)
         self.refresh()
 
     def refresh(self) -> None:
-        selected = self.detail.client_id
-        self.list.blockSignals(True)
         self.list.clear()
         for r in db.search_clients(self.win.conn, self.search.text()):
             item = QListWidgetItem(f"{r['last_name']}, {r['first_name']}")
@@ -560,17 +545,27 @@ class ClientsPage(QWidget):
             if r["tags"]:
                 item.setToolTip(r["tags"])
             self.list.addItem(item)
-            if r["id"] == selected:
-                self.list.setCurrentItem(item)
-        self.list.blockSignals(False)
-        if self.list.currentItem() is None:
-            self.detail.load(None)
+
+    def show_list(self) -> None:
+        self.stack.setCurrentIndex(0)
+        self.list.clearSelection()
+        self.refresh()
+
+    def _open(self, item: QListWidgetItem) -> None:
+        self.detail.load(item.data(Qt.ItemDataRole.UserRole))
+        self.stack.setCurrentIndex(1)
+
+    def _changed(self) -> None:  # after the edit dialog closed
+        self.refresh()
+        if self.detail.client_id is None:  # client was deleted
+            self.stack.setCurrentIndex(0)
 
     def _add(self) -> None:
         dialog = ClientDialog(self.win)
         if dialog.exec():
-            self.detail.client_id = dialog.client_id
             self.refresh()
+            self.detail.load(dialog.client_id)
+            self.stack.setCurrentIndex(1)
 
 
 # --------------------------------------------------------------------------
@@ -904,17 +899,22 @@ class MainWindow(QMainWindow):
             self.pages.addWidget(page)
 
         self.nav = QListWidget(objectName="Nav")
-        self.nav.setFixedWidth(200)
-        for name in ("Clients", "Inventory", "Change Log", "Settings"):
+        for name in ("Clients", "Inventory", "Change Log"):
             self.nav.addItem(tr(name))
-        self.nav.currentRowChanged.connect(self.pages.setCurrentIndex)
+        self.nav_settings = QListWidget(objectName="Nav")  # pinned at the bottom
+        self.nav_settings.addItem(tr("Settings"))
+        self.nav_settings.setFixedHeight(self.nav_settings.sizeHintForRow(0) + 16)
+        self.nav.currentRowChanged.connect(self._nav_main)
+        self.nav_settings.currentRowChanged.connect(self._nav_settings)
         self.nav.setCurrentRow(0)
 
         sidebar = QWidget(objectName="Sidebar")
+        sidebar.setFixedWidth(210)
         side = QVBoxLayout(sidebar)
         side.setContentsMargins(0, 0, 0, 0)
         side.addWidget(QLabel("Cosmetics Records", objectName="AppTitle"))
         side.addWidget(self.nav, 1)
+        side.addWidget(self.nav_settings)
 
         central = QWidget()
         lay = QHBoxLayout(central)
@@ -928,6 +928,20 @@ class MainWindow(QMainWindow):
         # backup after first paint — startup stays instantly usable
         QTimer.singleShot(0, self._startup_backup)
 
+    def _nav_main(self, row: int) -> None:
+        if row >= 0:
+            self.nav_settings.blockSignals(True)
+            self.nav_settings.setCurrentRow(-1)
+            self.nav_settings.blockSignals(False)
+            self.pages.setCurrentIndex(row)
+
+    def _nav_settings(self, row: int) -> None:
+        if row >= 0:
+            self.nav.blockSignals(True)
+            self.nav.setCurrentRow(-1)
+            self.nav.blockSignals(False)
+            self.pages.setCurrentIndex(3)
+
     def _startup_backup(self) -> None:
         if db.auto_backup_if_due(self.conn, self.cfg, self.path):
             self.statusBar().showMessage(tr("Automatic backup created ✓"), 4000)
@@ -939,7 +953,7 @@ class MainWindow(QMainWindow):
             db.restore_backup(backup, self.path)
         finally:
             self.conn = db.connect(self.path)
-        self.clients.refresh()
+        self.clients.show_list()
         self.inventory.refresh()
 
     def closeEvent(self, event) -> None:

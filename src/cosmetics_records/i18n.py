@@ -25,7 +25,7 @@ DE = {
     # Client list & detail
     "Search (name or tag)…": "Suchen (Name oder Tag)…",
     "+ New Client": "+ Neuer Kunde",
-    "Select a client": "Kundin/Kunde auswählen",
+    "← Back": "← Zurück",
     "Edit…": "Bearbeiten…",
     "Planned Treatment": "Geplante Behandlung",
     "Notes": "Notizen",
