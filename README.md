@@ -1,28 +1,30 @@
 # Cosmetics Records
 
-Kundenkartei für ein Ein-Personen-Kosmetikstudio: Kundendaten, Behandlungshistorie und Produktverkäufe. Python 3.10+ und PyQt6, zwei Quelldateien, keine weiteren Laufzeitabhängigkeiten.
+A desktop client-records app for a one-person cosmetics salon: client data, treatment history, and product sales. Python 3.10+ and PyQt6, four source files, no other runtime dependencies.
 
-Version 2.0 ist eine Neuimplementierung mit Fokus auf Geschwindigkeit und Sicherheit. Sie öffnet bestehende Datenbanken der Version 1.x unverändert.
+Version 2.0 is a ground-up reimplementation focused on speed and security. It opens existing 1.x databases unchanged.
 
-## Funktionen
+## Features
 
-- **Kunden**: Stammdaten, Allergien (prominent angezeigt), Tags, Suche (umlautfest)
-- **Behandlungen & Produktverkäufe**: Historie pro Kunde, Produkteingabe mit Vorschlägen aus dem Inventar
-- **Geplante Behandlung / Notizen**: Freitextfelder, automatisch gespeichert beim Verlassen des Feldes
-- **Inventar**: Artikelkatalog (ml, g, Pc.)
-- **Protokoll**: lückenlose Änderungshistorie — direkt in der Datenbank per Trigger erzeugt, von keiner Codestelle umgehbar
-- **Backups**: automatisch beim Start (konfigurierbares Intervall), konsistente Snapshots auch bei laufender Anwendung, Wiederherstellung per Klick
-- **CSV-Export**: Serienbrief (Name + Adresse) und Komplettexport aller Tabellen
+- **Clients**: contact data, allergies (shown prominently), tags, umlaut-safe search
+- **Treatments & product sales**: per-client history, product entry with inventory autocomplete
+- **Planned treatment / notes**: free-text fields, saved automatically when leaving the field
+- **Inventory**: product catalog (ml, g, Pc.)
+- **Change log**: complete audit history — written by database triggers, impossible for any code path to bypass
+- **Backups**: automatic on startup (configurable interval), consistent snapshots even while the app is running, one-click restore
+- **CSV export**: mail merge (name + address) and full export of all tables
+- **Languages**: English and German (auto-detected from the system, switchable in Settings)
+- **Themes**: Dark, Light, or follow the system
 
-## Sicherheit
+## Security
 
-- Datenbank, Konfiguration und Backups mit `0600`-Dateirechten, Datenordner `0700`
-- `PRAGMA secure_delete`: gelöschte Kundendaten sind nicht aus freien Datenbankseiten rekonstruierbar
-- Durchgängig parametrisierte SQL-Abfragen
-- Keine Logdatei — Behandlungsnotizen landen nirgendwo außerhalb der Datenbank
-- Für Verschlüsselung im Ruhezustand: Festplattenverschlüsselung (LUKS/BitLocker) verwenden
+- Database, config, and backups get `0600` file permissions; the data directory `0700`
+- `PRAGMA secure_delete`: deleted client data cannot be recovered from free database pages
+- Parameterized SQL throughout
+- No log file — treatment notes never land anywhere outside the database
+- For encryption at rest, use full-disk encryption (LUKS/BitLocker)
 
-## Starten
+## Running
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
@@ -30,18 +32,18 @@ pip install -r requirements.txt
 python src/cosmetics_records/app.py
 ```
 
-Unter NixOS: `nix-shell --run 'python src/cosmetics_records/app.py'`
+On NixOS: `nix-shell --run 'python src/cosmetics_records/app.py'`
 
-## Entwicklung
+## Development
 
 ```bash
 pip install -r requirements-dev.txt
-pytest            # Tests
-black src tests   # Formatierung
+pytest            # tests (includes a translation-completeness check)
+black src tests   # formatting
 ```
 
-Daten liegen unter `~/.local/share/cosmetics_records/` (Linux), `%APPDATA%\cosmetics_records\` (Windows) bzw. `~/Library/Application Support/cosmetics_records/` (macOS).
+Data lives in `~/.local/share/cosmetics_records/` (Linux), `%APPDATA%\cosmetics_records\` (Windows), or `~/Library/Application Support/cosmetics_records/` (macOS).
 
-## Lizenz
+## License
 
 Apache-2.0

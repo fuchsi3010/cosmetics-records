@@ -14,8 +14,8 @@ Complete reimplementation focused on speed and security: ~23,000 lines replaced 
 ### Changed
 - Audit logging moved into SQLite triggers — impossible to bypass, cascade deletes are now audited too
 - Single persistent WAL connection instead of per-query connections; startup no longer loads Pydantic/Babel/fuzzy-matching libraries
-- Native Qt widgets and system theme (Fusion) replace 1,800 lines of custom styling
-- German-only UI (the app's actual locale); i18n toolchain removed
+- Custom styling condensed into one theme file (Dark/Light/System, same palette and type scale as 1.x)
+- Babel/gettext toolchain replaced by a single English↔German translation dict; language auto-detected from the system, switchable in Settings; a test enforces translation completeness
 - Backups now use SQLite's online backup API (consistent snapshots even mid-write)
 
 ### Added
