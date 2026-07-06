@@ -1,6 +1,6 @@
 # Cosmetics Records
 
-A desktop client-records app for a one-person cosmetics salon: client data, treatment history, and product sales. Python 3.10+ and PyQt6, four source files, no other runtime dependencies.
+A desktop client-records app for a one-person cosmetics salon: client data, treatment history, and product sales. Python 3.10+, four source files, two runtime dependencies (PyQt6, qtawesome for icons).
 
 Version 2.0 is a ground-up reimplementation focused on speed and security. It opens existing 1.x databases unchanged.
 

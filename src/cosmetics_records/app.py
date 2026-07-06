@@ -14,10 +14,11 @@ import zipfile
 from datetime import date, datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QDate, QLocale, Qt, QTimer, QUrl
+from PyQt6.QtCore import QDate, QLocale, QSize, Qt, QTimer, QUrl
 from PyQt6.QtGui import QDesktopServices, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
+    QCalendarWidget,
     QCheckBox,
     QComboBox,
     QCompleter,
@@ -42,6 +43,7 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QStackedWidget,
     QTextBrowser,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -49,6 +51,18 @@ from PyQt6.QtWidgets import (
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from cosmetics_records import db, i18n, style  # noqa: E402
 from cosmetics_records.i18n import tr  # noqa: E402
+
+try:
+    import qtawesome as qta  # the FontAwesome pictograms the 1.x navbar used
+except ImportError:  # icons are eye candy — the app must still run without them
+    qta = None
+
+
+def icon(name: str) -> QIcon:
+    return (
+        qta.icon(name, color=style.ACCENT, color_selected="white") if qta else QIcon()
+    )
+
 
 EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 ICON = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
@@ -119,6 +133,43 @@ def confirm(parent: QWidget, text: str) -> bool:
     )
 
 
+class DateField(QWidget):
+    """Line edit (typing allowed, empty = no date) plus a calendar picker."""
+
+    def __init__(self):
+        super().__init__()
+        self.edit = QLineEdit(placeholderText=tr("YYYY-MM-DD"))
+        pick = QToolButton()
+        if qta:
+            pick.setIcon(icon("fa5s.calendar-alt"))
+        else:
+            pick.setText("…")
+        pick.clicked.connect(self._pick)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.edit, 1)
+        lay.addWidget(pick)
+
+    def text(self) -> str:
+        return self.edit.text()
+
+    def setText(self, text: str) -> None:
+        self.edit.setText(text)
+
+    def _pick(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle(tr("Date of birth"))
+        cal = QCalendarWidget()
+        cal.setMaximumDate(QDate.currentDate())
+        current = QDate.fromString(self.edit.text(), date_format())
+        cal.setSelectedDate(current if current.isValid() else QDate(1970, 1, 1))
+        cal.clicked.connect(
+            lambda d: (self.edit.setText(d.toString(date_format())), dialog.accept())
+        )
+        QVBoxLayout(dialog).addWidget(cal)
+        dialog.exec()
+
+
 class SaveOnBlur(QPlainTextEdit):
     """Saves when focus leaves the field — one audit entry per editing session."""
 
@@ -156,7 +207,7 @@ class ClientDialog(QDialog):
         self.phone = QLineEdit()
         self.address = QPlainTextEdit()
         self.address.setFixedHeight(60)
-        self.dob = QLineEdit(placeholderText=tr("YYYY-MM-DD"))
+        self.dob = DateField()
         self.allergies = QPlainTextEdit()
         self.allergies.setFixedHeight(60)
         self.tags = QLineEdit(placeholderText=tr("e.g. VIP, sensitive skin"))
@@ -488,7 +539,7 @@ class ClientDetail(QWidget):
         db.update_client_field(
             self.win.conn, self.client_id, field, value.strip() or None
         )
-        self.win.statusBar().showMessage(tr("Saved ✓"), 2000)
+        self.win.flash(tr("Saved ✓"))
 
     def _edit_client(self) -> None:
         dialog = ClientDialog(self.win, self.client_id)
@@ -899,21 +950,33 @@ class MainWindow(QMainWindow):
             self.pages.addWidget(page)
 
         self.nav = QListWidget(objectName="Nav")
-        for name in ("Clients", "Inventory", "Change Log"):
-            self.nav.addItem(tr(name))
+        for name, glyph in (
+            ("Clients", "fa5s.user"),
+            ("Inventory", "fa5s.boxes"),
+            ("Change Log", "fa5s.history"),
+        ):
+            self.nav.addItem(QListWidgetItem(icon(glyph), tr(name)))
         self.nav_settings = QListWidget(objectName="Nav")  # pinned at the bottom
-        self.nav_settings.addItem(tr("Settings"))
+        self.nav_settings.addItem(QListWidgetItem(icon("fa5s.cog"), tr("Settings")))
+        for nav in (self.nav, self.nav_settings):
+            nav.setIconSize(QSize(18, 18))
         self.nav_settings.setFixedHeight(self.nav_settings.sizeHintForRow(0) + 16)
         self.nav.currentRowChanged.connect(self._nav_main)
         self.nav_settings.currentRowChanged.connect(self._nav_settings)
         self.nav.setCurrentRow(0)
 
+        # transient feedback ("Saved ✓") lives in the sidebar — no status bar,
+        # so the sidebar runs the full window height
+        self.flash_label = QLabel("", objectName="Muted")
+        self.flash_label.setWordWrap(True)
+        self.flash_label.setContentsMargins(12, 4, 12, 8)
+
         sidebar = QWidget(objectName="Sidebar")
         sidebar.setFixedWidth(210)
         side = QVBoxLayout(sidebar)
-        side.setContentsMargins(0, 0, 0, 0)
-        side.addWidget(QLabel("Cosmetics Records", objectName="AppTitle"))
+        side.setContentsMargins(0, 8, 0, 0)
         side.addWidget(self.nav, 1)
+        side.addWidget(self.flash_label)
         side.addWidget(self.nav_settings)
 
         central = QWidget()
@@ -923,7 +986,6 @@ class MainWindow(QMainWindow):
         lay.addWidget(sidebar)
         lay.addWidget(self.pages, 1)
         self.setCentralWidget(central)
-        self.statusBar()
 
         # backup after first paint — startup stays instantly usable
         QTimer.singleShot(0, self._startup_backup)
@@ -942,9 +1004,13 @@ class MainWindow(QMainWindow):
             self.nav.blockSignals(False)
             self.pages.setCurrentIndex(3)
 
+    def flash(self, text: str) -> None:
+        self.flash_label.setText(text)
+        QTimer.singleShot(4000, lambda: self.flash_label.setText(""))
+
     def _startup_backup(self) -> None:
         if db.auto_backup_if_due(self.conn, self.cfg, self.path):
-            self.statusBar().showMessage(tr("Automatic backup created ✓"), 4000)
+            self.flash(tr("Automatic backup created ✓"))
 
     def restore(self, backup: Path) -> None:
         db.create_backup(self.conn, self.path)  # safety copy of the current state

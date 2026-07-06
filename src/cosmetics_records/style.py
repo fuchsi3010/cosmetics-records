@@ -6,29 +6,29 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QApplication
 
-# Salon-warm palette: dusty rose accent, warm-tinted neutrals.
-# The 1.x blue was ACCENT "#3B8ED0" / HOVER "#1F6AA5" with plain gray neutrals.
-ACCENT = "#B85C79"
-ACCENT_HOVER = "#9C4762"
-ERROR = "#D93A2B"
+# Spa palette: muted sage accent on soft warm-paper neutrals — pastel but
+# professional. Earlier accents: 1.x blue "#3B8ED0"/"#1F6AA5", rose "#B85C79".
+ACCENT = "#6B9080"
+ACCENT_HOVER = "#557567"
+ERROR = "#C7402E"
 
 DARK = {
-    "bg": "#2e2a28",
-    "surface": "#38322f",
-    "sidebar": "#262220",
-    "border": "#4a423e",
-    "text": "#EAE4E0",
-    "muted": "#A89C94",
-    "hover": "#403935",
+    "bg": "#2b2a27",
+    "surface": "#343330",
+    "sidebar": "#232220",
+    "border": "#47453f",
+    "text": "#E6E4DE",
+    "muted": "#A19C92",
+    "hover": "#3c3a35",
 }
 LIGHT = {
-    "bg": "#f8f4f1",
-    "surface": "#fffdfb",
-    "sidebar": "#f0e8e3",
-    "border": "#e3d8d1",
-    "text": "#332b27",
-    "muted": "#8a7a71",
-    "hover": "#efe5df",
+    "bg": "#f5f4f0",
+    "surface": "#fdfcfa",
+    "sidebar": "#eceae4",
+    "border": "#ddd9d0",
+    "text": "#2f2c28",
+    "muted": "#7d786e",
+    "hover": "#e8e5de",
 }
 
 
@@ -115,12 +115,6 @@ QGroupBox {{
 QGroupBox::title {{ subcontrol-origin: margin; left: 12px; color: {ACCENT}; }}
 
 QWidget#Sidebar {{ background: {c["sidebar"]}; }}
-QLabel#AppTitle {{
-    font-size: 15px;
-    font-weight: bold;
-    padding: 18px 12px 10px 12px;
-    background: transparent;
-}}
 QListWidget#Nav {{
     background: {c["sidebar"]};
     border: none;
@@ -134,7 +128,15 @@ QLabel#PageTitle {{ font-size: 24px; font-weight: bold; }}
 QLabel#DetailTitle {{ font-size: 18px; font-weight: bold; }}
 QLabel#SectionTitle {{ font-size: 14px; font-weight: bold; }}
 QLabel#Allergy {{ color: {ERROR}; font-weight: bold; }}
-QLabel#Muted, QStatusBar {{ color: {c["muted"]}; }}
+QLabel#Muted {{ color: {c["muted"]}; }}
+
+QToolButton {{
+    background: {c["surface"]};
+    border: 1px solid {c["border"]};
+    border-radius: 6px;
+    padding: 6px;
+}}
+QToolButton:hover {{ border-color: {ACCENT}; }}
 
 QSplitter::handle {{ background: transparent; }}
 QScrollBar:vertical {{ background: transparent; width: 10px; }}
