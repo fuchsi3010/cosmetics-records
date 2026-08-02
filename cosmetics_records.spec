@@ -25,3 +25,6 @@ exe = EXE(
         else None
     ),
 )
+
+if sys.platform == "darwin":  # macOS wants a .app bundle, not a bare binary
+    app = BUNDLE(exe, name="CosmeticsRecords.app")
