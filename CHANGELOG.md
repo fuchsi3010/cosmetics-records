@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-07-06
+## [2.0.0-beta.1] - 2026-08-02
 
 ### Highlights
 
-Complete reimplementation focused on speed and security: ~23,000 lines replaced by ~1,200. Existing 1.x databases open unchanged.
+Complete reimplementation focused on speed and security: ~23,000 lines replaced by ~2,000. Existing 1.x databases and configs open unchanged.
 
 ### Changed
 - Audit logging moved into SQLite triggers — impossible to bypass, cascade deletes are now audited too
@@ -22,6 +22,11 @@ Complete reimplementation focused on speed and security: ~23,000 lines replaced 
 - File permissions hardening: database/config/backups 0600, data dir 0700
 - `PRAGMA secure_delete`: deleted client data is not recoverable from DB free pages
 - Fractional inventory capacities survive editing (1.x truncated them to integers)
+- Automatic audit-log retention: entries older than a configurable age are purged at startup (privacy)
+- CSV import as the round-trip of "Export All Data" (validated, all-or-nothing, semicolon-tolerant) — also the migration path from other software
+- Database relocation from Settings (backup first, live reconnect)
+- UI scaling (80–200 %) and date-format settings, under the same config keys as 1.x
+- Sidebar navigation with the 1.x FontAwesome pictograms; sage pastel theme with flat chevron controls; calendar picker for date of birth
 
 ### Removed
 - Imperial-units setting (violated the DB unit constraint even in 1.x), log file (treatment notes no longer leak to disk), PyInstaller build scripts
