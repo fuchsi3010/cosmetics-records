@@ -1172,6 +1172,9 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName("Cosmetics Records")
     app.setStyle("Fusion")
+    # Qt's own file dialogs: themed like the app, and immune to the GTK
+    # portal aborting on systems without the gsettings schemas
+    app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeDialogs)
     if ICON.exists():
         app.setWindowIcon(QIcon(str(ICON)))
 
