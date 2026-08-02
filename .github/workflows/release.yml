@@ -18,6 +18,7 @@ jobs:
           - os: windows-latest
             artifact: CosmeticsRecords-Windows.exe
             built: dist/CosmeticsRecords.exe
+            extra: dist/CosmeticsRecords-Windows-Setup.exe
           - os: ubuntu-latest
             artifact: CosmeticsRecords-Linux
             built: dist/CosmeticsRecords
@@ -39,6 +40,17 @@ jobs:
       - name: Build
         run: pyinstaller cosmetics_records.spec
 
+      - name: Build installer (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="$(grep -m1 'version = ' pyproject.toml | cut -d'"' -f2)"
+          fi
+          APP_VERSION="${VERSION#v}" "/c/Program Files (x86)/Inno Setup 6/iscc.exe" \
+            installer/windows/installer.iss
+
       - name: Zip macOS app bundle
         if: runner.os == 'macOS'
         run: cd dist && zip -r CosmeticsRecords-macOS.zip CosmeticsRecords.app
@@ -51,7 +63,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}
+          path: |
+            dist/${{ matrix.artifact }}
+            ${{ matrix.extra || '' }}
 
   release:
     needs: build
