@@ -26,7 +26,15 @@ Version 2.0 is a ground-up reimplementation focused on speed and security. It op
 - No log file — treatment notes never land anywhere outside the database
 - For encryption at rest, use full-disk encryption (LUKS/BitLocker)
 
-## Running
+## Installation
+
+Download from the [Releases page](https://github.com/fuchsi3010/cosmetics-records/releases):
+
+- **Windows**: `CosmeticsRecords-Windows-Setup.exe` — installs, and upgrades an existing 1.x installation in place (data is kept). `CosmeticsRecords-Windows.exe` is the portable no-install variant.
+- **macOS**: unzip `CosmeticsRecords-macOS.zip` and drag the app to Applications.
+- **Linux**: `CosmeticsRecords-Linux`, `chmod +x` and run.
+
+## Running from source
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
