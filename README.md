@@ -36,6 +36,21 @@ python src/cosmetics_records/app.py
 
 On NixOS: `nix-shell --run 'python src/cosmetics_records/app.py'`
 
+## Migrating from other software
+
+1. Export your data from the old tool (CSV or Excel — anything tabular).
+2. Run Cosmetics Records once and use *Settings → Export All Data (CSV)* on the empty database — the generated files **are** the import template.
+3. Reshape your old export into those files. A spreadsheet, a small script, or an LLM ("here are my columns, produce these CSVs") all work. Only a few columns are required:
+   - `clients.csv`: `first_name`, `last_name` (everything else optional; `id` is a temporary key that links the record files and is remapped on import)
+   - `treatment_records.csv` / `product_records.csv`: `client_id`, `treatment_date`/`product_date` (`YYYY-MM-DD`), `treatment_notes`/`product_text`
+   - `inventory.csv`: `name`, `capacity`, `unit` (`ml`, `g`, `Pc.`)
+
+   Comma and semicolon delimiters both work (German Excel exports import as-is).
+4. *Settings → Back up now*, then *Import Data (CSV)* and pick the folder. Every row is validated and the import is all-or-nothing — one bad row aborts with the offending file and row in the message, and nothing is written. Fix the CSV and try again.
+5. Import looks wrong anyway? Restore the backup from step 4 — importing only ever adds records, it never merges or overwrites.
+
+The import itself lands in the change log (one entry per record), so the migration stays traceable. Coming from version 1.x of this app: skip all of this — 2.0 opens the existing database directly.
+
 ## Development
 
 ```bash
