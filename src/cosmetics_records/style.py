@@ -12,6 +12,13 @@ ACCENT = "#6B9080"
 ACCENT_HOVER = "#557567"
 ERROR = "#C7402E"
 
+SCALE = 1.0  # ui_scale from config (0.8–2.0); multiplies all font sizes
+
+
+def _px(base: int) -> str:
+    return f"{round(base * SCALE)}px"
+
+
 DARK = {
     "bg": "#2b2a27",
     "surface": "#343330",
@@ -60,7 +67,7 @@ def _palette(c: dict) -> QPalette:
 
 def _stylesheet(c: dict) -> str:
     return f"""
-QWidget {{ font-size: 13px; }}
+QWidget {{ font-size: {_px(13)}; }}
 
 QLineEdit, QPlainTextEdit, QTextBrowser, QSpinBox, QDoubleSpinBox,
 QDateEdit, QComboBox {{
@@ -119,14 +126,14 @@ QListWidget#Nav {{
     background: {c["sidebar"]};
     border: none;
     border-radius: 0;
-    font-size: 14px;
+    font-size: {_px(14)};
     padding: 6px;
 }}
 QListWidget#Nav::item {{ padding: 10px 12px; border-radius: 6px; margin: 2px 4px; }}
 
-QLabel#PageTitle {{ font-size: 24px; font-weight: bold; }}
-QLabel#DetailTitle {{ font-size: 18px; font-weight: bold; }}
-QLabel#SectionTitle {{ font-size: 14px; font-weight: bold; }}
+QLabel#PageTitle {{ font-size: {_px(24)}; font-weight: bold; }}
+QLabel#DetailTitle {{ font-size: {_px(18)}; font-weight: bold; }}
+QLabel#SectionTitle {{ font-size: {_px(14)}; font-weight: bold; }}
 QLabel#Allergy {{ color: {ERROR}; font-weight: bold; }}
 QLabel#Muted {{ color: {c["muted"]}; }}
 

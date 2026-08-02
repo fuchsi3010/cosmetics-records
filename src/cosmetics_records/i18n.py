@@ -94,6 +94,9 @@ DE = {
     # Settings
     "Appearance": "Darstellung",
     "Theme": "Farbschema",
+    "Scaling": "Skalierung",
+    "Date Format": "Datumsformat",
+    "Automatic": "Automatisch",
     "System": "System",
     "Light": "Hell",
     "Dark": "Dunkel",

@@ -135,8 +135,7 @@ def _audit_triggers() -> str:
                 return f"{p}.id"
             return f"{p}.client_id" if "client_id" in cols else "NULL"
 
-        ddl.append(
-            f"""
+        ddl.append(f"""
 CREATE TRIGGER IF NOT EXISTS audit_{table}_insert AFTER INSERT ON {table} BEGIN
     INSERT INTO audit_log (table_name, record_id, action, new_value, client_id)
     VALUES ('{table}', NEW.id, 'CREATE', {snap('NEW')}, {cid('NEW')});
@@ -150,8 +149,7 @@ END;
 CREATE TRIGGER IF NOT EXISTS audit_{table}_delete AFTER DELETE ON {table} BEGIN
     INSERT INTO audit_log (table_name, record_id, action, old_value, client_id)
     VALUES ('{table}', OLD.id, 'DELETE', {snap('OLD')}, {cid('OLD')});
-END;"""
-        )
+END;""")
     return "\n".join(ddl)
 
 

@@ -67,6 +67,9 @@ def icon(name: str) -> QIcon:
 EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 ICON = Path(__file__).parent / "resources" / "icons" / "icon-256.png"
 
+# One shared config dict for the whole app (same JSON keys as 1.x).
+CFG = db.load_config()
+
 # English source labels; rendered through tr() at display time.
 TABLE_LABELS = {
     "clients": "Client",
@@ -99,7 +102,10 @@ FIELD_LABELS = {
 
 
 def date_format() -> str:
-    return "dd.MM.yyyy" if i18n.LANG == "de" else "yyyy-MM-dd"
+    fmt = {"iso8601": "yyyy-MM-dd", "us": "MM/dd/yyyy", "de": "dd.MM.yyyy"}.get(
+        CFG.get("date_format")
+    )
+    return fmt or ("dd.MM.yyyy" if i18n.LANG == "de" else "yyyy-MM-dd")
 
 
 def fmt_date(iso: str | None) -> str:
@@ -112,7 +118,7 @@ def parse_dob(text: str) -> str | None:
     text = text.strip()
     if not text:
         return None
-    for pattern in ("%d.%m.%Y", "%Y-%m-%d"):
+    for pattern in ("%d.%m.%Y", "%Y-%m-%d", "%m/%d/%Y"):
         try:
             return datetime.strptime(text, pattern).date().isoformat()
         except ValueError:
@@ -776,6 +782,27 @@ class SettingsPage(QWidget):
         self.theme.setCurrentIndex(self.theme.findData(cfg.get("theme", "system")))
         self.theme.currentIndexChanged.connect(self._theme_changed)
 
+        self.scale = QSpinBox(minimum=80, maximum=200, singleStep=10, suffix=" %")
+        self.scale.setFixedWidth(120)
+        self.scale.setValue(round(cfg.get("ui_scale", 1.0) * 100))
+        self.scale.valueChanged.connect(self._scale_changed)
+
+        self.dates = QComboBox()
+        self.dates.setFixedWidth(220)
+        for label, value in (
+            (tr("Automatic"), "language"),
+            ("31.12.2026", "de"),
+            ("2026-12-31", "iso8601"),
+            ("12/31/2026", "us"),
+        ):
+            self.dates.addItem(label, value)
+        self.dates.setCurrentIndex(
+            self.dates.findData(cfg.get("date_format", "language"))
+        )
+        self.dates.currentIndexChanged.connect(
+            lambda: self._set("date_format", self.dates.currentData())
+        )
+
         self.language = QComboBox()
         self.language.setFixedWidth(220)
         self.language.addItem("English", "en")
@@ -787,6 +814,8 @@ class SettingsPage(QWidget):
         appearance_box = QGroupBox(tr("Appearance"))
         appearance = QFormLayout(appearance_box)
         appearance.addRow(tr("Theme"), self.theme)
+        appearance.addRow(tr("Scaling"), self.scale)
+        appearance.addRow(tr("Date Format"), self.dates)
         lang_row = QHBoxLayout()
         lang_row.addWidget(self.language)
         lang_row.addWidget(self.restart_hint, 1)
@@ -863,6 +892,13 @@ class SettingsPage(QWidget):
         self._set("theme", self.theme.currentData())
         style.apply_theme(self.theme.currentData())
 
+    def _scale_changed(self, value: int) -> None:
+        self._set("ui_scale", value / 100)
+        style.SCALE = value / 100
+        style.apply_theme(self.win.cfg.get("theme", "system"))
+        nav = self.win.nav_settings  # row height changed with the font
+        nav.setFixedHeight(nav.sizeHintForRow(0) + 16)
+
     def _language_changed(self) -> None:
         self._set("language", self.language.currentData())
         self.restart_hint.setText(tr("Takes effect after restarting."))
@@ -936,7 +972,7 @@ class SettingsPage(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.cfg = db.load_config()
+        self.cfg = CFG
         self.path = db.db_path(self.cfg)
         self.conn = db.connect(self.path)
 
@@ -1034,10 +1070,10 @@ def main() -> None:
     if ICON.exists():
         app.setWindowIcon(QIcon(str(ICON)))
 
-    cfg = db.load_config()
     default = "de" if QLocale.system().name().startswith("de") else "en"
-    i18n.set_language(cfg.get("language") or default)
-    style.apply_theme(cfg.get("theme", "system"))
+    i18n.set_language(CFG.get("language") or default)
+    style.SCALE = CFG.get("ui_scale", 1.0)
+    style.apply_theme(CFG.get("theme", "system"))
 
     window = MainWindow()
     app.styleHints().colorSchemeChanged.connect(
