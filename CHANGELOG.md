@@ -24,7 +24,7 @@ Complete reimplementation focused on speed and security: ~23,000 lines replaced 
 - Fractional inventory capacities survive editing (1.x truncated them to integers)
 
 ### Removed
-- CSV import (one-time initial migration, done), UI scale/date-format/imperial-units settings, log file (treatment notes no longer leak to disk), PyInstaller build scripts
+- Imperial-units setting (violated the DB unit constraint even in 1.x), log file (treatment notes no longer leak to disk), PyInstaller build scripts
 
 ## [1.0.0] - 2025-12-31
 

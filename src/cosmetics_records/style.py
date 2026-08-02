@@ -2,9 +2,28 @@
 8px radii, 24/18/14/13 type scale. QPalette carries the base colors (Fusion
 renders from it), the stylesheet adds spacing, radii and the sidebar."""
 
+import tempfile
+from pathlib import Path
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QApplication
+
+_ARROW_DIR = Path(tempfile.mkdtemp(prefix="cosmetics_qss_"))
+
+
+def _arrow(name: str, color: str) -> str:
+    """Render a FontAwesome glyph to a PNG for use in QSS image: url(...) —
+    Qt has no other way to get a crisp custom arrow into a subcontrol."""
+    try:
+        import qtawesome as qta
+    except ImportError:  # no icons installed → arrowless flat controls
+        return ""
+    path = _ARROW_DIR / f"{name.replace('.', '_')}_{color.lstrip('#')}.png"
+    if not path.exists():
+        qta.icon(name, color=color).pixmap(24, 24).save(str(path))
+    return path.as_posix()
+
 
 # Spa palette: muted sage accent on soft warm-paper neutrals — pastel but
 # professional. Earlier accents: 1.x blue "#3B8ED0"/"#1F6AA5", rose "#B85C79".
@@ -84,6 +103,27 @@ QComboBox QAbstractItemView {{
     background: {c["surface"]};
     border: 1px solid {c["border"]};
     selection-background-color: {ACCENT};
+}}
+
+/* flat chevrons instead of the dated native arrow buttons */
+QComboBox::drop-down {{ border: none; width: 28px; }}
+QComboBox::down-arrow {{
+    image: url({_arrow("fa5s.chevron-down", c["muted"])});
+    width: 12px; height: 12px; margin-right: 6px;
+}}
+QSpinBox::up-button, QDoubleSpinBox::up-button, QDateEdit::up-button {{
+    subcontrol-position: top right; border: none; width: 22px;
+}}
+QSpinBox::down-button, QDoubleSpinBox::down-button, QDateEdit::down-button {{
+    subcontrol-position: bottom right; border: none; width: 22px;
+}}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow, QDateEdit::up-arrow {{
+    image: url({_arrow("fa5s.chevron-up", c["muted"])});
+    width: 10px; height: 10px;
+}}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow, QDateEdit::down-arrow {{
+    image: url({_arrow("fa5s.chevron-down", c["muted"])});
+    width: 10px; height: 10px;
 }}
 
 QPushButton {{

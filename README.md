@@ -12,7 +12,9 @@ Version 2.0 is a ground-up reimplementation focused on speed and security. It op
 - **Inventory**: product catalog (ml, g, Pc.)
 - **Change log**: complete audit history — written by database triggers, impossible for any code path to bypass
 - **Backups**: automatic on startup (configurable interval), consistent snapshots even while the app is running, one-click restore
-- **CSV export**: mail merge (name + address) and full export of all tables
+- **CSV import/export**: mail merge (name + address), full export of all tables, and re-import of the exported files (also usable for bringing data in from other tools)
+- **Log retention**: audit entries older than a configurable age are removed automatically at startup (privacy)
+- **Database relocation**: move the database file from within Settings
 - **Languages**: English and German (auto-detected from the system, switchable in Settings)
 - **Themes**: Dark, Light, or follow the system
 

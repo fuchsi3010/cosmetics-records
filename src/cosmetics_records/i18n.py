@@ -119,6 +119,26 @@ DE = {
     "Backup restored.": "Backup wiederhergestellt.",
     "Restore failed:\n{}": "Wiederherstellung fehlgeschlagen:\n{}",
     "Export": "Export",
+    "Import": "Import",
+    "Data": "Daten",
+    "Import Data (CSV)…": "Daten importieren (CSV)…",
+    "Choose the folder containing the CSV files": "Ordner mit den CSV-Dateien wählen",
+    "Imports clients.csv, treatment_records.csv, product_records.csv "
+    "and inventory.csv.\nExisting data is kept. Continue?": "Importiert clients.csv, treatment_records.csv, product_records.csv "  # noqa: E501
+    "und inventory.csv.\nBestehende Daten bleiben erhalten. Fortfahren?",
+    "Import failed:\n{}": "Import fehlgeschlagen:\n{}",
+    "{} records imported.": "{} Einträge importiert.",
+    "Change database location…": "Datenbank-Speicherort ändern…",
+    "The database will be moved. A backup is created first.\nContinue?": "Die Datenbank wird verschoben. Vorher wird ein Backup erstellt.\n"  # noqa: E501
+    "Fortfahren?",
+    "Database moved.": "Datenbank verschoben.",
+    "Move failed:\n{}": "Verschieben fehlgeschlagen:\n{}",
+    "Retention": "Aufbewahrung",
+    " days": " Tage",
+    "Clean up now": "Jetzt aufräumen",
+    "Applied automatically at startup.": "Wird beim Start automatisch angewendet.",
+    "Delete all log entries older than {} days?": "Alle Protokolleinträge löschen, die älter als {} Tage sind?",  # noqa: E501
+    "{} entries deleted.": "{} Einträge gelöscht.",
     "Mail Merge Export (CSV)…": "Serienbrief-Export (CSV)…",
     "Mail Merge Export": "Serienbrief-Export",
     "clients_mail_merge.csv": "kunden_serienbrief.csv",

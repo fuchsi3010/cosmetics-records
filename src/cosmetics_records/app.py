@@ -9,6 +9,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import shutil
 import sys
 import zipfile
 from datetime import date, datetime
@@ -859,20 +860,47 @@ class SettingsPage(QWidget):
         row.addWidget(open_dir)
         form.addRow(row)
 
+        self.retention = QSpinBox(minimum=30, maximum=3650, suffix=tr(" days"))
+        self.retention.setFixedWidth(140)
+        self.retention.setValue(cfg.get("audit_retention_days", 365))
+        self.retention.valueChanged.connect(
+            lambda v: self._set("audit_retention_days", v)
+        )
+        cleanup_now = QPushButton(tr("Clean up now"))
+        cleanup_now.clicked.connect(self._cleanup_audit)
+        log_box = QGroupBox(tr("Change Log"))
+        log_form = QFormLayout(log_box)
+        log_row = QHBoxLayout()
+        log_row.addWidget(self.retention)
+        log_row.addWidget(cleanup_now)
+        log_row.addStretch()
+        log_form.addRow(tr("Retention"), log_row)
+        log_form.addRow(
+            QLabel(tr("Applied automatically at startup."), objectName="Muted")
+        )
+
         mail_merge = QPushButton(tr("Mail Merge Export (CSV)…"))
         mail_merge.clicked.connect(self._mail_merge)
         full_export = QPushButton(tr("Export All Data (CSV)…"))
         full_export.clicked.connect(self._export_all)
-        export_box = QGroupBox(tr("Export"))
-        export_lay = QHBoxLayout(export_box)
-        export_lay.addWidget(mail_merge)
-        export_lay.addWidget(full_export)
+        import_csv = QPushButton(tr("Import Data (CSV)…"))
+        import_csv.clicked.connect(self._import)
+        move_db = QPushButton(tr("Change database location…"))
+        move_db.clicked.connect(self._move_db)
+        data_box = QGroupBox(tr("Data"))
+        data_lay = QVBoxLayout(data_box)
+        export_row = QHBoxLayout()
+        export_row.addWidget(mail_merge)
+        export_row.addWidget(full_export)
+        manage_row = QHBoxLayout()
+        manage_row.addWidget(import_csv)
+        manage_row.addWidget(move_db)
+        data_lay.addLayout(export_row)
+        data_lay.addLayout(manage_row)
 
-        info = QLabel(
-            tr("Database: {}").format(win.path) + f"\nCosmetics Records {db.VERSION}",
-            objectName="Muted",
-        )
-        info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.info = QLabel(objectName="Muted")
+        self._refresh_info()
+        self.info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(24, 20, 24, 16)
@@ -880,9 +908,16 @@ class SettingsPage(QWidget):
         lay.addSpacing(8)
         lay.addWidget(appearance_box)
         lay.addWidget(backup_box)
-        lay.addWidget(export_box)
-        lay.addWidget(info)
+        lay.addWidget(log_box)
+        lay.addWidget(data_box)
+        lay.addWidget(self.info)
         lay.addStretch()
+
+    def _refresh_info(self) -> None:
+        self.info.setText(
+            tr("Database: {}").format(self.win.path)
+            + f"\nCosmetics Records {db.VERSION}"
+        )
 
     def _set(self, key: str, value) -> None:
         self.win.cfg[key] = value
@@ -940,6 +975,59 @@ class SettingsPage(QWidget):
             QMessageBox.critical(
                 self, tr("Error"), tr("Restore failed:\n{}").format(err)
             )
+
+    def _cleanup_audit(self) -> None:
+        days = self.retention.value()
+        self._set("audit_retention_days", days)
+        if confirm(self, tr("Delete all log entries older than {} days?").format(days)):
+            n = db.cleanup_audit(self.win.conn, days)
+            QMessageBox.information(
+                self, tr("Change Log"), tr("{} entries deleted.").format(n)
+            )
+
+    def _import(self) -> None:
+        directory = QFileDialog.getExistingDirectory(
+            self, tr("Choose the folder containing the CSV files")
+        )
+        if not directory or not confirm(
+            self,
+            tr(
+                "Imports clients.csv, treatment_records.csv, product_records.csv "
+                "and inventory.csv.\nExisting data is kept. Continue?"
+            ),
+        ):
+            return
+        try:
+            n = db.import_csv_dir(self.win.conn, Path(directory))
+        except Exception as err:  # any bad row aborted the import; nothing written
+            return QMessageBox.critical(
+                self, tr("Error"), tr("Import failed:\n{}").format(err)
+            )
+        self.win.clients.refresh()
+        self.win.inventory.refresh()
+        QMessageBox.information(
+            self, tr("Import"), tr("{} records imported.").format(n)
+        )
+
+    def _move_db(self) -> None:
+        target, _ = QFileDialog.getSaveFileName(
+            self, tr("Change database location…"), str(self.win.path), "SQLite (*.db)"
+        )
+        if not target or Path(target) == self.win.path:
+            return
+        if not confirm(
+            self,
+            tr("The database will be moved. A backup is created first.\nContinue?"),
+        ):
+            return
+        try:
+            self.win.move_database(Path(target))
+        except OSError as err:
+            return QMessageBox.critical(
+                self, tr("Error"), tr("Move failed:\n{}").format(err)
+            )
+        self._refresh_info()
+        QMessageBox.information(self, tr("Data"), tr("Database moved."))
 
     def _mail_merge(self) -> None:
         path, _ = QFileDialog.getSaveFileName(
@@ -1047,6 +1135,23 @@ class MainWindow(QMainWindow):
     def _startup_backup(self) -> None:
         if db.auto_backup_if_due(self.conn, self.cfg, self.path):
             self.flash(tr("Automatic backup created ✓"))
+        days = self.cfg.get("audit_retention_days")
+        if days:  # privacy: old audit snapshots expire without user action
+            db.cleanup_audit(self.conn, days)
+
+    def move_database(self, target: Path) -> None:
+        db.create_backup(self.conn, self.path)
+        self.conn.close()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(self.path, target)
+        for suffix in ("-wal", "-shm"):  # leftovers from an unclean shutdown
+            Path(str(self.path) + suffix).unlink(missing_ok=True)
+        self.cfg["database_path"] = str(target)
+        db.save_config(self.cfg)
+        self.path = target
+        self.conn = db.connect(target)
+        self.clients.show_list()
+        self.inventory.refresh()
 
     def restore(self, backup: Path) -> None:
         db.create_backup(self.conn, self.path)  # safety copy of the current state

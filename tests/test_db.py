@@ -117,6 +117,44 @@ def test_roundtrip(tmp_path, monkeypatch):
     conn.close()
 
 
+def test_import_and_audit_cleanup(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "data_dir", lambda: tmp_path)
+    conn = db.connect(tmp_path / "a.db")
+    cid = db.save_client(conn, {"first_name": "Anna", "last_name": "Müller"})
+    db.save_record(conn, "treatment_records", cid, "2026-07-01", "Peeling")
+    db.save_inventory(conn, "Serum", None, 30, "ml")
+    out = tmp_path / "export"
+    out.mkdir()
+    db.export_all(conn, out)
+
+    # round-trip: import the export into a fresh DB, client ids remapped
+    conn2 = db.connect(tmp_path / "b.db")
+    assert db.import_csv_dir(conn2, out) == 3
+    clients = db.search_clients(conn2)
+    assert clients[0]["last_name"] == "Müller"
+    recs = db.records(conn2, "treatment_records", clients[0]["id"])
+    assert recs[0]["treatment_notes"] == "Peeling"
+
+    # one bad row anywhere rolls back the entire import
+    (out / "inventory.csv").write_text(
+        "name,capacity,unit\nX,10,badunit\n", encoding="utf-8"
+    )
+    conn3 = db.connect(tmp_path / "c.db")
+    try:
+        db.import_csv_dir(conn3, out)
+        raise AssertionError("invalid unit was accepted")
+    except Exception:
+        pass
+    assert not db.search_clients(conn3)
+
+    # age-based audit cleanup
+    conn.execute("UPDATE audit_log SET created_at = datetime('now', '-400 days')")
+    assert db.cleanup_audit(conn, 365) > 0
+    assert conn.execute("SELECT COUNT(*) FROM audit_log").fetchone()[0] == 0
+    for c in (conn, conn2, conn3):
+        c.close()
+
+
 def test_config_and_permissions(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "data_dir", lambda: tmp_path)
     db.save_config({"auto_backup": True, "fremder_schluessel": 1})

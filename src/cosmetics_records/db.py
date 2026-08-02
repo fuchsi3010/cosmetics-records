@@ -414,6 +414,80 @@ def export_mail_merge(conn: sqlite3.Connection, path: Path) -> int:
     return len(rows)
 
 
+def cleanup_audit(conn: sqlite3.Connection, days: int) -> int:
+    """Privacy: delete audit entries older than `days`. With secure_delete on,
+    the freed pages are scrubbed, so the data is really gone."""
+    cur = conn.execute(
+        "DELETE FROM audit_log WHERE created_at < datetime('now', ?)",
+        (f"-{days} days",),
+    )
+    return cur.rowcount
+
+
+def _csv_rows(path: Path) -> list[dict]:
+    if not path.exists():  # missing file = nothing to import
+        return []
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        try:  # German Excel writes semicolons
+            dialect = csv.Sniffer().sniff(f.read(4096), delimiters=",;\t")
+        except csv.Error:
+            dialect = csv.excel
+        f.seek(0)
+        return list(csv.DictReader(f, dialect=dialect))
+
+
+def import_csv_dir(conn: sqlite3.Connection, directory: Path) -> int:
+    """Import the CSVs that export_all writes (same filenames and columns).
+    Client ids are remapped on the fly; record rows may reference imported
+    ids or ids already in the DB (the FK rejects anything else). Any bad row
+    aborts the whole import — all or nothing."""
+    imported = 0
+    id_map: dict[str, int] = {}
+    conn.execute("BEGIN")
+    try:
+        for row in _csv_rows(directory / "clients.csv"):
+            fields = {f: (row.get(f) or "").strip() or None for f in CLIENT_FIELDS}
+            if not fields["first_name"] or not fields["last_name"]:
+                raise ValueError(f"clients.csv: first_name/last_name required: {row}")
+            if fields["date_of_birth"]:
+                datetime.strptime(fields["date_of_birth"], "%Y-%m-%d")
+            new_id = save_client(conn, fields)
+            if (row.get("id") or "").strip():
+                id_map[row["id"].strip()] = new_id
+            imported += 1
+        for table in ("treatment_records", "product_records"):
+            date_col, text_col = RECORD_COLS[table]
+            for row in _csv_rows(directory / f"{table}.csv"):
+                raw = (row.get("client_id") or "").strip()
+                day = (row.get(date_col) or "").strip()
+                text = (row.get(text_col) or "").strip()
+                datetime.strptime(day, "%Y-%m-%d")
+                if not text:
+                    raise ValueError(f"{table}.csv: {text_col} required: {row}")
+                save_record(conn, table, id_map.get(raw, raw and int(raw)), day, text)
+                imported += 1
+        for row in _csv_rows(directory / "inventory.csv"):
+            name = (row.get("name") or "").strip()
+            capacity = float(row.get("capacity") or 0)
+            if not name or capacity <= 0:
+                raise ValueError(
+                    f"inventory.csv: name and capacity > 0 required: {row}"
+                )
+            save_inventory(
+                conn,
+                name,
+                (row.get("description") or "").strip() or None,
+                capacity,
+                (row.get("unit") or "").strip(),
+            )
+            imported += 1
+        conn.execute("COMMIT")
+    except BaseException:  # also rolls back on KeyboardInterrupt
+        conn.execute("ROLLBACK")
+        raise
+    return imported
+
+
 def export_all(conn: sqlite3.Connection, directory: Path) -> list[Path]:
     written = []
     for table in (
