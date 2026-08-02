@@ -92,7 +92,7 @@ QPushButton {{
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
-    font-weight: bold;
+    font-weight: 500;
 }}
 QPushButton:hover {{ background: {ACCENT_HOVER}; }}
 QPushButton:pressed {{ background: {ACCENT_HOVER}; padding-top: 9px; }}
@@ -133,7 +133,7 @@ QListWidget#Nav::item {{ padding: 10px 12px; border-radius: 6px; margin: 2px 4px
 
 QLabel#PageTitle {{ font-size: {_px(24)}; font-weight: bold; }}
 QLabel#DetailTitle {{ font-size: {_px(18)}; font-weight: bold; }}
-QLabel#SectionTitle {{ font-size: {_px(14)}; font-weight: bold; }}
+QLabel#SectionTitle {{ font-size: {_px(14)}; font-weight: 600; color: {c["muted"]}; }}
 QLabel#Allergy {{ color: {ERROR}; font-weight: bold; }}
 QLabel#Muted {{ color: {c["muted"]}; }}
 
