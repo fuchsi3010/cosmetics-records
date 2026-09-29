@@ -524,6 +524,8 @@ class ClientDetail(QWidget):
                 - ((today.month, today.day) < (born.month, born.day))
             )
             age = f" ({years})"
+            if (today.month, today.day) == (born.month, born.day):
+                age += " 🎂"
         self.header.setText(f"{row['first_name']} {row['last_name']}{age}")
         self.allergies.setText(
             f"⚠ {tr('Allergies')}: {row['allergies']}" if row["allergies"] else ""
