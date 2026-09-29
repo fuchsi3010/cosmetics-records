@@ -2,6 +2,7 @@
 
 import ast
 import sys
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -114,6 +115,25 @@ def test_roundtrip(tmp_path, monkeypatch):
         raise AssertionError("outside path accepted")
     except ValueError:
         pass
+    conn.close()
+
+
+def test_upcoming_birthdays(tmp_path, monkeypatch):
+    """Window, December → January wrap, 29 February in a non-leap year."""
+    monkeypatch.setattr(db, "data_dir", lambda: tmp_path)
+    conn = db.connect(tmp_path / "b.db")
+    for first, dob in (("Nye", "1980-01-02"), ("Leap", "1992-02-29"), ("No", None)):
+        db.save_client(
+            conn, {"first_name": first, "last_name": "B", "date_of_birth": dob}
+        )
+
+    def names(today):
+        return [(n, r["first_name"]) for n, r in db.upcoming_birthdays(conn, 7, today)]
+
+    assert names(date(2026, 12, 30)) == [(3, "Nye")]
+    assert names(date(2027, 2, 27)) == [(1, "Leap")]
+    assert names(date(2028, 2, 29)) == [(0, "Leap")]
+    assert names(date(2026, 6, 1)) == []
     conn.close()
 
 

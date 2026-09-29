@@ -583,6 +583,9 @@ class ClientsPage(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.addWidget(QLabel(tr("Clients"), objectName="PageTitle"))
         lay.addSpacing(8)
+        self.birthdays = QLabel(wordWrap=True)
+        self.birthdays.linkActivated.connect(lambda cid: self._show(int(cid)))
+        lay.addWidget(self.birthdays)
         lay.addWidget(self.search)
         lay.addWidget(self.list)
         lay.addWidget(add)
@@ -603,6 +606,17 @@ class ClientsPage(QWidget):
             if r["tags"]:
                 item.setToolTip(r["tags"])
             self.list.addItem(item)
+        when = {0: tr("today"), 1: tr("tomorrow")}
+        upcoming = [
+            f"<a href='{r['id']}'>{html.escape(r['first_name'])} "
+            f"{html.escape(r['last_name'])}</a> "
+            f"({when.get(n) or tr('in {} days').format(n)})"
+            for n, r in db.upcoming_birthdays(self.win.conn)
+        ]
+        self.birthdays.setText(
+            f"🎂 {tr('Birthdays')}: {', '.join(upcoming)}" if upcoming else ""
+        )
+        self.birthdays.setVisible(bool(upcoming))
 
     def show_list(self) -> None:
         self.stack.setCurrentIndex(0)
@@ -610,7 +624,10 @@ class ClientsPage(QWidget):
         self.refresh()
 
     def _open(self, item: QListWidgetItem) -> None:
-        self.detail.load(item.data(Qt.ItemDataRole.UserRole))
+        self._show(item.data(Qt.ItemDataRole.UserRole))
+
+    def _show(self, client_id: int) -> None:
+        self.detail.load(client_id)
         self.stack.setCurrentIndex(1)
 
     def _changed(self) -> None:  # after the edit dialog closed
