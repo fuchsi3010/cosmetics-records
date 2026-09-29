@@ -36,10 +36,6 @@ DE = {
     "Double-click to edit": "Doppelklick zum Bearbeiten",
     "Allergies": "Allergien",
     "Saved ✓": "Gespeichert ✓",
-    "Birthdays": "Geburtstage",
-    "today": "heute",
-    "tomorrow": "morgen",
-    "in {} days": "in {} Tagen",
     # Client dialog
     "New Client": "Neuer Kunde",
     "Edit Client": "Kunde bearbeiten",

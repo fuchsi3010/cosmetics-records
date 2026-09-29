@@ -13,7 +13,7 @@ import platform
 import shutil
 import sqlite3
 import zipfile
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
 VERSION = "2.0.0-beta.1"
@@ -230,28 +230,6 @@ def search_clients(conn: sqlite3.Connection, text: str = "") -> list[sqlite3.Row
         for r in rows
         if needle in f"{r['first_name']} {r['last_name']} {r['tags'] or ''}".casefold()
     ]
-
-
-def upcoming_birthdays(
-    conn: sqlite3.Connection, days: int = 7, today: date | None = None
-) -> list[tuple[int, sqlite3.Row]]:
-    """(days until, client) for birthdays within the next `days` days, 0 = today."""
-    today = today or date.today()
-    out = []
-    for r in conn.execute(
-        "SELECT id, first_name, last_name, date_of_birth FROM clients"
-        " WHERE date_of_birth > ''"
-    ):
-        born = date.fromisoformat(r["date_of_birth"])
-        for year in (today.year, today.year + 1):  # December looks into January
-            try:
-                bday = born.replace(year=year)
-            except ValueError:  # 29 February in a non-leap year
-                bday = date(year, 2, 28)
-            if 0 <= (bday - today).days <= days:
-                out.append(((bday - today).days, r))
-                break
-    return sorted(out, key=lambda x: x[0])
 
 
 def save_client(
