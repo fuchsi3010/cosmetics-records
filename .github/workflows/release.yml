@@ -92,6 +92,8 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
+          # without it a new tag lands on the default branch (main = 1.x), not the built commit
+          target_commitish: ${{ github.sha }}
           draft: true
           prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
           files: dist/*
