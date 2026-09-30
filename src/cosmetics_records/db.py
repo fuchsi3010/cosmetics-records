@@ -16,7 +16,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-VERSION = "2.0.0-beta.1"
+VERSION = "2.0.0-beta.2"
 
 # ponytail: schema copied verbatim from the old migrations for drop-in
 # compatibility; audit_log gains client_id inline (was migration v002).
